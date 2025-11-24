@@ -5,14 +5,11 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class Teacher extends Staff {
 
-    @Getter
-    @Setter
     private String title;
-
-    @Getter
-    @Setter
     private String position;
 
     public Teacher(String firstName, String lastName,

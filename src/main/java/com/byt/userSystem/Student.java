@@ -6,10 +6,10 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
+@Getter
+@Setter
 public class Student extends Attendee {
 
-    @Getter
-    @Setter
     private StudyStatus studiesStatus;
 
     public Student(String firstName, String lastName,

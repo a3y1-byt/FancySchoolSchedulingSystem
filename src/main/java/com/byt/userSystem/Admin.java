@@ -6,10 +6,10 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 public class Admin extends Staff {
 
-    @Getter
-    @Setter
     private LocalDateTime lastLoginTime;
 
     public Admin(String firstName, String lastName,

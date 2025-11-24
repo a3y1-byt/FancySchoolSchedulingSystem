@@ -7,10 +7,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public abstract class Staff extends User {
 
-    @Getter
-    @Setter
     private LocalDate hireDate;
 
     public Staff(String firstName,

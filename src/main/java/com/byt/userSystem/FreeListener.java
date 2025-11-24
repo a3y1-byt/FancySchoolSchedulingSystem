@@ -6,11 +6,11 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
+@Getter
+@Setter
 public class FreeListener extends Attendee {
 
-    @Getter
-    @Setter
-    private String notes = "";
+    private String notes;
 
     public FreeListener(String firstName, String lastName,
                         String familyName, LocalDate dateOfBirth,

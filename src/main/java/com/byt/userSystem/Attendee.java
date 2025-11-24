@@ -6,11 +6,12 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+@Getter
+@Setter
 public abstract class Attendee extends User {
 
-    @Getter
-    @Setter
     private List<StudyLanguage> languagesOfStudies = new ArrayList<>();
 
 
@@ -19,11 +20,7 @@ public abstract class Attendee extends User {
                     String phoneNumber, String email,
                     List<StudyLanguage> languagesOfStudies) {
         super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email);
-        if (languagesOfStudies != null) {
-            this.languagesOfStudies = languagesOfStudies;
-        } else {
-            this.languagesOfStudies = new ArrayList<>();
-        }
+        this.languagesOfStudies = Objects.requireNonNullElseGet(languagesOfStudies, ArrayList::new);
 
     }
 
