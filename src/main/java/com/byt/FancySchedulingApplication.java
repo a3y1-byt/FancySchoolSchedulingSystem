@@ -3,6 +3,6 @@ package com.byt;
 
 public class FancySchedulingApplication {
     public static void main(String[] args) {
-
+        System.out.println("FancySchedulingApplication");
     }
 }
