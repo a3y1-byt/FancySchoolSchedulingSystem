@@ -1,6 +1,9 @@
-package com.byt.userSystem;
+package com.byt.user_system;
 
+import com.byt.user_system.enums.StudyLanguage;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -10,9 +13,10 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public abstract class Attendee extends User {
 
-    private List<StudyLanguage> languagesOfStudies = new ArrayList<>();
+    private List<StudyLanguage> languagesOfStudies;
 
 
     public Attendee(String firstName, String lastName,
@@ -22,10 +26,6 @@ public abstract class Attendee extends User {
         super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email);
         this.languagesOfStudies = Objects.requireNonNullElseGet(languagesOfStudies, ArrayList::new);
 
-    }
-
-    public Attendee() {
-        super();
     }
 
 }
