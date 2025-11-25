@@ -1,12 +1,14 @@
 package com.byt.scheduling;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
+import lombok.Builder;
 
-@Getter
-@Setter
+@Value
+@Builder
 public class ClassRoom {
-    private String name;
-    private int floor;
-    private int capacity;
+    String id;
+    String name;
+    int floor;
+    int capacity;
+    String buildingId;
 }
