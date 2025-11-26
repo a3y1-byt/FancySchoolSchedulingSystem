@@ -1,14 +1,10 @@
 package com.byt.user_system.data;
 
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.enums.StudyStatus;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -19,8 +15,8 @@ public class Teacher extends Staff {
     private String position;
 
     public Teacher(String firstName, String lastName, String familyName,
-                   LocalDate dateOfBirth, String phoneNumber, String email,
-                   LocalDate hireDate,String title,
+                   Instant  dateOfBirth, String phoneNumber, String email,
+                   Instant hireDate, String title,
                    String position) {
 
         super(firstName, lastName, familyName,

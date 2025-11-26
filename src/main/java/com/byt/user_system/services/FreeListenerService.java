@@ -9,14 +9,14 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 
-public class FreeListenerService implements CRUDService<FreeListener>  {
+public class FreeListenerService implements CRUDService<FreeListener> {
 
     // comments explaining how everything works are in FreeListener Service
     private final SaveLoadService service;
@@ -39,7 +39,7 @@ public class FreeListenerService implements CRUDService<FreeListener>  {
     // _________________________________________________________
 
     public FreeListener create(String firstName, String lastName, String familyName,
-                               LocalDate dateOfBirth, String phoneNumber, String email,
+                               Instant dateOfBirth, String phoneNumber, String email,
                                List<StudyLanguage> languagesOfStudies,
                                String notes) throws IOException {
 

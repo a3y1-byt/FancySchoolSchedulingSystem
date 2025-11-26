@@ -1,22 +1,21 @@
 package com.byt.user_system.data;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public abstract class Staff extends User {
 
-    private LocalDate hireDate;
+    private Instant  hireDate;
 
     public Staff(String firstName, String lastName, String familyName,
-                   LocalDate dateOfBirth, String phoneNumber, String email,
-                   LocalDate hireDate) {
+                 Instant  dateOfBirth, String phoneNumber, String email,
+                 Instant hireDate) {
 
         super(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email);

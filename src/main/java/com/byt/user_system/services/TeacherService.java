@@ -8,7 +8,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,12 +37,12 @@ public class TeacherService implements CRUDService<Teacher> {
     // _________________________________________________________
 
     public Teacher create(String firstName, String lastName, String familyName,
-                               LocalDate dateOfBirth, String phoneNumber, String email,
-                               LocalDate hireDate,String title,
-                               String position) throws IOException {
+                          Instant dateOfBirth, String phoneNumber, String email,
+                          Instant hireDate, String title,
+                          String position) throws IOException {
         Teacher teacher = new Teacher(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, title,  position
+                hireDate, title, position
         );
 
         teachers.add(teacher);

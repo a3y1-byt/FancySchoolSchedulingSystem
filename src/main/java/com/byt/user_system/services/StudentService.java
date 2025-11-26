@@ -10,7 +10,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,9 +38,9 @@ public class StudentService implements CRUDService<Student> {
     // _________________________________________________________
 
     public Student create(String firstName, String lastName, String familyName,
-           LocalDate dateOfBirth, String phoneNumber, String email,
-           List<StudyLanguage> languagesOfStudies,
-           StudyStatus studiesStatus) throws IOException {
+                          Instant dateOfBirth, String phoneNumber, String email,
+                          List<StudyLanguage> languagesOfStudies,
+                          StudyStatus studiesStatus) throws IOException {
         Student student = new Student(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 new ArrayList<>(languagesOfStudies), studiesStatus
