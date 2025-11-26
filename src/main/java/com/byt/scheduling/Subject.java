@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class Subject {
     private  List<SubjectType> type;
-    private List<Lesson> lessons;
+    private List<Lesson> lessons;//todo: reverse relationship
     private int hours;
     private int ects;
 }
