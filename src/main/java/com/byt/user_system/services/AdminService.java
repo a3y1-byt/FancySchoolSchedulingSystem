@@ -3,9 +3,6 @@ package com.byt.user_system.services;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.user_system.data.Admin;
-import com.byt.user_system.data.Student;
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.enums.StudyStatus;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -21,68 +18,26 @@ public class AdminService {
     private final SaveLoadService service;
     private List<Admin> admins;
 
-    private static final Type ADMIN_LIST_TYPE =
-            new TypeToken<List<Admin>>() {}.getType();
+    // cause Java will erase generics in runtime, gson won't be able to get what exactly
+    // is inside List Admin. Via TypeToken we save FULL info about List type,
+    // so thst later we could correctly deserialize json into list<Admin>
+    private static final Type ADMIN_LIST_TYPE = new TypeToken<List<Admin>>() {
+    }.getType();
 
+    // Constructor, we just copy inputed List to not share references with external code
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
         this.admins = admins != null ? copyList(admins) : new ArrayList<>();
     }
 
 
-    // ADDINg COPY - like this?
-
-    private Admin copy(Admin adm) {
-        if (adm == null) return null;
-
-        Admin copy = new Admin(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                adm.getHireDate(),
-                adm.getLastLoginTime()
-        );
-        copy.setId(adm.getId());
-        return copy;
-    }
-
-    private List<Admin> copyList(List<Admin> source) {
-        List<Admin> result = new ArrayList<>();
-        if (source == null) return result;
-        for (Admin a : source) {
-            result.add(copy(a));
-        }
-        return result;
-    }
-
-    private void persist() throws IOException {
-        // So here I am passing to our 'database' copy of obj?
-        service.save(DataSaveKeys.ADMINS, copyList(admins));
-    }
-
     public void init() throws IOException {
-        if (!service.canLoad(DataSaveKeys.ADMINS)) {
-            admins = new ArrayList<>();
-            return;
-        }
-
-        Object loaded = service.load(DataSaveKeys.ADMINS, ADMIN_LIST_TYPE);
-
-        if (loaded instanceof List<?> raw) {
-            List<Admin> result = new ArrayList<>();
-            for (Object o : raw) {
-                if (o instanceof Admin) {
-                    result.add(copy((Admin) o));
-                }
-            }
-            admins = result;
-        } else {
-            admins = new ArrayList<>();
-        }
+        List<Admin> loaded = loadFromDb(); // raw objects from our 'DB'
+        this.admins = copyList(loaded); // safe deep copies
     }
+
+    // _________________________________________________________
+    // Next it's just our basic CRUD operations, nothing hard
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
@@ -94,7 +49,7 @@ public class AdminService {
         );
 
         admins.add(admin);
-        persist();
+        saveToDb();
 
         return copy(admin);
     }
@@ -102,7 +57,7 @@ public class AdminService {
     public Admin create(Admin admin) throws IOException {
         Admin toStore = copy(admin);
         admins.add(toStore);
-        persist();
+        saveToDb();
         return copy(toStore);
     }
 
@@ -124,7 +79,7 @@ public class AdminService {
             Admin current = admins.get(i);
             if (Objects.equals(current.getId(), updated.getId())) {
                 admins.set(i, copy(updated));
-                persist();
+                saveToDb();
                 return;
             }
         }
@@ -134,10 +89,71 @@ public class AdminService {
         for (int i = 0; i < admins.size(); i++) {
             if (Objects.equals(admins.get(i).getId(), id)) {
                 admins.remove(i);
-                persist();
+                saveToDb();
                 return;
             }
         }
+    }
+    // _________________________________________________________
+
+    // creating fully independent copy of Admin,
+    // so that code from outside could not change internal objects of service
+    private Admin copy(Admin adm) {
+        if (adm == null) return null;
+
+        Admin copy = new Admin(
+                adm.getFirstName(),
+                adm.getLastName(),
+                adm.getFamilyName(),
+                adm.getDateOfBirth(),
+                adm.getPhoneNumber(),
+                adm.getEmail(),
+                adm.getHireDate(),
+                adm.getLastLoginTime()
+        );
+        copy.setId(adm.getId());
+        return copy;
+    }
+
+    // just a new list with copies of Admins.
+    // It's a deep copy - changes of outer list or inside elements won't affect internal
+    // list of admins
+    private List<Admin> copyList(List<Admin> source) {
+        List<Admin> result = new ArrayList<>();
+        if (source == null) return result;
+        for (Admin a : source) {
+            result.add(copy(a));
+        }
+        return result;
+    }
+
+    private List<Admin> loadFromDb() throws IOException {
+        if (!service.canLoad(DataSaveKeys.ADMINS)) {
+            return new ArrayList<>();
+        }
+
+        // SaveLoadService via Gson is reading JSON from file and returns object
+        Object loaded = service.load(DataSaveKeys.ADMINS, ADMIN_LIST_TYPE);
+
+        // checking if loaded is indeed a List,
+        // taking from him only Admin elements,
+        // returning raw list of objects, just as they came from persistence
+        if (loaded instanceof List<?> raw) {
+            List<Admin> result = new ArrayList<>();
+            for (Object o : raw) {
+                if (o instanceof Admin admin) {
+                    result.add(admin); // RAW from DB
+                }
+            }
+            return result;
+        }
+
+        return new ArrayList<>();
+    }
+
+    // just for seperating internal work with persistence from our CRUD methods.
+    private void saveToDb() throws IOException {
+        service.save(DataSaveKeys.ADMINS, admins);
     }
 
 }
