@@ -2,6 +2,7 @@ package com.byt.user_system.services;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
+import com.byt.services.CRUDService;
 import com.byt.user_system.data.Admin;
 import com.google.gson.reflect.TypeToken;
 
@@ -12,8 +13,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
-public class AdminService {
+public class AdminService implements CRUDService<Admin> {
 
     private final SaveLoadService service;
     private List<Admin> admins;
@@ -54,38 +56,65 @@ public class AdminService {
         return copy(admin);
     }
 
-    public Admin create(Admin admin) throws IOException {
-        Admin toStore = copy(admin);
+    @Override
+    public void create(Admin prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) {
+            throw new IllegalArgumentException("Admin prototype must not be null");
+        }
+        Admin toStore = copy(prototype);
         admins.add(toStore);
         saveToDb();
-        return copy(toStore);
     }
 
+    @Override
+    public Optional<Admin> get(String id) throws IllegalArgumentException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getId(), id)) {
+                return Optional.of(copy(admin));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public List<Admin> getAll() {
         return copyList(admins);
     }
 
-    public Admin getById(String id) {
-        for (Admin admin : admins) {
-            if (Objects.equals(admin.getId(), id)) {
-                return copy(admin);
-            }
+    @Override
+    public void update(String id, Admin prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
         }
-        return null;
-    }
+        if (prototype == null) {
+            throw new IllegalArgumentException("Admin prototype must not be null");
+        }
 
-    public void update(Admin updated) throws IOException {
         for (int i = 0; i < admins.size(); i++) {
             Admin current = admins.get(i);
-            if (Objects.equals(current.getId(), updated.getId())) {
-                admins.set(i, copy(updated));
+            if (Objects.equals(current.getId(), id)) {
+                Admin updatedCopy = copy(prototype);
+                // не довіряємо prototype.getId(), використовуємо параметр id
+                updatedCopy.setId(id);
+                admins.set(i, updatedCopy);
                 saveToDb();
                 return;
             }
         }
+        throw new IllegalArgumentException("Admin with id=" + id + " not found");
     }
 
-    public void deleteById(String id) throws IOException {
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
         for (int i = 0; i < admins.size(); i++) {
             if (Objects.equals(admins.get(i).getId(), id)) {
                 admins.remove(i);
@@ -93,7 +122,22 @@ public class AdminService {
                 return;
             }
         }
+        throw new IllegalArgumentException("Admin with id=" + id + " not found");
     }
+
+    @Override
+    public boolean exists(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // _________________________________________________________
 
     // creating fully independent copy of Admin,

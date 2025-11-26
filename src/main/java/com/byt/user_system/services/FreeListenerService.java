@@ -2,6 +2,7 @@ package com.byt.user_system.services;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
+import com.byt.services.CRUDService;
 import com.byt.user_system.data.FreeListener;
 import com.byt.user_system.enums.StudyLanguage;
 import com.google.gson.reflect.TypeToken;
@@ -12,11 +13,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
-public class FreeListenerService {
+public class FreeListenerService implements CRUDService<FreeListener>  {
 
-    // comments explaining how everything works are in Admin Service
+    // comments explaining how everything works are in FreeListener Service
     private final SaveLoadService service;
     private List<FreeListener> freeListeners;
 
@@ -52,38 +54,65 @@ public class FreeListenerService {
         return copy(freeListener);
     }
 
-    public FreeListener create(FreeListener freeListener) throws IOException {
-        FreeListener toStore = copy(freeListener);
+    @Override
+    public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) {
+            throw new IllegalArgumentException("FreeListener prototype must not be null");
+        }
+        FreeListener toStore = copy(prototype);
         freeListeners.add(toStore);
         saveToDb();
-        return copy(toStore);
     }
 
+    @Override
+    public Optional<FreeListener> get(String id) throws IllegalArgumentException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
+        for (FreeListener freeListener : freeListeners) {
+            if (Objects.equals(freeListener.getId(), id)) {
+                return Optional.of(copy(freeListener));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public List<FreeListener> getAll() {
         return copyList(freeListeners);
     }
 
-    public FreeListener getById(String id) {
-        for (FreeListener freeListener : freeListeners) {
-            if (Objects.equals(freeListener.getId(), id)) {
-                return copy(freeListener);
-            }
+    @Override
+    public void update(String id, FreeListener prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
         }
-        return null;
-    }
+        if (prototype == null) {
+            throw new IllegalArgumentException("FreeListener prototype must not be null");
+        }
 
-    public void update(FreeListener updated) throws IOException {
         for (int i = 0; i < freeListeners.size(); i++) {
             FreeListener current = freeListeners.get(i);
-            if (Objects.equals(current.getId(), updated.getId())) {
-                freeListeners.set(i, copy(updated));
+            if (Objects.equals(current.getId(), id)) {
+                FreeListener updatedCopy = copy(prototype);
+                // не довіряємо prototype.getId(), використовуємо параметр id
+                updatedCopy.setId(id);
+                freeListeners.set(i, updatedCopy);
                 saveToDb();
                 return;
             }
         }
+        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
     }
 
-    public void deleteById(String id) throws IOException {
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
         for (int i = 0; i < freeListeners.size(); i++) {
             if (Objects.equals(freeListeners.get(i).getId(), id)) {
                 freeListeners.remove(i);
@@ -91,11 +120,31 @@ public class FreeListenerService {
                 return;
             }
         }
+        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
     }
+
+    @Override
+    public boolean exists(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (FreeListener freeListener : freeListeners) {
+            if (Objects.equals(freeListener.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // _________________________________________________________
 
     private FreeListener copy(FreeListener adm) {
         if (adm == null) return null;
+
+        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
+        List<StudyLanguage> langsCopy = langs != null
+                ? new ArrayList<>(langs)
+                : new ArrayList<>();
 
         FreeListener copy = new FreeListener(
                 adm.getFirstName(),
@@ -104,7 +153,7 @@ public class FreeListenerService {
                 adm.getDateOfBirth(),
                 adm.getPhoneNumber(),
                 adm.getEmail(),
-                adm.getLanguagesOfStudies(),
+                langsCopy,
                 adm.getNotes()
         );
         copy.setId(adm.getId());

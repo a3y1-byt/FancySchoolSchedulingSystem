@@ -2,6 +2,7 @@ package com.byt.user_system.services;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
+import com.byt.services.CRUDService;
 import com.byt.user_system.data.Student;
 import com.byt.user_system.enums.StudyLanguage;
 import com.byt.user_system.enums.StudyStatus;
@@ -13,9 +14,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
-public class StudentService {
-    // comments explaining how everything works are in Admin Service
+public class StudentService implements CRUDService<Student> {
+    // comments explaining how everything works are in Student Service
     private final SaveLoadService service;
     private List<Student> students;
 
@@ -51,38 +53,65 @@ public class StudentService {
         return copy(student);
     }
 
-    public Student create(Student student) throws IOException {
-        Student toStore = copy(student);
+    @Override
+    public void create(Student prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) {
+            throw new IllegalArgumentException("Student prototype must not be null");
+        }
+        Student toStore = copy(prototype);
         students.add(toStore);
         saveToDb();
-        return copy(toStore);
     }
 
+    @Override
+    public Optional<Student> get(String id) throws IllegalArgumentException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
+        for (Student student : students) {
+            if (Objects.equals(student.getId(), id)) {
+                return Optional.of(copy(student));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public List<Student> getAll() {
         return copyList(students);
     }
 
-    public Student getById(String id) {
-        for (Student student : students) {
-            if (Objects.equals(student.getId(), id)) {
-                return copy(student);
-            }
+    @Override
+    public void update(String id, Student prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
         }
-        return null;
-    }
+        if (prototype == null) {
+            throw new IllegalArgumentException("Student prototype must not be null");
+        }
 
-    public void update(Student updated) throws IOException {
         for (int i = 0; i < students.size(); i++) {
             Student current = students.get(i);
-            if (Objects.equals(current.getId(), updated.getId())) {
-                students.set(i, copy(updated));
+            if (Objects.equals(current.getId(), id)) {
+                Student updatedCopy = copy(prototype);
+                // не довіряємо prototype.getId(), використовуємо параметр id
+                updatedCopy.setId(id);
+                students.set(i, updatedCopy);
                 saveToDb();
                 return;
             }
         }
+        throw new IllegalArgumentException("Student with id=" + id + " not found");
     }
 
-    public void deleteById(String id) throws IOException {
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
         for (int i = 0; i < students.size(); i++) {
             if (Objects.equals(students.get(i).getId(), id)) {
                 students.remove(i);
@@ -90,11 +119,31 @@ public class StudentService {
                 return;
             }
         }
+        throw new IllegalArgumentException("Student with id=" + id + " not found");
     }
+
+    @Override
+    public boolean exists(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (Student student : students) {
+            if (Objects.equals(student.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // _________________________________________________________
 
     private Student copy(Student adm) {
         if (adm == null) return null;
+
+        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
+        List<StudyLanguage> langsCopy = langs != null
+                ? new ArrayList<>(langs)
+                : new ArrayList<>();
 
         Student copy = new Student(
                 adm.getFirstName(),
@@ -103,7 +152,7 @@ public class StudentService {
                 adm.getDateOfBirth(),
                 adm.getPhoneNumber(),
                 adm.getEmail(),
-                adm.getLanguagesOfStudies(),
+                langsCopy,
                 adm.getStudiesStatus()
         );
         copy.setId(adm.getId());

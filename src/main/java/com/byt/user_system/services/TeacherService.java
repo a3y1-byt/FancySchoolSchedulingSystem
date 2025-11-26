@@ -2,6 +2,7 @@ package com.byt.user_system.services;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
+import com.byt.services.CRUDService;
 import com.byt.user_system.data.Teacher;
 import com.google.gson.reflect.TypeToken;
 
@@ -11,10 +12,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
-public class TeacherService {
-    // comments explaining how everything works are in Admin Service
+public class TeacherService implements CRUDService<Teacher> {
+    // comments explaining how everything works are in Teacher Service
     private final SaveLoadService service;
     private List<Teacher> teachers;
 
@@ -49,38 +51,65 @@ public class TeacherService {
         return copy(teacher);
     }
 
-    public Teacher create(Teacher teacher) throws IOException {
-        Teacher toStore = copy(teacher);
+    @Override
+    public void create(Teacher prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) {
+            throw new IllegalArgumentException("Teacher prototype must not be null");
+        }
+        Teacher toStore = copy(prototype);
         teachers.add(toStore);
         saveToDb();
-        return copy(toStore);
     }
 
+    @Override
+    public Optional<Teacher> get(String id) throws IllegalArgumentException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
+        for (Teacher teacher : teachers) {
+            if (Objects.equals(teacher.getId(), id)) {
+                return Optional.of(copy(teacher));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public List<Teacher> getAll() {
         return copyList(teachers);
     }
 
-    public Teacher getById(String id) {
-        for (Teacher teacher : teachers) {
-            if (Objects.equals(teacher.getId(), id)) {
-                return copy(teacher);
-            }
+    @Override
+    public void update(String id, Teacher prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
         }
-        return null;
-    }
+        if (prototype == null) {
+            throw new IllegalArgumentException("Teacher prototype must not be null");
+        }
 
-    public void update(Teacher updated) throws IOException {
         for (int i = 0; i < teachers.size(); i++) {
             Teacher current = teachers.get(i);
-            if (Objects.equals(current.getId(), updated.getId())) {
-                teachers.set(i, copy(updated));
+            if (Objects.equals(current.getId(), id)) {
+                Teacher updatedCopy = copy(prototype);
+                // не довіряємо prototype.getId(), використовуємо параметр id
+                updatedCopy.setId(id);
+                teachers.set(i, updatedCopy);
                 saveToDb();
                 return;
             }
         }
+        throw new IllegalArgumentException("Teacher with id=" + id + " not found");
     }
 
-    public void deleteById(String id) throws IOException {
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
+        }
+
         for (int i = 0; i < teachers.size(); i++) {
             if (Objects.equals(teachers.get(i).getId(), id)) {
                 teachers.remove(i);
@@ -88,6 +117,20 @@ public class TeacherService {
                 return;
             }
         }
+        throw new IllegalArgumentException("Teacher with id=" + id + " not found");
+    }
+
+    @Override
+    public boolean exists(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (Teacher teacher : teachers) {
+            if (Objects.equals(teacher.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
     }
     // _________________________________________________________
 
