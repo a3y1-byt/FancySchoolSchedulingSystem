@@ -26,10 +26,43 @@ public class AdminService {
 
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
-        this.admins = admins;
+        this.admins = admins != null ? copyList(admins) : new ArrayList<>();
     }
 
-    @SuppressWarnings("unchecked")
+
+    // ADDINg COPY - like this?
+
+    private Admin copy(Admin adm) {
+        if (adm == null) return null;
+
+        Admin copy = new Admin(
+                adm.getFirstName(),
+                adm.getLastName(),
+                adm.getFamilyName(),
+                adm.getDateOfBirth(),
+                adm.getPhoneNumber(),
+                adm.getEmail(),
+                adm.getHireDate(),
+                adm.getLastLoginTime()
+        );
+        copy.setId(adm.getId());
+        return copy;
+    }
+
+    private List<Admin> copyList(List<Admin> source) {
+        List<Admin> result = new ArrayList<>();
+        if (source == null) return result;
+        for (Admin a : source) {
+            result.add(copy(a));
+        }
+        return result;
+    }
+
+    private void persist() throws IOException {
+        // So here I am passing to our 'database' copy of obj?
+        service.save(DataSaveKeys.ADMINS, copyList(admins));
+    }
+
     public void init() throws IOException {
         if (!service.canLoad(DataSaveKeys.ADMINS)) {
             admins = new ArrayList<>();
@@ -38,38 +71,49 @@ public class AdminService {
 
         Object loaded = service.load(DataSaveKeys.ADMINS, ADMIN_LIST_TYPE);
 
-        if (loaded instanceof List<?>) {
-            admins = (List<Admin>) loaded;
+        if (loaded instanceof List<?> raw) {
+            List<Admin> result = new ArrayList<>();
+            for (Object o : raw) {
+                if (o instanceof Admin) {
+                    result.add(copy((Admin) o));
+                }
+            }
+            admins = result;
         } else {
             admins = new ArrayList<>();
         }
     }
 
-    public void create(String firstName, String lastName, String familyName,
-                       LocalDate dateOfBirth, String phoneNumber, String email,
-                       LocalDate hireDate, LocalDateTime lastLoginTime) throws IOException {
+    public Admin create(String firstName, String lastName, String familyName,
+                        LocalDate dateOfBirth, String phoneNumber, String email,
+                        LocalDate hireDate, LocalDateTime lastLoginTime) throws IOException {
+
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime
         );
 
         admins.add(admin);
-        service.save(DataSaveKeys.ADMINS, admins);
+        persist();
+
+        return copy(admin);
     }
 
-    public void create(Admin admin) throws IOException {
-        admins.add(admin);
-        service.save(DataSaveKeys.ADMINS, admins);
+    public Admin create(Admin admin) throws IOException {
+        Admin toStore = copy(admin);
+        admins.add(toStore);
+        persist();
+        return copy(toStore);
     }
 
     public List<Admin> getAll() {
-        return new ArrayList<>(admins);
+        return copyList(admins);
     }
 
     public Admin getById(String id) {
         for (Admin admin : admins) {
             if (Objects.equals(admin.getId(), id)) {
-                return admin;
+                return copy(admin);
             }
         }
         return null;
@@ -79,8 +123,8 @@ public class AdminService {
         for (int i = 0; i < admins.size(); i++) {
             Admin current = admins.get(i);
             if (Objects.equals(current.getId(), updated.getId())) {
-                admins.set(i, updated);
-                service.save(DataSaveKeys.ADMINS, admins);
+                admins.set(i, copy(updated));
+                persist();
                 return;
             }
         }
@@ -90,9 +134,10 @@ public class AdminService {
         for (int i = 0; i < admins.size(); i++) {
             if (Objects.equals(admins.get(i).getId(), id)) {
                 admins.remove(i);
-                service.save(DataSaveKeys.ADMINS, admins);
+                persist();
                 return;
             }
         }
     }
+
 }
