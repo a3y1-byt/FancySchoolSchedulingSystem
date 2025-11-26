@@ -4,21 +4,24 @@ import com.byt.scheduling.enums.DayOfWeek;
 import com.byt.scheduling.enums.LessonMode;
 import com.byt.scheduling.enums.LessonType;
 import com.byt.scheduling.enums.WeekPattern;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Value;
 
-import java.util.Date;
+import java.time.LocalTime;
 
-@Getter
-@Setter
+
+@Value
+@Builder
 public class Lesson {
-    private LessonType type;
-    private LessonMode mode;
-    private String note;
-    private DayOfWeek dayOfWeek;
-    private Date startTime;
-    private Date endTime;
-    private String language;
-    private WeekPattern weekPattern;
-    private ClassRoom classRoom;
+    String id;
+    LessonType type;
+    LessonMode mode;
+    String note;
+    DayOfWeek dayOfWeek;
+    LocalTime startTime;
+    LocalTime endTime;
+    String language;
+    WeekPattern weekPattern;
+    String classRoomId;
+    String subjectId;
 }

@@ -1,16 +1,17 @@
 package com.byt.scheduling;
 
 import com.byt.scheduling.enums.SubjectType;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Builder;
+import lombok.Value;
 import java.util.List;
 
-@Getter
-@Setter
+@Value
+@Builder
 public class Subject {
-    private  List<SubjectType> type;
-    private List<Lesson> lessons;//todo: reverse relationship
-    private int hours;
-    private int ects;
+    String id;
+    String name;
+    List<SubjectType> types;
+    int hours;
+    int ects;
+    List<Lesson> lessons;
 }

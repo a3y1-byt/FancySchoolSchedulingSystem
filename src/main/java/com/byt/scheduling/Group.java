@@ -1,18 +1,21 @@
 package com.byt.scheduling;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.byt.user_system.Student;
+import lombok.Builder;
+import lombok.Value;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Value
+@Builder
 public class Group {
-    private String name;
-    private String language;
-    private int maxCapacity;
-    private int minCapacity;
-    private int yearOfStudy;
-    private List<String> notes;
-    private List<Lesson> lessons;
+    String id;
+    String name;
+    String language;
+    int maxCapacity;
+    int minCapacity;
+    int yearOfStudy;
+    List<String> notes;
+    List<Lesson> lessons;
+    List<Student> students;
 }

@@ -1,17 +1,20 @@
 package com.byt.scheduling;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-import java.util.Date;
+import lombok.Value;
+
+import java.time.LocalDate;
 import java.util.List;
 
-@Getter
-@Setter
+
+@Value
+@Builder
 public class Semester {
-    private String semester;
-    private Date startDate;
-    private Date endDate;
-    private int academicYear;
-    private List<Lesson> lessons;
+    String id;
+    String name;
+    LocalDate startDate;
+    LocalDate endDate;
+    int academicYear;
+    List<Lesson> lessons;
 }
