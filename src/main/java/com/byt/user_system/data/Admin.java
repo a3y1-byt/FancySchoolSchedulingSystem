@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -14,8 +15,8 @@ public class Admin extends Staff {
     private Instant lastLoginTime;
 
     public Admin(String firstName, String lastName, String familyName,
-                 Instant  dateOfBirth, String phoneNumber, String email,
-                 Instant  hireDate, Instant  lastLoginTime) {
+                 LocalDate dateOfBirth, String phoneNumber, String email,
+                 LocalDate  hireDate, Instant  lastLoginTime) {
 
         super(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,

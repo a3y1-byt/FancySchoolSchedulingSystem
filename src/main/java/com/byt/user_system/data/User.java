@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -17,12 +18,12 @@ public abstract class User {
     private String firstName;
     private String lastName;
     private String familyName;
-    private Instant dateOfBirth;
+    private LocalDate dateOfBirth;
     private String phoneNumber;
     private String email;
 
     public User(String firstName, String lastName,
-                String familyName, Instant  dateOfBirth,
+                String familyName, LocalDate  dateOfBirth,
                 String phoneNumber, String email) {
 
         this.id = java.util.UUID.randomUUID().toString();

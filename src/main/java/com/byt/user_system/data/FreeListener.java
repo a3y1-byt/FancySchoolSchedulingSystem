@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -16,7 +16,7 @@ public class FreeListener extends Attendee {
     private String notes;
 
     public FreeListener(String firstName, String lastName, String familyName,
-                        Instant dateOfBirth, String phoneNumber, String email,
+                        LocalDate dateOfBirth, String phoneNumber, String email,
                         List<StudyLanguage> languagesOfStudies,
                         String notes) {
 

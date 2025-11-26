@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -15,8 +15,8 @@ public class Teacher extends Staff {
     private String position;
 
     public Teacher(String firstName, String lastName, String familyName,
-                   Instant  dateOfBirth, String phoneNumber, String email,
-                   Instant hireDate, String title,
+                   LocalDate dateOfBirth, String phoneNumber, String email,
+                   LocalDate hireDate, String title,
                    String position) {
 
         super(firstName, lastName, familyName,

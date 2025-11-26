@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,8 +42,8 @@ public class AdminService implements CRUDService<Admin> {
     // Next it's just our basic CRUD operations, nothing hard
 
     public Admin create(String firstName, String lastName, String familyName,
-                        Instant dateOfBirth, String phoneNumber, String email,
-                        Instant hireDate, Instant lastLoginTime) throws IOException {
+                        LocalDate dateOfBirth, String phoneNumber, String email,
+                        LocalDate hireDate, Instant lastLoginTime) throws IOException {
 
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,

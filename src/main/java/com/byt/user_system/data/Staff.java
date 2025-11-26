@@ -5,17 +5,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public abstract class Staff extends User {
 
-    private Instant  hireDate;
+    private LocalDate  hireDate;
 
     public Staff(String firstName, String lastName, String familyName,
-                 Instant  dateOfBirth, String phoneNumber, String email,
-                 Instant hireDate) {
+                 LocalDate dateOfBirth, String phoneNumber, String email,
+                 LocalDate hireDate) {
 
         super(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email);
