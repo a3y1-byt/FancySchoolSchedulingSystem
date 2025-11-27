@@ -1,10 +1,10 @@
 package com.byt.scheduling;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class Specialization {
     String id;

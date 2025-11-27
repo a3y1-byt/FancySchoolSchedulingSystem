@@ -1,9 +1,8 @@
 package com.byt.scheduling;
-
-import lombok.Value;
+import lombok.Data;
 import lombok.Builder;
 
-@Value
+@Data
 @Builder
 public class ClassRoom {
     String id;

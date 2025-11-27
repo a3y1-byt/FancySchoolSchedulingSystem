@@ -2,12 +2,12 @@ package com.byt.scheduling;
 
 import com.byt.user_system.data.Student;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class Group {
     String id;
@@ -32,7 +32,6 @@ public class Group {
                         ? new ArrayList<>(group.getNotes())
                         : new ArrayList<>())
                 .lessons(lessons)
-//                .students(students)
                 .build();
     }
 
@@ -48,7 +47,6 @@ public class Group {
                         ? new ArrayList<>(group.getNotes())
                         : new ArrayList<>())
                 .lessons(null)
-//                .students(null)
                 .build();
     }
 }

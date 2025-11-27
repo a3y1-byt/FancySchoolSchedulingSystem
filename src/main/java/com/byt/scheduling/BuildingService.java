@@ -1,9 +1,7 @@
-package com.byt.scheduling.services;
+package com.byt.scheduling;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.scheduling.Building;
-import com.byt.scheduling.ClassRoom;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
@@ -17,9 +15,9 @@ public class BuildingService implements CRUDService<Building> {
     private final ClassRoomService classRoomService;
     private  List<Building> buildings;
 
-    public BuildingService(SaveLoadService saveLoadService, ClassRoomService classRoomService) {
+    public BuildingService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.classRoomService = classRoomService;
+        this.classRoomService = new ClassRoomService(saveLoadService);
         this.buildings = null;
         loadBuildings();
     }
@@ -83,7 +81,7 @@ public class BuildingService implements CRUDService<Building> {
 
 
         if (updatedBuildings.size() < originalSize) {
-            saveAllBuildings(buildings);
+            saveAllBuildings(updatedBuildings);
         }
         loadBuildings();
     }

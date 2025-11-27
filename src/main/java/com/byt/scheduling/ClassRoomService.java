@@ -1,8 +1,7 @@
-package com.byt.scheduling.services;
+package com.byt.scheduling;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.scheduling.ClassRoom;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
@@ -18,12 +17,22 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     public ClassRoomService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
         this.classRooms = null;
-        loadClassRooms();
     }
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading classrooms";
+        if (!saveLoadService.canLoad(DataSaveKeys.CLASSROOMS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<ClassRoom>>(){}.getType();
+        try {
+            List<ClassRoom> loadedClassRooms = (List<ClassRoom>) saveLoadService.load(DataSaveKeys.CLASSROOMS, type);
+            this.classRooms = new ArrayList<>(loadedClassRooms);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -89,6 +98,7 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     }
 
     public List<ClassRoom> listClassRoomsByBuildingId(String buildingId) {
+        if(this.classRooms == null) return new ArrayList<>();
         return classRooms.stream()
                 .filter(r -> r.getBuildingId().equals(buildingId))
                 .map(ClassRoom::copy)

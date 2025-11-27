@@ -1,9 +1,7 @@
-package com.byt.scheduling.services;
+package com.byt.scheduling;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.scheduling.StudyProgram;
-import com.byt.scheduling.Specialization;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
@@ -17,9 +15,9 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     private final SpecializationService specializationService;
     private List<StudyProgram> studyPrograms;
 
-    public StudyProgramService(SaveLoadService saveLoadService, SpecializationService specializationService) {
+    public StudyProgramService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.specializationService = specializationService;
+        this.specializationService = new SpecializationService(saveLoadService);
         this.studyPrograms = null;
         loadStudyPrograms();
     }

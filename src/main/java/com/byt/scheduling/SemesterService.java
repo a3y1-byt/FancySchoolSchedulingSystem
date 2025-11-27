@@ -1,9 +1,7 @@
-package com.byt.scheduling.services;
+package com.byt.scheduling;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.scheduling.Semester;
-import com.byt.scheduling.Lesson;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
@@ -17,11 +15,10 @@ public class SemesterService implements CRUDService<Semester> {
     private final LessonService lessonService;
     private List<Semester> semesters;
 
-    public SemesterService(SaveLoadService saveLoadService, LessonService lessonService) {
+    public SemesterService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.lessonService = lessonService;
+        this.lessonService = new  LessonService(saveLoadService);
         this.semesters = null;
-        loadSemesters();
     }
 
     @Override

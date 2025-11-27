@@ -1,11 +1,11 @@
 package com.byt.scheduling;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class Semester {
     String id;

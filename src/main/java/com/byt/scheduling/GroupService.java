@@ -1,9 +1,7 @@
-package com.byt.scheduling.services;
+package com.byt.scheduling;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.scheduling.Group;
-import com.byt.scheduling.Lesson;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
@@ -17,11 +15,9 @@ public class GroupService implements CRUDService<Group> {
     private final LessonService lessonService;
     private List<Group> groups;
 
-    public GroupService(SaveLoadService saveLoadService, LessonService lessonService) {
+    public GroupService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.lessonService = lessonService;
-        this.groups = null;
-        loadGroups();
+        this.lessonService = new LessonService(saveLoadService);
     }
 
     @Override

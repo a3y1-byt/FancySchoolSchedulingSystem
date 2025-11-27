@@ -2,10 +2,10 @@ package com.byt.scheduling;
 
 import com.byt.scheduling.enums.StudyProgramLevel;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class StudyProgram {
     String id;

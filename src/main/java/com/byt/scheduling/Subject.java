@@ -2,11 +2,11 @@ package com.byt.scheduling;
 
 import com.byt.scheduling.enums.SubjectType;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class Subject {
     String id;
