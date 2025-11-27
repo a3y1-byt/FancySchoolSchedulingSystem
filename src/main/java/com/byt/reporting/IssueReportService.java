@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,23 +31,12 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     @Override
     public void initialize() throws IOException {
-        List<IssueReport> loaded = loadFromDb();
-        this.reports = copyList(loaded);
+        this.reports = copyList(loadFromDb());
     }
 
-    // Convenience method for controllers
-    public IssueReport create(String title, String description) throws IOException {
-        return create(title, description, LocalDateTime.now());
-    }
-
-    public IssueReport create(String title, String description, LocalDateTime createdAt) throws IOException {
-        validateTitle(title);
-        validateDescription(description);
-        validateCreatedAt(createdAt);
-
-        IssueReport report = new IssueReport(null, title, description, createdAt);
-        create(report);
-        return copy(report);
+    @Deprecated
+    public void init() throws IOException {
+        initialize();
     }
 
     @Override
@@ -123,9 +111,8 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     @Override
     public boolean exists(String id) {
-        if (id == null || id.isBlank()) {
-            return false;
-        }
+        if (id == null || id.isBlank()) return false;
+
         for (IssueReport r : reports) {
             if (Objects.equals(r.getId(), id)) {
                 return true;
@@ -185,30 +172,17 @@ public class IssueReportService implements CRUDService<IssueReport> {
         }
     }
 
-    private static void validateTitle(String title) {
-        if (title == null || title.isBlank()) {
+    private static void validatePrototype(IssueReport prototype) {
+        if (prototype == null) throw new IllegalArgumentException("IssueReport must not be null");
+
+        if (prototype.getTitle() == null || prototype.getTitle().isBlank()) {
             throw new IllegalArgumentException("title must not be blank");
         }
-    }
-
-    private static void validateDescription(String description) {
-        if (description == null || description.isBlank()) {
+        if (prototype.getDescription() == null || prototype.getDescription().isBlank()) {
             throw new IllegalArgumentException("description must not be blank");
         }
-    }
-
-    private static void validateCreatedAt(LocalDateTime createdAt) {
-        if (createdAt == null) {
+        if (prototype.getCreatedAt() == null) {
             throw new IllegalArgumentException("createdAt must not be null");
         }
-    }
-
-    private static void validatePrototype(IssueReport prototype) {
-        if (prototype == null) {
-            throw new IllegalArgumentException("IssueReport must not be null");
-        }
-        validateTitle(prototype.getTitle());
-        validateDescription(prototype.getDescription());
-        validateCreatedAt(prototype.getCreatedAt());
     }
 }
