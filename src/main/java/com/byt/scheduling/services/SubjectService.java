@@ -25,6 +25,11 @@ public class SubjectService implements CRUDService<Subject> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Subject prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("Subject already exists");
@@ -35,13 +40,22 @@ public class SubjectService implements CRUDService<Subject> {
     }
 
     @Override
-    public Subject get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Subject> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
 
         Subject subject = findById(id);
-        if (subject == null) return null;
+        if (subject == null) return Optional.empty();
+
         List<Lesson> lessons = lessonService.listLessonsBySubjectId(id);
-        return Subject.copy(subject, lessons);
+        Subject subjectCopy = Subject.copy(subject);
+        return Optional.of(subjectCopy);
+    }
+
+    @Override
+    public List<Subject> getAll() throws IOException {
+        return subjects.stream()
+                .map(Subject::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

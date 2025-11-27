@@ -25,6 +25,11 @@ public class BuildingService implements CRUDService<Building> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Building prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if(exists(prototype.getId())) throw new IllegalArgumentException("Building already exists");
@@ -35,14 +40,21 @@ public class BuildingService implements CRUDService<Building> {
     }
 
     @Override
-    public Building get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Building> get(String id) throws IllegalArgumentException, IOException {
         if(id == null || id.isEmpty()) throw new IllegalArgumentException("Building id is null or empty");
 
         Building building =  findById(id);
-        if(building == null) return null;
-
+        if(building == null) return Optional.empty();
         List<ClassRoom> classRooms = classRoomService.listClassRoomsByBuildingId(building.getId());
-        return Building.copy(building, classRooms);
+        Building buildingCopy = Building.copy(building, classRooms);
+        return Optional.of(buildingCopy);
+    }
+
+    @Override
+    public List<Building> getAll() throws IOException {
+        return  buildings.stream()
+                .map(Building::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

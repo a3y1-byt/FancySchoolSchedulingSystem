@@ -25,6 +25,11 @@ public class SemesterService implements CRUDService<Semester> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Semester prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("Semester already exists");
@@ -35,14 +40,22 @@ public class SemesterService implements CRUDService<Semester> {
     }
 
     @Override
-    public Semester get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Semester> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
 
         Semester semester = findById(id);
-        if (semester == null) return null;
+        if (semester == null) return Optional.empty();
 
         List<Lesson> lessons = lessonService.listLessonsBySemesterId(id);
-        return Semester.copy(semester, lessons);
+        Semester semesterCopy =  Semester.copy(semester, lessons);
+        return Optional.of(semesterCopy);
+    }
+
+    @Override
+    public List<Semester> getAll() throws IOException {
+        return semesters.stream()
+                .map(Semester::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -25,6 +25,11 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(StudyProgram prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("StudyProgram already exists");
@@ -35,14 +40,23 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     }
 
     @Override
-    public StudyProgram get(String id) throws IllegalArgumentException, IOException {
+    public Optional<StudyProgram> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
 
         StudyProgram program = findById(id);
-        if (program == null) return null;
+        if (program == null) return Optional.empty();
 
         List<Specialization> specializations = specializationService.listSpecializationsByStudyProgramId(id);
-        return StudyProgram.copy(program, specializations);
+        StudyProgram studyProgramCopy = StudyProgram.copy(program,  specializations);
+
+        return Optional.of(studyProgramCopy);
+    }
+
+    @Override
+    public List<StudyProgram> getAll() throws IOException {
+        return studyPrograms.stream()
+                .map(StudyProgram::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

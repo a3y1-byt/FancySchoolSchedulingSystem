@@ -25,6 +25,11 @@ public class GroupService implements CRUDService<Group> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Group prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("Group already exists");
@@ -35,15 +40,22 @@ public class GroupService implements CRUDService<Group> {
     }
 
     @Override
-    public Group get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Group> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Group id is null or empty");
 
         Group group = findById(id);
-        if (group == null) return null;
+        if (group == null) return Optional.empty();
 
         List<Lesson> lessons = lessonService.listLessonsByGroupId(id);
+        Group groupCopy = Group.copy(group, lessons);
+        return Optional.of(groupCopy);
+    }
 
-        return Group.copy(group);
+    @Override
+    public List<Group> getAll() throws IOException {
+        return groups.stream()
+                .map(Group::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

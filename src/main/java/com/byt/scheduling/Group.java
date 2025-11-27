@@ -1,6 +1,6 @@
 package com.byt.scheduling;
 
-import com.byt.user_system.Student;
+import com.byt.user_system.data.Student;
 import lombok.Builder;
 import lombok.Value;
 
@@ -20,7 +20,7 @@ public class Group {
     List<Lesson> lessons;
     List<Student> students;
 
-    public static Group copy(Group group, List<Lesson> lessons, List<Student> students) {
+    public static Group copy(Group group, List<Lesson> lessons) {
         return Group.builder()
                 .id(group.getId())
                 .name(group.getName())
@@ -32,7 +32,7 @@ public class Group {
                         ? new ArrayList<>(group.getNotes())
                         : new ArrayList<>())
                 .lessons(lessons)
-                .students(students)
+//                .students(students)
                 .build();
     }
 
@@ -48,7 +48,7 @@ public class Group {
                         ? new ArrayList<>(group.getNotes())
                         : new ArrayList<>())
                 .lessons(null)
-                .students(null)
+//                .students(null)
                 .build();
     }
 }

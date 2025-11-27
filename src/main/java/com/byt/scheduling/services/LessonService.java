@@ -22,6 +22,11 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Lesson prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("Lesson already exists");
@@ -32,13 +37,21 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     @Override
-    public Lesson get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Lesson> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
 
         Lesson lesson = findById(id);
         if (lesson == null) return null;
 
-        return Lesson.copy(lesson);
+        Lesson lessonCopy = Lesson.copy(lesson);
+        return Optional.of(lessonCopy);
+    }
+
+    @Override
+    public List<Lesson> getAll() throws IOException {
+        return lessons.stream()
+                .map(Lesson::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

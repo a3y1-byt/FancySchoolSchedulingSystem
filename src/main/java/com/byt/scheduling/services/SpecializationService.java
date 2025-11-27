@@ -25,6 +25,11 @@ public class SpecializationService implements CRUDService<Specialization> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(Specialization prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("Specialization already exists");
@@ -35,14 +40,22 @@ public class SpecializationService implements CRUDService<Specialization> {
     }
 
     @Override
-    public Specialization get(String id) throws IllegalArgumentException, IOException {
+    public Optional<Specialization> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Specialization id is null or empty");
 
         Specialization specialization = findById(id);
-        if (specialization == null) return null;
+        if (specialization == null) return Optional.empty();
 
         List<Subject> subjects = subjectService.listSubjectsBySpecializationId(id);
-        return Specialization.copy(specialization, subjects);
+        Specialization specializationCopy = Specialization.copy(specialization, subjects);
+        return Optional.of(specializationCopy);
+    }
+
+    @Override
+    public List<Specialization> getAll() throws IOException {
+        return specializations.stream()
+                .map(Specialization::copy)
+                .collect(Collectors.toList());
     }
 
     @Override

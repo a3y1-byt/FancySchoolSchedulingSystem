@@ -22,6 +22,11 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     }
 
     @Override
+    public void initialize() throws IOException {
+        CRUDService.super.initialize();
+    }
+
+    @Override
     public void create(ClassRoom prototype) throws IllegalArgumentException, IOException {
         if (prototype == null) throw new IllegalArgumentException("Prototype is null");
         if (exists(prototype.getId())) throw new IllegalArgumentException("ClassRoom already exists");
@@ -32,13 +37,19 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     }
 
     @Override
-    public ClassRoom get(String id) throws IllegalArgumentException, IOException {
+    public Optional<ClassRoom> get(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
-
         ClassRoom classRoom = findById(id);
-        if (classRoom == null) return null;
+        if (classRoom == null) return Optional.empty();
+        ClassRoom classRoomCopy = ClassRoom.copy(classRoom);
+        return Optional.of(classRoomCopy);
+    }
 
-        return ClassRoom.copy(classRoom);
+    @Override
+    public List<ClassRoom> getAll() throws IOException {
+        return classRooms.stream()
+                .map(ClassRoom::copy)
+                .collect(Collectors.toList());
     }
 
     @Override
