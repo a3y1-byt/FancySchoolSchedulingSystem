@@ -3,6 +3,7 @@ package com.byt.scheduling.services;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.scheduling.ClassRoom;
+import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -10,87 +11,84 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ClassRoomService {
+public class ClassRoomService implements CRUDService<ClassRoom> {
     private final SaveLoadService saveLoadService;
+    private List<ClassRoom> classRooms;
 
-    public ClassRoomService(SaveLoadService saveLoadService, BuildingService buildingService) {
+    public ClassRoomService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
+        this.classRooms = null;
+        loadClassRooms();
     }
 
-    public ClassRoom addClassRoom(String id, String name, int floor, int capacity, String buildingId) {
-        List<ClassRoom> classRooms = listClassRooms();
+    @Override
+    public void create(ClassRoom prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        if (exists(prototype.getId())) throw new IllegalArgumentException("ClassRoom already exists");
 
-        boolean exists = classRooms.stream().anyMatch(r -> r.getId().equals(id));
-        if (exists) {
-            throw new IllegalArgumentException("ClassRoom with id " + id + " already exists");
-        }
-
-        ClassRoom classRoom = ClassRoom.builder()
-                .id(id)
-                .name(name)
-                .floor(floor)
-                .capacity(capacity)
-                .buildingId(buildingId)
-                .build();
-
-        classRooms.add(classRoom);
+        classRooms.add(ClassRoom.copy(prototype));
         saveAllClassRooms(classRooms);
-        return classRoom;
+        loadClassRooms();
     }
 
-    public Optional<ClassRoom> getClassRoomById(String id) {
-        return listClassRooms().stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst();
+    @Override
+    public ClassRoom get(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
+
+        ClassRoom classRoom = findById(id);
+        if (classRoom == null) return null;
+
+        return ClassRoom.copy(classRoom);
     }
 
+    @Override
+    public void update(String id, ClassRoom prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("ClassRoom with id " + id + " does not exist");
 
-    public List<ClassRoom> listClassRooms() {
-        try {
-            if (!saveLoadService.canLoad(DataSaveKeys.CLASSROOMS)) {
-                return new ArrayList<>();
-            }
-
-            Type type = new TypeToken<List<ClassRoom>>(){}.getType();
-            List<ClassRoom> classRooms = (List<ClassRoom>) saveLoadService.load(DataSaveKeys.CLASSROOMS, type);
-            return new ArrayList<>(classRooms);
-        } catch (IOException e) {
-            System.err.println("Failed to load classrooms: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    public ClassRoom updateClassRoom(String id, String name, int floor, int capacity, String buildingId) {
-
-        List<ClassRoom> classRooms = listClassRooms();
-
-        ClassRoom existingRoom = getClassRoomById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ClassRoom with id " + id + " not found"));
-
-        ClassRoom updatedRoom = ClassRoom.builder()
-                .id(id)
-                .name(name)
-                .floor(floor)
-                .capacity(capacity)
-                .buildingId(buildingId)
-                .build();
-
-        classRooms = classRooms.stream()
-                .map(r -> r.getId().equals(id) ? updatedRoom : r)
+        List<ClassRoom> updatedList = classRooms.stream()
+                .map(r -> r.getId().equals(id) ? ClassRoom.copy(prototype) : r)
                 .collect(Collectors.toList());
 
-        saveAllClassRooms(classRooms);
-        return updatedRoom;
+        saveAllClassRooms(updatedList);
+        loadClassRooms();
     }
 
-    public boolean deleteClassRoom(String id) {
-        List<ClassRoom> classRooms = listClassRooms();
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("ClassRoom with id " + id + " does not exist");
 
-        boolean removed = classRooms.removeIf(r -> r.getId().equals(id));
-        if (removed) {
-            saveAllClassRooms(classRooms);
+        int originalSize = classRooms.size();
+
+        List<ClassRoom> updatedClassRooms = classRooms.stream()
+                .filter(r -> !r.getId().equals(id))
+                .collect(Collectors.toList());
+
+        if (updatedClassRooms.size() < originalSize) {
+            saveAllClassRooms(updatedClassRooms);
         }
-        return removed;
+        loadClassRooms();
+    }
+
+    @Override
+    public boolean exists(String id) throws IOException {
+        loadClassRooms();
+        return classRooms.stream().anyMatch(r -> r.getId().equals(id));
+    }
+
+    public List<ClassRoom> listClassRoomsByBuildingId(String buildingId) {
+        return classRooms.stream()
+                .filter(r -> r.getBuildingId().equals(buildingId))
+                .map(ClassRoom::copy)
+                .collect(Collectors.toList());
+    }
+
+    private ClassRoom findById(String id) {
+        return this.classRooms.stream()
+                .filter(r -> r.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     private void saveAllClassRooms(List<ClassRoom> classRooms) {
@@ -98,6 +96,21 @@ public class ClassRoomService {
             saveLoadService.save(DataSaveKeys.CLASSROOMS, classRooms);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save classrooms", e);
+        }
+    }
+
+    private void loadClassRooms() {
+        String cannotLoadMessage = "Error loading classrooms";
+        if (!saveLoadService.canLoad(DataSaveKeys.CLASSROOMS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<ClassRoom>>(){}.getType();
+        try {
+            List<ClassRoom> loadedClassRooms = (List<ClassRoom>) saveLoadService.load(DataSaveKeys.CLASSROOMS, type);
+            this.classRooms = new ArrayList<>(loadedClassRooms);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
         }
     }
 }

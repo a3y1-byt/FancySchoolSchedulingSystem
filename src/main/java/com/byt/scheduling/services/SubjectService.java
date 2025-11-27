@@ -4,7 +4,7 @@ import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.scheduling.Subject;
 import com.byt.scheduling.Lesson;
-import com.byt.scheduling.enums.SubjectType;
+import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -12,117 +12,87 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SubjectService {
+public class SubjectService implements CRUDService<Subject> {
     private final SaveLoadService saveLoadService;
     private final LessonService lessonService;
+    private List<Subject> subjects;
 
     public SubjectService(SaveLoadService saveLoadService, LessonService lessonService) {
         this.saveLoadService = saveLoadService;
         this.lessonService = lessonService;
+        this.subjects = null;
+        loadSubjects();
     }
 
-    public Subject addSubject(String id, String name, List<SubjectType> types, int hours, int ects) {
-        List<Subject> subjects = listSubjects();
+    @Override
+    public void create(Subject prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        if (exists(prototype.getId())) throw new IllegalArgumentException("Subject already exists");
 
-        boolean exists = subjects.stream().anyMatch(s -> s.getId().equals(id));
-        if (exists) {
-            throw new IllegalArgumentException("Subject with id " + id + " already exists");
-        }
-
-        Subject subject = Subject.builder()
-                .id(id)
-                .name(name)
-                .types(new ArrayList<>(types))
-                .hours(hours)
-                .ects(ects)
-                .lessons(new ArrayList<>())
-                .build();
-
-        subjects.add(subject);
+        subjects.add(Subject.copy(prototype));
         saveAllSubjects(subjects);
-        return subject;
+        loadSubjects();
     }
 
-    public Subject addLessonToSubject(String subjectId, String lessonId) {
-        Subject subject = getSubjectById(subjectId)
-                .orElseThrow(() -> new IllegalArgumentException("Subject with id " + subjectId + " not found"));
+    @Override
+    public Subject get(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
 
-        Lesson lesson = lessonService.getLessonById(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Lesson with id " + lessonId + " not found"));
-
-        List<Lesson> lessons = new ArrayList<>(subject.getLessons());
-        if (lessons.stream().noneMatch(l -> l.getId().equals(lessonId))) {
-            lessons.add(lesson);
-        }
-
-        return updateSubject(subjectId, subject.getName(), subject.getTypes(),
-                subject.getHours(), subject.getEcts(), lessons);
+        Subject subject = findById(id);
+        if (subject == null) return null;
+        List<Lesson> lessons = lessonService.listLessonsBySubjectId(id);
+        return Subject.copy(subject, lessons);
     }
 
-    public Subject removeLessonFromSubject(String subjectId, String lessonId) {
-        Subject subject = getSubjectById(subjectId)
-                .orElseThrow(() -> new IllegalArgumentException("Subject with id " + subjectId + " not found"));
+    @Override
+    public void update(String id, Subject prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Subject with id " + id + " does not exist");
 
-        List<Lesson> lessons = subject.getLessons().stream()
-                .filter(l -> !l.getId().equals(lessonId))
+        List<Subject> updatedList = subjects.stream()
+                .map(s -> s.getId().equals(id) ? Subject.copy(prototype) : s)
                 .collect(Collectors.toList());
 
-        return updateSubject(subjectId, subject.getName(), subject.getTypes(),
-                subject.getHours(), subject.getEcts(), lessons);
+        saveAllSubjects(updatedList);
+        loadSubjects();
     }
 
-    public Optional<Subject> getSubjectById(String id) {
-        return listSubjects().stream()
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Subject with id " + id + " does not exist");
+
+        int originalSize = subjects.size();
+
+        List<Subject> updatedSubjects = subjects.stream()
+                .filter(s -> !s.getId().equals(id))
+                .collect(Collectors.toList());
+
+        if (updatedSubjects.size() < originalSize) {
+            saveAllSubjects(updatedSubjects);
+        }
+        loadSubjects();
+    }
+
+    @Override
+    public boolean exists(String id) throws IOException {
+        loadSubjects();
+        return subjects.stream().anyMatch(s -> s.getId().equals(id));
+    }
+
+    public List<Subject> listSubjectsBySpecializationId(String specializationId) {
+        return this.subjects.stream()
+                .filter(s -> s.getSpecializationId().equals(specializationId))
+                .map(Subject::copy)
+                .collect(Collectors.toList());
+
+    }
+
+    private Subject findById(String id) {
+        return this.subjects.stream()
                 .filter(s -> s.getId().equals(id))
-                .findFirst();
-    }
-
-    public List<Subject> listSubjects() {
-        try {
-            if (!saveLoadService.canLoad(DataSaveKeys.SUBJECTS)) {
-                return new ArrayList<>();
-            }
-
-            Type type = new TypeToken<List<Subject>>(){}.getType();
-            List<Subject> subjects = (List<Subject>) saveLoadService.load(DataSaveKeys.SUBJECTS, type);
-            return new ArrayList<>(subjects);
-        } catch (IOException e) {
-            System.err.println("Failed to load subjects: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    public Subject updateSubject(String id, String name, List<SubjectType> types, int hours, int ects, List<Lesson> lessons) {
-        List<Subject> subjects = listSubjects();
-
-        Subject existingSubject = getSubjectById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Subject with id " + id + " not found"));
-
-        Subject updatedSubject = Subject.builder()
-                .id(id)
-                .name(name)
-                .types(new ArrayList<>(types))
-                .hours(hours)
-                .ects(ects)
-                .lessons(new ArrayList<>(lessons))
-                .build();
-
-        subjects = subjects.stream()
-                .map(s -> s.getId().equals(id) ? updatedSubject : s)
-                .collect(Collectors.toList());
-
-        saveAllSubjects(subjects);
-        return updatedSubject;
-    }
-
-    public boolean deleteSubject(String id) {
-        List<Subject> subjects = listSubjects();
-
-        boolean removed = subjects.removeIf(s -> s.getId().equals(id));
-        if (removed) {
-            saveAllSubjects(subjects);
-        }
-        return removed;
+                .findFirst()
+                .orElse(null);
     }
 
     private void saveAllSubjects(List<Subject> subjects) {
@@ -130,6 +100,21 @@ public class SubjectService {
             saveLoadService.save(DataSaveKeys.SUBJECTS, subjects);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save subjects", e);
+        }
+    }
+
+    private void loadSubjects() {
+        String cannotLoadMessage = "Error loading subjects";
+        if (!saveLoadService.canLoad(DataSaveKeys.SUBJECTS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Subject>>(){}.getType();
+        try {
+            List<Subject> loadedSubjects = (List<Subject>) saveLoadService.load(DataSaveKeys.SUBJECTS, type);
+            this.subjects = new ArrayList<>(loadedSubjects);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
         }
     }
 }

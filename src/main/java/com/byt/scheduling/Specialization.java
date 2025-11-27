@@ -1,9 +1,7 @@
 package com.byt.scheduling;
 
-
 import lombok.Builder;
 import lombok.Value;
-
 import java.util.List;
 
 @Value
@@ -14,4 +12,24 @@ public class Specialization {
     String description;
     String studyProgramId;
     List<Subject> subjects;
+
+    public static Specialization copy(Specialization specialization, List<Subject> subjects) {
+        return Specialization.builder()
+                .id(specialization.getId())
+                .name(specialization.getName())
+                .description(specialization.getDescription())
+                .studyProgramId(specialization.getStudyProgramId())
+                .subjects(subjects)
+                .build();
+    }
+
+    public static Specialization copy(Specialization specialization) {
+        return Specialization.builder()
+                .id(specialization.getId())
+                .name(specialization.getName())
+                .description(specialization.getDescription())
+                .studyProgramId(specialization.getStudyProgramId())
+                .subjects(null)
+                .build();
+    }
 }

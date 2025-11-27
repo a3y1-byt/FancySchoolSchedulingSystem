@@ -3,113 +3,115 @@ package com.byt.scheduling.services;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.scheduling.Lesson;
-import com.byt.scheduling.enums.DayOfWeek;
-import com.byt.scheduling.enums.LessonMode;
-import com.byt.scheduling.enums.LessonType;
-import com.byt.scheduling.enums.WeekPattern;
+import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LessonService {
+public class LessonService implements CRUDService<Lesson> {
     private final SaveLoadService saveLoadService;
+    private List<Lesson> lessons;
 
     public LessonService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
+        this.lessons = null;
+        loadLessons();
     }
 
-    public Lesson addLesson(String id, LessonType type, LessonMode mode, String note, DayOfWeek dayOfWeek,
-                            LocalTime startTime, LocalTime endTime, String language, WeekPattern weekPattern,
-                            String classRoomId, String subjectId) {
-        List<Lesson> lessons = listLessons();
+    @Override
+    public void create(Lesson prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        if (exists(prototype.getId())) throw new IllegalArgumentException("Lesson already exists");
 
-        boolean exists = lessons.stream().anyMatch(l -> l.getId().equals(id));
-        if (exists) {
-            throw new IllegalArgumentException("Lesson with id " + id + " already exists");
-        }
-
-        Lesson lesson = Lesson.builder()
-                .id(id)
-                .type(type)
-                .mode(mode)
-                .note(note)
-                .dayOfWeek(dayOfWeek)
-                .startTime(startTime)
-                .endTime(endTime)
-                .language(language)
-                .weekPattern(weekPattern)
-                .classRoomId(classRoomId)
-                .subjectId(subjectId)
-                .build();
-
-        lessons.add(lesson);
+        lessons.add(Lesson.copy(prototype));
         saveAllLessons(lessons);
-        return lesson;
+        loadLessons();
     }
 
-    public Optional<Lesson> getLessonById(String id) {
-        return listLessons().stream()
-                .filter(l -> l.getId().equals(id))
-                .findFirst();
+    @Override
+    public Lesson get(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
+
+        Lesson lesson = findById(id);
+        if (lesson == null) return null;
+
+        return Lesson.copy(lesson);
     }
 
-    public List<Lesson> listLessons() {
-        try {
-            if (!saveLoadService.canLoad(DataSaveKeys.LESSONS)) {
-                return new ArrayList<>();
-            }
+    @Override
+    public void update(String id, Lesson prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Lesson with id " + id + " does not exist");
 
-            Type type = new TypeToken<List<Lesson>>(){}.getType();
-            List<Lesson> lessons = (List<Lesson>) saveLoadService.load(DataSaveKeys.LESSONS, type);
-            return new ArrayList<>(lessons);
-        } catch (IOException e) {
-            System.err.println("Failed to load lessons: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    public Lesson updateLesson(String id, LessonType type, LessonMode mode, String note, DayOfWeek dayOfWeek,
-                               LocalTime startTime, LocalTime endTime, String language, WeekPattern weekPattern,
-                               String classRoomId, String subjectId) {
-        List<Lesson> lessons = listLessons();
-
-        Lesson existingLesson = getLessonById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Lesson with id " + id + " not found"));
-
-        Lesson updatedLesson = Lesson.builder()
-                .id(id)
-                .type(type)
-                .mode(mode)
-                .note(note)
-                .dayOfWeek(dayOfWeek)
-                .startTime(startTime)
-                .endTime(endTime)
-                .language(language)
-                .weekPattern(weekPattern)
-                .classRoomId(classRoomId)
-                .subjectId(subjectId)
-                .build();
-
-        lessons = lessons.stream()
-                .map(l -> l.getId().equals(id) ? updatedLesson : l)
+        List<Lesson> updatedList = lessons.stream()
+                .map(l -> l.getId().equals(id) ? Lesson.copy(prototype) : l)
                 .collect(Collectors.toList());
 
-        saveAllLessons(lessons);
-        return updatedLesson;
+        saveAllLessons(updatedList);
+        loadLessons();
     }
 
-    public boolean deleteLesson(String id) {
-        List<Lesson> lessons = listLessons();
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Lesson with id " + id + " does not exist");
 
-        boolean removed = lessons.removeIf(l -> l.getId().equals(id));
-        if (removed) {
-            saveAllLessons(lessons);
+        int originalSize = lessons.size();
+
+        List<Lesson> updatedLessons = lessons.stream()
+                .filter(l -> !l.getId().equals(id))
+                .collect(Collectors.toList());
+
+        if (updatedLessons.size() < originalSize) {
+            saveAllLessons(updatedLessons);
         }
-        return removed;
+        loadLessons();
+    }
+
+    @Override
+    public boolean exists(String id) throws IOException {
+        loadLessons();
+        return lessons.stream().anyMatch(l -> l.getId().equals(id));
+    }
+
+    public List<Lesson> listLessonsByGroupId(String groupId) {
+
+        return lessons.stream()
+                .filter(l -> l.getGroupId() != null && l.getClassRoomId().equals(groupId))
+                .map(Lesson::copy)
+                .collect(Collectors.toList());
+    }
+
+    public List<Lesson> listLessonsBySemesterId(String groupId) {
+
+        return lessons.stream()
+                .filter(l -> l.getSemesterId() != null && l.getSemesterId().equals(groupId))
+                .map(Lesson::copy)
+                .collect(Collectors.toList());
+    }
+
+    public List<Lesson> listLessonsByClassRoomId(String classRoomId) {
+        return lessons.stream()
+                .filter(l -> l.getClassRoomId() != null && l.getClassRoomId().equals(classRoomId))
+                .map(Lesson::copy)
+                .collect(Collectors.toList());
+    }
+
+    public List<Lesson> listLessonsBySubjectId(String subjectId) {
+        return lessons.stream()
+                .filter(l -> l.getSubjectId() != null && l.getSubjectId().equals(subjectId))
+                .map(Lesson::copy)
+                .collect(Collectors.toList());
+    }
+
+    private Lesson findById(String id) {
+        return this.lessons.stream()
+                .filter(l -> l.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     private void saveAllLessons(List<Lesson> lessons) {
@@ -117,6 +119,21 @@ public class LessonService {
             saveLoadService.save(DataSaveKeys.LESSONS, lessons);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save lessons", e);
+        }
+    }
+
+    private void loadLessons() {
+        String cannotLoadMessage = "Error loading lessons";
+        if (!saveLoadService.canLoad(DataSaveKeys.LESSONS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Lesson>>(){}.getType();
+        try {
+            List<Lesson> loadedLessons = (List<Lesson>) saveLoadService.load(DataSaveKeys.LESSONS, type);
+            this.lessons = new ArrayList<>(loadedLessons);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
         }
     }
 }

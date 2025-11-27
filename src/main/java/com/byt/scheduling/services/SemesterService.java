@@ -4,98 +4,88 @@ import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.scheduling.Semester;
 import com.byt.scheduling.Lesson;
+import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SemesterService {
+public class SemesterService implements CRUDService<Semester> {
     private final SaveLoadService saveLoadService;
     private final LessonService lessonService;
+    private List<Semester> semesters;
 
     public SemesterService(SaveLoadService saveLoadService, LessonService lessonService) {
         this.saveLoadService = saveLoadService;
         this.lessonService = lessonService;
+        this.semesters = null;
+        loadSemesters();
     }
 
-    public Semester addSemester(String id, String name, LocalDate startDate, LocalDate endDate, int academicYear) {
-        List<Semester> semesters = listSemesters();
+    @Override
+    public void create(Semester prototype) throws IllegalArgumentException, IOException {
+        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        if (exists(prototype.getId())) throw new IllegalArgumentException("Semester already exists");
 
-        boolean exists = semesters.stream().anyMatch(s -> s.getId().equals(id));
-        if (exists) {
-            throw new IllegalArgumentException("Semester with id " + id + " already exists");
-        }
-
-        Semester semester = Semester.builder()
-                .id(id)
-                .name(name)
-                .startDate(startDate)
-                .endDate(endDate)
-                .academicYear(academicYear)
-                .lessons(new ArrayList<>())
-                .build();
-
-        semesters.add(semester);
+        semesters.add(Semester.copy(prototype));
         saveAllSemesters(semesters);
-        return semester;
+        loadSemesters();
     }
 
-    public Optional<Semester> getSemesterById(String id) {
-        return listSemesters().stream()
-                .filter(s -> s.getId().equals(id))
-                .findFirst();
+    @Override
+    public Semester get(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
+
+        Semester semester = findById(id);
+        if (semester == null) return null;
+
+        List<Lesson> lessons = lessonService.listLessonsBySemesterId(id);
+        return Semester.copy(semester, lessons);
     }
 
-    public List<Semester> listSemesters() {
-        try {
-            if (!saveLoadService.canLoad(DataSaveKeys.SEMESTERS)) {
-                return new ArrayList<>();
-            }
+    @Override
+    public void update(String id, Semester prototype) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Semester with id " + id + " does not exist");
 
-            Type type = new TypeToken<List<Semester>>(){}.getType();
-            List<Semester> semesters = (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
-            return new ArrayList<>(semesters);
-        } catch (IOException e) {
-            System.err.println("Failed to load semesters: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    public Semester updateSemester(String id, String name, LocalDate startDate, LocalDate endDate,
-                                   int academicYear, List<Lesson> lessons) {
-        List<Semester> semesters = listSemesters();
-
-        Semester existingSemester = getSemesterById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Semester with id " + id + " not found"));
-
-        Semester updatedSemester = Semester.builder()
-                .id(id)
-                .name(name)
-                .startDate(startDate)
-                .endDate(endDate)
-                .academicYear(academicYear)
-                .lessons(new ArrayList<>(lessons))
-                .build();
-
-        semesters = semesters.stream()
-                .map(s -> s.getId().equals(id) ? updatedSemester : s)
+        List<Semester> updatedList = semesters.stream()
+                .map(s -> s.getId().equals(id) ? Semester.copy(prototype) : s)
                 .collect(Collectors.toList());
 
-        saveAllSemesters(semesters);
-        return updatedSemester;
+        saveAllSemesters(updatedList);
+        loadSemesters();
     }
 
-    public boolean deleteSemester(String id) {
-        List<Semester> semesters = listSemesters();
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
+        if (!exists(id)) throw new IllegalArgumentException("Semester with id " + id + " does not exist");
 
-        boolean removed = semesters.removeIf(s -> s.getId().equals(id));
-        if (removed) {
-            saveAllSemesters(semesters);
+        int originalSize = semesters.size();
+
+        List<Semester> updatedSemesters = semesters.stream()
+                .filter(s -> !s.getId().equals(id))
+                .collect(Collectors.toList());
+
+        if (updatedSemesters.size() < originalSize) {
+            saveAllSemesters(updatedSemesters);
         }
-        return removed;
+        loadSemesters();
+    }
+
+    @Override
+    public boolean exists(String id) throws IOException {
+        loadSemesters();
+        return semesters.stream().anyMatch(s -> s.getId().equals(id));
+    }
+
+    private Semester findById(String id) {
+        return this.semesters.stream()
+                .filter(s -> s.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     private void saveAllSemesters(List<Semester> semesters) {
@@ -103,6 +93,21 @@ public class SemesterService {
             saveLoadService.save(DataSaveKeys.SEMESTERS, semesters);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save semesters", e);
+        }
+    }
+
+    private void loadSemesters() {
+        String cannotLoadMessage = "Error loading semesters";
+        if (!saveLoadService.canLoad(DataSaveKeys.SEMESTERS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Semester>>(){}.getType();
+        try {
+            List<Semester> loadedSemesters = (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
+            this.semesters = new ArrayList<>(loadedSemesters);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
         }
     }
 }

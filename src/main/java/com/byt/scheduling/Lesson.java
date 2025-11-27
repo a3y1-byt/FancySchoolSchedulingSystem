@@ -9,7 +9,6 @@ import lombok.Value;
 
 import java.time.LocalTime;
 
-
 @Value
 @Builder
 public class Lesson {
@@ -24,4 +23,24 @@ public class Lesson {
     WeekPattern weekPattern;
     String classRoomId;
     String subjectId;
+    String semesterId;
+    String groupId;
+
+    public static Lesson copy(Lesson lesson) {
+        return Lesson.builder()
+                .id(lesson.getId())
+                .type(lesson.getType())
+                .mode(lesson.getMode())
+                .note(lesson.getNote())
+                .dayOfWeek(lesson.getDayOfWeek())
+                .startTime(lesson.getStartTime())
+                .endTime(lesson.getEndTime())
+                .language(lesson.getLanguage())
+                .weekPattern(lesson.getWeekPattern())
+                .classRoomId(lesson.getClassRoomId())
+                .subjectId(lesson.getSubjectId())
+                .semesterId(lesson.getSemesterId())
+                .groupId(lesson.getGroupId())
+                .build();
+    }
 }
