@@ -1,10 +1,9 @@
 package com.byt.scheduling;
 
 import com.byt.user_system.data.Student;
+import com.byt.user_system.enums.StudyLanguage;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -12,7 +11,7 @@ import java.util.List;
 public class Group {
     String id;
     String name;
-    String language;
+    StudyLanguage language;
     int maxCapacity;
     int minCapacity;
     int yearOfStudy;
