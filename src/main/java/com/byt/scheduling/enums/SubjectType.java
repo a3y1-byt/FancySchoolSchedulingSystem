@@ -4,5 +4,5 @@ public enum SubjectType {
     LANGUAGE_COURSE,
     EXAM_SUBJECT,
     ELECTIVE_SUBJECT,
-    NOTE_SUBJECT,
+    NORMAL_SUBJECT,
 }
