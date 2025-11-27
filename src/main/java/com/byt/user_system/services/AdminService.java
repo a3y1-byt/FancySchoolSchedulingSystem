@@ -8,8 +8,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,7 +46,7 @@ public class AdminService implements CRUDService<Admin> {
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
-                        LocalDate hireDate, Instant lastLoginTime) throws IOException {
+                        LocalDate hireDate, LocalDateTime lastLoginTime) throws IOException {
 
         validateClassData(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
@@ -214,7 +214,7 @@ public class AdminService implements CRUDService<Admin> {
             String phoneNumber,
             String email,
             LocalDate hireDate,
-            Instant lastLoginTime
+            LocalDateTime lastLoginTime
     ) {
         // general USER class validation
         UserValidator.validateUserFields(
@@ -253,14 +253,14 @@ public class AdminService implements CRUDService<Admin> {
         }
 
         if (lastLoginTime != null) {
-            Instant now = Instant.now();
+            LocalDateTime now = LocalDateTime.now();
 
             if (lastLoginTime.isAfter(now)) {
                 throw new ValidationException("Last login time cannot be in the future");
             }
 
-            Instant hireStartInstant = hireDate.atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
-            if (lastLoginTime.isBefore(hireStartInstant)) {
+            LocalDateTime hireStartLocalDateTime = hireDate.atStartOfDay(java.time.ZoneOffset.UTC).toLocalDateTime();
+            if (lastLoginTime.isBefore(hireStartLocalDateTime)) {
                 throw new ValidationException("Last login time cannot be before hire date");
             }
         }

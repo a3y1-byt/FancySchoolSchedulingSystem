@@ -1,6 +1,7 @@
 package com.byt.user_system.data;
 
 import com.byt.user_system.enums.StudyLanguage;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public abstract class Attendee extends User {
 
     private List<StudyLanguage> languagesOfStudies;
