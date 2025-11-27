@@ -104,7 +104,6 @@ public class AdminService implements CRUDService<Admin> {
             Admin current = admins.get(i);
             if (Objects.equals(current.getId(), id)) {
                 Admin updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 admins.set(i, updatedCopy);
                 saveToDb();

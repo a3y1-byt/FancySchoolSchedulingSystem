@@ -101,7 +101,6 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             FreeListener current = freeListeners.get(i);
             if (Objects.equals(current.getId(), id)) {
                 FreeListener updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 freeListeners.set(i, updatedCopy);
                 saveToDb();

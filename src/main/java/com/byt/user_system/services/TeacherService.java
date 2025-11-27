@@ -101,7 +101,6 @@ public class TeacherService implements CRUDService<Teacher> {
             Teacher current = teachers.get(i);
             if (Objects.equals(current.getId(), id)) {
                 Teacher updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 teachers.set(i, updatedCopy);
                 saveToDb();

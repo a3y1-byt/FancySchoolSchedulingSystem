@@ -103,7 +103,6 @@ public class StudentService implements CRUDService<Student> {
             Student current = students.get(i);
             if (Objects.equals(current.getId(), id)) {
                 Student updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 students.set(i, updatedCopy);
                 saveToDb();
