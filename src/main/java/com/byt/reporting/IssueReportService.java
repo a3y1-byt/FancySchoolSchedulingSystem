@@ -1,4 +1,4 @@
-package com.byt.reporting.services;
+package com.byt.reporting;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
