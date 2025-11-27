@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,6 +52,46 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
     }
 
     // ------------------- TESTS FOR FIELDS FROM USER -------------------
+
+    // Update test
+    @Test
+    public void updateStudentWithValidData() throws IOException {
+        StudentService service = (StudentService) serviceWithData;
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(25);
+
+        String id = getSampleObjectId();
+        Optional<Student> beforeOpt = service.get(id);
+        assertTrue(beforeOpt.isPresent());
+
+        Student prototype = new Student(
+                "Yumpa",
+                "Hnatiukk",
+                "Piess",
+                dob,
+                "3809691046",
+                "yumiii@gmail.com",
+                List.of(StudyLanguage.POLISH),
+                StudyStatus.SUSPENDED
+        );
+
+        service.update(id, prototype);
+
+        Optional<Student> afterOpt = service.get(id);
+        assertTrue(afterOpt.isPresent());
+        Student updated = afterOpt.get();
+
+        assertEquals("Yumpa", updated.getFirstName());
+        assertEquals("Hnatiukk", updated.getLastName());
+        assertEquals("Piess", updated.getFamilyName());
+        assertEquals("3809691046", updated.getPhoneNumber());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
+        assertEquals(StudyStatus.SUSPENDED, updated.getStudiesStatus());
+
+        assertEquals(id, updated.getId());
+    }
 
     // firstName contains ukrainian letters
     @Test
