@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.byt.user_system.validation.UserValidator;
+import com.byt.user_system.validation.ValidationException;
+
 public class AdminService implements CRUDService<Admin> {
 
     private final SaveLoadService service;
@@ -45,6 +48,10 @@ public class AdminService implements CRUDService<Admin> {
                         LocalDate dateOfBirth, String phoneNumber, String email,
                         LocalDate hireDate, Instant lastLoginTime) throws IOException {
 
+        validateClassData(firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                hireDate, lastLoginTime);
+
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime
@@ -58,9 +65,8 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) {
-            throw new IllegalArgumentException("Admin prototype must not be null");
-        }
+        validateClass(prototype);
+
         Admin toStore = copy(prototype);
         admins.add(toStore);
         saveToDb();
@@ -91,9 +97,8 @@ public class AdminService implements CRUDService<Admin> {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id must not be null or blank");
         }
-        if (prototype == null) {
-            throw new IllegalArgumentException("Admin prototype must not be null");
-        }
+
+        validateClass(prototype);
 
         for (int i = 0; i < admins.size(); i++) {
             Admin current = admins.get(i);
@@ -198,6 +203,85 @@ public class AdminService implements CRUDService<Admin> {
     // just for seperating internal work with persistence from our CRUD methods.
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.ADMINS, admins);
+    }
+
+
+    // VALIDATION METHODS
+    private void validateClassData(
+            String firstName,
+            String lastName,
+            String familyName,
+            LocalDate dateOfBirth,
+            String phoneNumber,
+            String email,
+            LocalDate hireDate,
+            Instant lastLoginTime
+    ) {
+        // general USER class validation
+        UserValidator.validateUserFields(
+                firstName,
+                lastName,
+                familyName,
+                dateOfBirth,
+                phoneNumber,
+                email
+        );
+
+        //  only Admin validation
+        if (hireDate == null) {
+            throw new ValidationException("Hire date must not be null");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate earliest_hire_date = LocalDate.of(2000, 1, 1);
+        int min_age_at_hire = 18;
+
+        if (dateOfBirth != null) {
+            LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
+            if (hireDate.isBefore(minHireDateByDob)) {
+                throw new ValidationException(
+                        "Person must be at least " + min_age_at_hire + " years old at hire date"
+                );
+            }
+        }
+
+        if (hireDate.isAfter(today)) {
+            throw new ValidationException("Hire date must not be in the future");
+        }
+
+        if (dateOfBirth != null && hireDate.isBefore(dateOfBirth)) {
+            throw new ValidationException("Hire date cannot be before date of birth");
+        }
+
+        if (lastLoginTime != null) {
+            Instant now = Instant.now();
+
+            if (lastLoginTime.isAfter(now)) {
+                throw new ValidationException("Last login time cannot be in the future");
+            }
+
+            Instant hireStartInstant = hireDate.atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
+            if (lastLoginTime.isBefore(hireStartInstant)) {
+                throw new ValidationException("Last login time cannot be before hire date");
+            }
+        }
+    }
+
+    private void validateClass(Admin prototype) {
+        if (prototype == null) {
+            throw new ValidationException("Admin prototype must not be null");
+        }
+
+        validateClassData(
+                prototype.getFirstName(),
+                prototype.getLastName(),
+                prototype.getFamilyName(),
+                prototype.getDateOfBirth(),
+                prototype.getPhoneNumber(),
+                prototype.getEmail(),
+                prototype.getHireDate(),
+                prototype.getLastLoginTime()
+        );
     }
 
 }

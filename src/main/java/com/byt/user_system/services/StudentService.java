@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.byt.user_system.validation.UserValidator;
+import com.byt.user_system.validation.ValidationException;
+
 public class StudentService implements CRUDService<Student> {
     // comments explaining how everything works are in Student Service
     private final SaveLoadService service;
@@ -41,6 +44,12 @@ public class StudentService implements CRUDService<Student> {
                           LocalDate dateOfBirth, String phoneNumber, String email,
                           List<StudyLanguage> languagesOfStudies,
                           StudyStatus studiesStatus) throws IOException {
+
+        validateClassData(firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                languagesOfStudies, studiesStatus);
+
+
         Student student = new Student(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 new ArrayList<>(languagesOfStudies), studiesStatus
@@ -55,9 +64,8 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public void create(Student prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) {
-            throw new IllegalArgumentException("Student prototype must not be null");
-        }
+        validateClass(prototype);
+
         Student toStore = copy(prototype);
         students.add(toStore);
         saveToDb();
@@ -88,9 +96,8 @@ public class StudentService implements CRUDService<Student> {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id must not be null or blank");
         }
-        if (prototype == null) {
-            throw new IllegalArgumentException("Student prototype must not be null");
-        }
+
+        validateClass(prototype);
 
         for (int i = 0; i < students.size(); i++) {
             Student current = students.get(i);
@@ -191,5 +198,55 @@ public class StudentService implements CRUDService<Student> {
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.STUDENTS, students);
     }
+
+
+    // VALIDATION METHODS
+    private void validateClassData(
+            String firstName,
+            String lastName,
+            String familyName,
+            LocalDate dateOfBirth,
+            String phoneNumber,
+            String email,
+            List<StudyLanguage> languagesOfStudies,
+            StudyStatus studiesStatus
+    ) {
+        // general USER class validation
+        UserValidator.validateUserFields(
+                firstName,
+                lastName,
+                familyName,
+                dateOfBirth,
+                phoneNumber,
+                email
+        );
+
+        //  only Student validation
+        if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
+            throw new ValidationException("Student must have at least one study language");
+        }
+
+        if (studiesStatus == null) {
+            throw new ValidationException("Study status must not be null");
+        }
+    }
+
+    private void validateClass(Student prototype) {
+        if (prototype == null) {
+            throw new ValidationException("Student prototype must not be null");
+        }
+
+        validateClassData(
+                prototype.getFirstName(),
+                prototype.getLastName(),
+                prototype.getFamilyName(),
+                prototype.getDateOfBirth(),
+                prototype.getPhoneNumber(),
+                prototype.getEmail(),
+                prototype.getLanguagesOfStudies(),
+                prototype.getStudiesStatus()
+        );
+    }
+
 }
 

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.byt.user_system.validation.UserValidator;
+import com.byt.user_system.validation.ValidationException;
 
 public class FreeListenerService implements CRUDService<FreeListener> {
 
@@ -43,6 +45,10 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                                List<StudyLanguage> languagesOfStudies,
                                String notes) throws IOException {
 
+        validateClassData(firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                languagesOfStudies, notes);
+
         FreeListener freeListener = new FreeListener(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 new ArrayList<>(languagesOfStudies), notes
@@ -56,9 +62,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) {
-            throw new IllegalArgumentException("FreeListener prototype must not be null");
-        }
+        validateClass(prototype);
+
         FreeListener toStore = copy(prototype);
         freeListeners.add(toStore);
         saveToDb();
@@ -89,9 +94,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id must not be null or blank");
         }
-        if (prototype == null) {
-            throw new IllegalArgumentException("FreeListener prototype must not be null");
-        }
+
+        validateClass(prototype);
 
         for (int i = 0; i < freeListeners.size(); i++) {
             FreeListener current = freeListeners.get(i);
@@ -192,4 +196,56 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.FREE_LISTENERS, freeListeners);
     }
+
+
+    // VALIDATION METHODS
+    private void validateClassData(
+            String firstName,
+            String lastName,
+            String familyName,
+            LocalDate dateOfBirth,
+            String phoneNumber,
+            String email,
+            List<StudyLanguage> languagesOfStudies,
+            String notes
+    ) {
+        // general USER class validation
+        UserValidator.validateUserFields(
+                firstName,
+                lastName,
+                familyName,
+                dateOfBirth,
+                phoneNumber,
+                email
+        );
+
+        //  only FreeListener validation
+        if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
+            throw new ValidationException("FreeListener must have at least one study language");
+        }
+
+        // notes are nullable but I think it is ok to set them at max  = 1000
+        int max_notes = 1000;
+        if (notes != null && notes.length() > max_notes) {
+            throw new ValidationException("Notes are too long");
+        }
+    }
+
+    private void validateClass(FreeListener prototype) {
+        if (prototype == null) {
+            throw new ValidationException("FreeListener prototype must not be null");
+        }
+
+        validateClassData(
+                prototype.getFirstName(),
+                prototype.getLastName(),
+                prototype.getFamilyName(),
+                prototype.getDateOfBirth(),
+                prototype.getPhoneNumber(),
+                prototype.getEmail(),
+                prototype.getLanguagesOfStudies(),
+                prototype.getNotes()
+        );
+    }
+
 }
