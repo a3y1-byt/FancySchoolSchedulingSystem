@@ -35,8 +35,8 @@ public class AdminService implements CRUDService<Admin> {
         this.admins = admins != null ? copyList(admins) : new ArrayList<>();
     }
 
-
-    public void init() throws IOException {
+    @Override
+    public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb(); // raw objects from our 'DB'
         this.admins = copyList(loaded); // safe deep copies
     }
@@ -88,7 +88,7 @@ public class AdminService implements CRUDService<Admin> {
     }
 
     @Override
-    public List<Admin> getAll() {
+    public List<Admin> getAll() throws IOException{
         return copyList(admins);
     }
 
@@ -104,7 +104,6 @@ public class AdminService implements CRUDService<Admin> {
             Admin current = admins.get(i);
             if (Objects.equals(current.getId(), id)) {
                 Admin updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 admins.set(i, updatedCopy);
                 saveToDb();
@@ -131,7 +130,7 @@ public class AdminService implements CRUDService<Admin> {
     }
 
     @Override
-    public boolean exists(String id) {
+    public boolean exists(String id) throws IOException{
         if (id == null || id.isBlank()) {
             return false;
         }

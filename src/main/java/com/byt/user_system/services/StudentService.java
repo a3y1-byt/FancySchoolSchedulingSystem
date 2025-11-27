@@ -32,8 +32,8 @@ public class StudentService implements CRUDService<Student> {
         this.students = students != null ? copyList(students) : new ArrayList<>();
     }
 
-
-    public void init() throws IOException {
+    @Override
+    public void initialize() throws IOException {
         List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
         this.students = copyList(loaded); // safe deep copies
     }
@@ -87,7 +87,7 @@ public class StudentService implements CRUDService<Student> {
     }
 
     @Override
-    public List<Student> getAll() {
+    public List<Student> getAll() throws IOException{
         return copyList(students);
     }
 
@@ -103,7 +103,6 @@ public class StudentService implements CRUDService<Student> {
             Student current = students.get(i);
             if (Objects.equals(current.getId(), id)) {
                 Student updatedCopy = copy(prototype);
-                // не довіряємо prototype.getId(), використовуємо параметр id
                 updatedCopy.setId(id);
                 students.set(i, updatedCopy);
                 saveToDb();
@@ -130,7 +129,7 @@ public class StudentService implements CRUDService<Student> {
     }
 
     @Override
-    public boolean exists(String id) {
+    public boolean exists(String id) throws IOException{
         if (id == null || id.isBlank()) {
             return false;
         }
