@@ -131,20 +131,6 @@ public abstract class CRUDServiceTest<TEntity> {
         }
     }
 
-    @Disabled("Java's type erasure makes this test impossible for now")
-    @Test
-    public void testCreateAddsObjectToService() {
-        CRUDService<TEntity> service = emptyService;
-        try {
-            service.create(getSampleObject());
-
-            String repositoryRecordWithCreatedObject = emptyRepository.read(dataRepositoryKey.repositoryKey);
-            String expectedRecord = oneElementRepository.read(dataRepositoryKey.repositoryKey);
-        } catch (IOException e) {
-            fail(e);
-        }
-    }
-
     @Test
     public void testThrowsOnDeleteNonExistentObject() {
         CRUDService<TEntity> service = emptyService;
