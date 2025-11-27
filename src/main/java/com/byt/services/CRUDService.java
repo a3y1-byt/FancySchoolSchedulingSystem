@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CRUDService<TEntity> {
+    default void initialize() throws IOException {}
+
     void create(TEntity prototype) throws IllegalArgumentException, IOException;
 
     Optional<TEntity> get(String id) throws IllegalArgumentException, IOException;
