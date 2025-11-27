@@ -1,15 +1,33 @@
 package com.byt.scheduling;
 
 import com.byt.scheduling.enums.StudyProgramLevel;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Builder;
+import lombok.Data;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class StudyProgram {
-    private String name;
-    private StudyProgramLevel level;
-    private List<Specialization> specializations;
+    String id;
+    String name;
+    StudyProgramLevel level;
+    List<Specialization> specializations;
+
+    public static StudyProgram copy(StudyProgram program, List<Specialization> specializations) {
+        return StudyProgram.builder()
+                .id(program.getId())
+                .name(program.getName())
+                .level(program.getLevel())
+                .specializations(specializations)
+                .build();
+    }
+
+    public static StudyProgram copy(StudyProgram program) {
+        return StudyProgram.builder()
+                .id(program.getId())
+                .name(program.getName())
+                .level(program.getLevel())
+                .specializations(null)
+                .build();
+    }
 }

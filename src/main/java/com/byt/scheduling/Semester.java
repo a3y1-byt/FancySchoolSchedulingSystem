@@ -1,17 +1,39 @@
 package com.byt.scheduling;
 
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.Date;
+import lombok.Builder;
+import lombok.Data;
+import java.time.LocalDate;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class Semester {
-    private String semester;
-    private Date startDate;
-    private Date endDate;
-    private int academicYear;
-    private List<Lesson> lessons;
+    String id;
+    String name;
+    LocalDate startDate;
+    LocalDate endDate;
+    int academicYear;
+    List<Lesson> lessons;
+
+    public static Semester copy(Semester semester, List<Lesson> lessons) {
+        return Semester.builder()
+                .id(semester.getId())
+                .name(semester.getName())
+                .startDate(semester.getStartDate())
+                .endDate(semester.getEndDate())
+                .academicYear(semester.getAcademicYear())
+                .lessons(lessons)
+                .build();
+    }
+
+    public static Semester copy(Semester semester) {
+        return Semester.builder()
+                .id(semester.getId())
+                .name(semester.getName())
+                .startDate(semester.getStartDate())
+                .endDate(semester.getEndDate())
+                .academicYear(semester.getAcademicYear())
+                .lessons(null)
+                .build();
+    }
 }

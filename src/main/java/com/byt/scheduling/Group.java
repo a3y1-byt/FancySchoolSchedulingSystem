@@ -1,18 +1,48 @@
 package com.byt.scheduling;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.byt.user_system.data.Student;
+import lombok.Builder;
+import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class Group {
-    private String name;
-    private String language;
-    private int maxCapacity;
-    private int minCapacity;
-    private int yearOfStudy;
-    private List<String> notes;
-    private List<Lesson> lessons;
+    String id;
+    String name;
+    String language;
+    int maxCapacity;
+    int minCapacity;
+    int yearOfStudy;
+    List<String> notes;
+    List<Lesson> lessons;
+    List<Student> students;
+
+    public static Group copy(Group group, List<Lesson> lessons) {
+        return Group.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .language(group.getLanguage())
+                .maxCapacity(group.getMaxCapacity())
+                .minCapacity(group.getMinCapacity())
+                .yearOfStudy(group.getYearOfStudy())
+                .notes(group.getNotes())
+                .lessons(lessons)
+                .build();
+    }
+
+    public static Group copy(Group group) {
+        return Group.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .language(group.getLanguage())
+                .maxCapacity(group.getMaxCapacity())
+                .minCapacity(group.getMinCapacity())
+                .yearOfStudy(group.getYearOfStudy())
+                .notes(group.getNotes())
+                .lessons(null)
+                .build();
+    }
 }

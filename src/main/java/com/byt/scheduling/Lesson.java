@@ -4,21 +4,43 @@ import com.byt.scheduling.enums.DayOfWeek;
 import com.byt.scheduling.enums.LessonMode;
 import com.byt.scheduling.enums.LessonType;
 import com.byt.scheduling.enums.WeekPattern;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalTime;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class Lesson {
-    private LessonType type;
-    private LessonMode mode;
-    private String note;
-    private DayOfWeek dayOfWeek;
-    private Date startTime;
-    private Date endTime;
-    private String language;
-    private WeekPattern weekPattern;
-    private ClassRoom classRoom;
+    String id;
+    LessonType type;
+    LessonMode mode;
+    String note;
+    DayOfWeek dayOfWeek;
+    LocalTime startTime;
+    LocalTime endTime;
+    String language;
+    WeekPattern weekPattern;
+    String classRoomId;
+    String subjectId;
+    String semesterId;
+    String groupId;
+
+    public static Lesson copy(Lesson lesson) {
+        return Lesson.builder()
+                .id(lesson.getId())
+                .type(lesson.getType())
+                .mode(lesson.getMode())
+                .note(lesson.getNote())
+                .dayOfWeek(lesson.getDayOfWeek())
+                .startTime(lesson.getStartTime())
+                .endTime(lesson.getEndTime())
+                .language(lesson.getLanguage())
+                .weekPattern(lesson.getWeekPattern())
+                .classRoomId(lesson.getClassRoomId())
+                .subjectId(lesson.getSubjectId())
+                .semesterId(lesson.getSemesterId())
+                .groupId(lesson.getGroupId())
+                .build();
+    }
 }
