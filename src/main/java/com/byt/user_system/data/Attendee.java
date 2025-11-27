@@ -1,7 +1,6 @@
-package com.byt.user_system;
+package com.byt.user_system.data;
 
 import com.byt.user_system.enums.StudyLanguage;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
