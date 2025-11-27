@@ -1,7 +1,10 @@
 package com.byt.persistence;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -65,6 +68,21 @@ public class JsonDataSerializerTest {
         Student[] expected = testStudentArray;
 
         assertArrayEquals(expected, (Student[])serializer.deserialize(serializedStudentArray, Student[].class));
+    }
+
+    @Nested
+    public class AdaptersTest {
+        private final LocalDateTime testDateTime = LocalDateTime.of(2002, 4, 10, 12, 32, 10, 10012);
+
+        @Test
+        public void testNoLossesHappenOnTwoSidedSerialization() {
+            LocalDateTime dateTime = testDateTime;
+
+            String serializedDateTime = serializer.serialize(dateTime);
+            LocalDateTime deserializedDateTime = (LocalDateTime) serializer.deserialize(serializedDateTime, LocalDateTime.class);
+
+            assertEquals(dateTime, deserializedDateTime);
+        }
     }
 
     private record Classroom(int number, Student[] students) {
