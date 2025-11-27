@@ -41,6 +41,6 @@ class LessonServiceTest extends CRUDServiceTest<Lesson> {
 
     @Override
     protected void alterEntity(Lesson lesson) {
-        lesson.setNote(lesson.getNote() + " - Updated");
+        lesson.setId("L-002");
     }
 }

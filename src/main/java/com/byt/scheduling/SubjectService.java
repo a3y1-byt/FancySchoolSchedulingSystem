@@ -19,12 +19,22 @@ public class SubjectService implements CRUDService<Subject> {
         this.saveLoadService = saveLoadService;
         this.lessonService = new LessonService(saveLoadService);
         this.subjects = null;
-        loadSubjects();
     }
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading subjects";
+        if (!saveLoadService.canLoad(DataSaveKeys.SUBJECTS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Subject>>(){}.getType();
+        try {
+            List<Subject> loadedSubjects = (List<Subject>) saveLoadService.load(DataSaveKeys.SUBJECTS, type);
+            this.subjects = new ArrayList<>(loadedSubjects);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -93,6 +103,8 @@ public class SubjectService implements CRUDService<Subject> {
     }
 
     public List<Subject> listSubjectsBySpecializationId(String specializationId) {
+        if(this.subjects == null || this.subjects.isEmpty()) return null;
+
         return this.subjects.stream()
                 .filter(s -> s.getSpecializationId().equals(specializationId))
                 .map(Subject::copy)
@@ -101,6 +113,7 @@ public class SubjectService implements CRUDService<Subject> {
     }
 
     private Subject findById(String id) {
+        if(this.subjects == null || this.subjects.isEmpty()) return null;
         return this.subjects.stream()
                 .filter(s -> s.getId().equals(id))
                 .findFirst()

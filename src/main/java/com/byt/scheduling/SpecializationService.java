@@ -23,7 +23,18 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading specializations";
+        if (!saveLoadService.canLoad(DataSaveKeys.SPECIALIZATIONS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Specialization>>(){}.getType();
+        try {
+            List<Specialization> loadedSpecializations = (List<Specialization>) saveLoadService.load(DataSaveKeys.SPECIALIZATIONS, type);
+            this.specializations = new ArrayList<>(loadedSpecializations);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -99,6 +110,8 @@ public class SpecializationService implements CRUDService<Specialization> {
     }
 
     private Specialization findById(String id) {
+        if(specializations == null) return null;
+
         return this.specializations.stream()
                 .filter(s -> s.getId().equals(id))
                 .findFirst()

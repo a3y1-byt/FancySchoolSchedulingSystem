@@ -23,7 +23,18 @@ public class SemesterService implements CRUDService<Semester> {
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading semesters";
+        if (!saveLoadService.canLoad(DataSaveKeys.SEMESTERS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Semester>>(){}.getType();
+        try {
+            List<Semester> loadedSemesters = (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
+            this.semesters = new ArrayList<>(loadedSemesters);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -92,6 +103,8 @@ public class SemesterService implements CRUDService<Semester> {
     }
 
     private Semester findById(String id) {
+        if(this.semesters == null) return null;
+
         return this.semesters.stream()
                 .filter(s -> s.getId().equals(id))
                 .findFirst()

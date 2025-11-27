@@ -50,7 +50,7 @@ public class LessonService implements CRUDService<Lesson> {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
 
         Lesson lesson = findById(id);
-        if (lesson == null) return null;
+        if (lesson == null) return Optional.empty();
 
         Lesson lessonCopy = Lesson.copy(lesson);
         return Optional.of(lessonCopy);

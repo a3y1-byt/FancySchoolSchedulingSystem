@@ -33,7 +33,7 @@ class SemesterServiceTest extends CRUDServiceTest<Semester> {
 
     @Override
     protected void alterEntity(Semester semester) {
-        semester.setAcademicYear(semester.getAcademicYear() + 1);
+        semester.setId("SEM-2025-WINTER");
     }
 }
 

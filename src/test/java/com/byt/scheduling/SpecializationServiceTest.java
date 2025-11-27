@@ -10,6 +10,7 @@ import java.util.function.Function;
 class SpecializationServiceTest extends CRUDServiceTest<Specialization> {
 
     protected SpecializationServiceTest() {
+
         super(DataSaveKeys.SPECIALIZATIONS, SpecializationService::new);
     }
 

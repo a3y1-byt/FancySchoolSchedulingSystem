@@ -28,14 +28,14 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .maxCapacity(25)
                 .minCapacity(15)
                 .yearOfStudy(3)
-                .notes(new ArrayList<>())
-                .lessons(new ArrayList<>())
-                .students(new ArrayList<>())
+                .notes(null)
+                .lessons(null)
+                .students(null)
                 .build();
     }
 
     @Override
     protected void alterEntity(Group group) {
-        group.setLanguage("English");
+        group.setId("G-2027");
     }
 }

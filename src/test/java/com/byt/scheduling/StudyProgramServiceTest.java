@@ -31,6 +31,6 @@ class StudyProgramServiceTest extends CRUDServiceTest<StudyProgram> {
 
     @Override
     protected void alterEntity(StudyProgram studyProgram) {
-        studyProgram.setName(studyProgram.getName() + " - Updated");
+        studyProgram.setId(studyProgram.getId() + "sth");
     }
 }
