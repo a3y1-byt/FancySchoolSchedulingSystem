@@ -32,8 +32,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         this.freeListeners = freeListeners != null ? copyList(freeListeners) : new ArrayList<>();
     }
 
-
-    public void init() throws IOException {
+    @Override
+    public void initialize() throws IOException {
         List<FreeListener> loaded = loadFromDb(); // raw objects from our 'DB'
         this.freeListeners = copyList(loaded); // safe deep copies
     }
@@ -85,7 +85,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     }
 
     @Override
-    public List<FreeListener> getAll() {
+    public List<FreeListener> getAll() throws IOException{
         return copyList(freeListeners);
     }
 
@@ -127,7 +127,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     }
 
     @Override
-    public boolean exists(String id) {
+    public boolean exists(String id) throws IOException{
         if (id == null || id.isBlank()) {
             return false;
         }

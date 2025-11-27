@@ -31,8 +31,8 @@ public class TeacherService implements CRUDService<Teacher> {
         this.teachers = teachers != null ? copyList(teachers) : new ArrayList<>();
     }
 
-
-    public void init() throws IOException {
+    @Override
+    public void initialize() throws IOException {
         List<Teacher> loaded = loadFromDb(); // raw objects from our 'DB'
         this.teachers = copyList(loaded); // safe deep copies
     }
@@ -85,7 +85,7 @@ public class TeacherService implements CRUDService<Teacher> {
     }
 
     @Override
-    public List<Teacher> getAll() {
+    public List<Teacher> getAll() throws IOException{
         return copyList(teachers);
     }
 
@@ -127,7 +127,7 @@ public class TeacherService implements CRUDService<Teacher> {
     }
 
     @Override
-    public boolean exists(String id) {
+    public boolean exists(String id) throws IOException{
         if (id == null || id.isBlank()) {
             return false;
         }
