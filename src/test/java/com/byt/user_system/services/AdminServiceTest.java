@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,6 +52,49 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
     }
 
     // ------------------- TESTS FOR FIELDS FROM USER -------------------
+
+    // update test
+    @Test
+    public void updateAdminWithValidData() throws IOException {
+        AdminService service = (AdminService) serviceWithData;
+
+        String id = getSampleObjectId();
+        Optional<Admin> beforeOpt = service.get(id);
+        assertTrue(beforeOpt.isPresent());
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(25);
+        LocalDate hireDate = today.minusYears(2);
+        LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
+
+        Admin prototype = new Admin(
+                "Yumpa",
+                "Hnatiukk",
+                "Piess",
+                dob,
+                "3809691046",
+                "yumiii@gmail.com",
+                hireDate,
+                lastLogin
+        );
+
+        service.update(id, prototype);
+
+        Optional<Admin> afterOpt = service.get(id);
+        assertTrue(afterOpt.isPresent());
+        Admin updated = afterOpt.get();
+
+        assertEquals("Yumpa", updated.getFirstName());
+        assertEquals("Hnatiukk", updated.getLastName());
+        assertEquals("Piess", updated.getFamilyName());
+        assertEquals(dob, updated.getDateOfBirth());
+        assertEquals("3809691046", updated.getPhoneNumber());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(hireDate, updated.getHireDate());
+        assertEquals(lastLogin, updated.getLastLoginTime());
+
+        assertEquals(id, updated.getId());
+    }
 
     // firstName contains ukrainian letters
     @Test

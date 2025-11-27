@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,6 +51,47 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
     }
 
     // ------------------- TESTS FOR FIELDS FROM USER -------------------
+
+    // update test
+    @Test
+    public void updateFreeListenerWithValidData() throws IOException {
+        FreeListenerService service = (FreeListenerService) serviceWithData;
+
+        String id = getSampleObjectId();
+        Optional<FreeListener> beforeOpt = service.get(id);
+        assertTrue(beforeOpt.isPresent());
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(25);
+
+        FreeListener prototype = new FreeListener(
+                "Yumpa",
+                "Hnatiukk",
+                "Piess",
+                dob,
+                "3809691046",
+                "yumiii@gmail.com",
+                List.of(StudyLanguage.POLISH),
+                "woof woof woof"
+        );
+
+        service.update(id, prototype);
+
+        Optional<FreeListener> afterOpt = service.get(id);
+        assertTrue(afterOpt.isPresent());
+        FreeListener updated = afterOpt.get();
+
+        assertEquals("Yumpa", updated.getFirstName());
+        assertEquals("Hnatiukk", updated.getLastName());
+        assertEquals("Piess", updated.getFamilyName());
+        assertEquals(dob, updated.getDateOfBirth());
+        assertEquals("3809691046", updated.getPhoneNumber());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
+        assertEquals("woof woof woof", updated.getNotes());
+
+        assertEquals(id, updated.getId());
+    }
 
     // firstName contains ukrainian letters
     @Test

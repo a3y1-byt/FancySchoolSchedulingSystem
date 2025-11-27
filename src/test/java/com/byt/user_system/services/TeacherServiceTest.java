@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,7 +53,51 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
     // ------------------- TESTS FOR FIELDS FROM USER -------------------
 
-    // firstName contains ukrainian letters
+    // update test
+    @Test
+    public void updateTeacherWithValidData() throws IOException {
+        TeacherService service = (TeacherService) serviceWithData;
+
+        String id = getSampleObjectId();
+        Optional<Teacher> beforeOpt = service.get(id);
+        assertTrue(beforeOpt.isPresent());
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(25);
+        LocalDate hireDate = today.minusYears(2);
+
+        Teacher prototype = new Teacher(
+                "Yumpa",
+                "Hnatiukk",
+                "Piess",
+                dob,
+                "3809691046",
+                "yumiii@gmail.com",
+                hireDate,
+                "DogTeacher",
+                "Dean"
+        );
+
+        service.update(id, prototype);
+
+        Optional<Teacher> afterOpt = service.get(id);
+        assertTrue(afterOpt.isPresent());
+        Teacher updated = afterOpt.get();
+
+        assertEquals("Yumpa", updated.getFirstName());
+        assertEquals("Hnatiukk", updated.getLastName());
+        assertEquals("Piess", updated.getFamilyName());
+        assertEquals(dob, updated.getDateOfBirth());
+        assertEquals("3809691046", updated.getPhoneNumber());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(hireDate, updated.getHireDate());
+        assertEquals("DogTeacher", updated.getTitle());
+        assertEquals("Dean", updated.getPosition());
+
+        assertEquals(id, updated.getId());
+    }
+
+                // firstName contains ukrainian letters
     @Test
     public void createTeacherWithNonLatinFirstName() {
         TeacherService service = (TeacherService) emptyService;
