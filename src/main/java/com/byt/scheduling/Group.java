@@ -28,9 +28,7 @@ public class Group {
                 .maxCapacity(group.getMaxCapacity())
                 .minCapacity(group.getMinCapacity())
                 .yearOfStudy(group.getYearOfStudy())
-                .notes(group.getNotes() != null
-                        ? new ArrayList<>(group.getNotes())
-                        : new ArrayList<>())
+                .notes(group.getNotes())
                 .lessons(lessons)
                 .build();
     }
@@ -43,9 +41,7 @@ public class Group {
                 .maxCapacity(group.getMaxCapacity())
                 .minCapacity(group.getMinCapacity())
                 .yearOfStudy(group.getYearOfStudy())
-                .notes(group.getNotes() != null
-                        ? new ArrayList<>(group.getNotes())
-                        : new ArrayList<>())
+                .notes(group.getNotes())
                 .lessons(null)
                 .build();
     }

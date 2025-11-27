@@ -17,12 +17,22 @@ public class LessonService implements CRUDService<Lesson> {
     public LessonService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
         this.lessons = null;
-        loadLessons();
     }
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading lessons";
+        if (!saveLoadService.canLoad(DataSaveKeys.LESSONS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Lesson>>(){}.getType();
+        try {
+            List<Lesson> loadedLessons = (List<Lesson>) saveLoadService.load(DataSaveKeys.LESSONS, type);
+            this.lessons = new ArrayList<>(loadedLessons);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -90,6 +100,7 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     public List<Lesson> listLessonsByGroupId(String groupId) {
+        if(this.lessons == null || this.lessons.isEmpty()) return null;
 
         return lessons.stream()
                 .filter(l -> l.getGroupId() != null && l.getClassRoomId().equals(groupId))
@@ -98,6 +109,7 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     public List<Lesson> listLessonsBySemesterId(String groupId) {
+        if(this.lessons == null || this.lessons.isEmpty()) return null;
 
         return lessons.stream()
                 .filter(l -> l.getSemesterId() != null && l.getSemesterId().equals(groupId))
@@ -106,6 +118,8 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     public List<Lesson> listLessonsByClassRoomId(String classRoomId) {
+        if(this.lessons == null || this.lessons.isEmpty()) return null;
+
         return lessons.stream()
                 .filter(l -> l.getClassRoomId() != null && l.getClassRoomId().equals(classRoomId))
                 .map(Lesson::copy)
@@ -113,6 +127,7 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     public List<Lesson> listLessonsBySubjectId(String subjectId) {
+        if(this.lessons == null || this.lessons.isEmpty()) return null;
         return lessons.stream()
                 .filter(l -> l.getSubjectId() != null && l.getSubjectId().equals(subjectId))
                 .map(Lesson::copy)
@@ -120,6 +135,8 @@ public class LessonService implements CRUDService<Lesson> {
     }
 
     private Lesson findById(String id) {
+        if(this.lessons == null || this.lessons.isEmpty()) return null;
+
         return this.lessons.stream()
                 .filter(l -> l.getId().equals(id))
                 .findFirst()

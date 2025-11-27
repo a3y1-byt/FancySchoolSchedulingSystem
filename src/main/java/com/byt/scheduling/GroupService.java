@@ -22,7 +22,18 @@ public class GroupService implements CRUDService<Group> {
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
+        String cannotLoadMessage = "Error loading groups";
+        if (!saveLoadService.canLoad(DataSaveKeys.GROUPS)) {
+            throw new RuntimeException(cannotLoadMessage);
+        }
+
+        Type type = new TypeToken<List<Group>>(){}.getType();
+        try {
+            List<Group> loadedGroups = (List<Group>) saveLoadService.load(DataSaveKeys.GROUPS, type);
+            this.groups = new ArrayList<>(loadedGroups);
+        } catch (IOException e) {
+            throw new RuntimeException(cannotLoadMessage, e);
+        }
     }
 
     @Override
@@ -91,6 +102,8 @@ public class GroupService implements CRUDService<Group> {
     }
 
     private Group findById(String id) {
+        if(this.groups == null || this.groups.isEmpty()) return null;
+
         return this.groups.stream()
                 .filter(g -> g.getId().equals(id))
                 .findFirst()

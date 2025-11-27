@@ -3,6 +3,7 @@ package com.byt.scheduling;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -27,9 +28,9 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .maxCapacity(25)
                 .minCapacity(15)
                 .yearOfStudy(3)
-                .notes(Arrays.asList("Java Networking", "Networking"))
-                .lessons(null)
-                .students(null)
+                .notes(new ArrayList<>())
+                .lessons(new ArrayList<>())
+                .students(new ArrayList<>())
                 .build();
     }
 
