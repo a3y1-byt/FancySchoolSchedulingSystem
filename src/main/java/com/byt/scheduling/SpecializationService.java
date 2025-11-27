@@ -70,6 +70,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     public void update(String id, Specialization prototype) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Specialization id is null or empty");
         if (!exists(id)) throw new IllegalArgumentException("Specialization with id " + id + " does not exist");
+        if(specializations == null) return;
 
         List<Specialization> updatedList = specializations.stream()
                 .map(s -> s.getId().equals(id) ? Specialization.copy(prototype) : s)
@@ -83,9 +84,9 @@ public class SpecializationService implements CRUDService<Specialization> {
     public void delete(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isEmpty()) throw new IllegalArgumentException("Specialization id is null or empty");
         if (!exists(id)) throw new IllegalArgumentException("Specialization with id " + id + " does not exist");
+        if(specializations == null) return;
 
         int originalSize = specializations.size();
-
         List<Specialization> updatedSpecializations = specializations.stream()
                 .filter(s -> !s.getId().equals(id))
                 .collect(Collectors.toList());
@@ -99,10 +100,13 @@ public class SpecializationService implements CRUDService<Specialization> {
     @Override
     public boolean exists(String id) throws IOException {
         loadSpecializations();
+        if(specializations == null) return false;
         return specializations.stream().anyMatch(s -> s.getId().equals(id));
     }
 
     public List<Specialization> listSpecializationsByStudyProgramId(String studyProgramId) {
+        if(specializations == null) return null;
+
         return specializations.stream()
                 .filter(s -> s.getStudyProgramId() != null && s.getStudyProgramId().equals(studyProgramId))
                 .map(Specialization::copy)
@@ -112,7 +116,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     private Specialization findById(String id) {
         if(specializations == null) return null;
 
-        return this.specializations.stream()
+        return specializations.stream()
                 .filter(s -> s.getId().equals(id))
                 .findFirst()
                 .orElse(null);

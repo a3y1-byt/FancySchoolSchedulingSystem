@@ -45,6 +45,7 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
         if (program == null) return Optional.empty();
 
         List<Specialization> specializations = specializationService.listSpecializationsByStudyProgramId(id);
+
         StudyProgram studyProgramCopy = StudyProgram.copy(program,  specializations);
 
         return Optional.of(studyProgramCopy);
@@ -94,7 +95,8 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     }
 
     private StudyProgram findById(String id) {
-        return this.studyPrograms.stream()
+        if(studyPrograms == null || studyPrograms.isEmpty()) return null;
+        return studyPrograms.stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst()
                 .orElse(null);
