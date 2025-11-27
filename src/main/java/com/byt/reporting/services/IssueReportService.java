@@ -3,145 +3,208 @@ package com.byt.reporting.services;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.reporting.IssueReport;
+import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
-public class IssueReportService {
+public class IssueReportService implements CRUDService<IssueReport> {
 
-    private static final Type REPORT_LIST_TYPE = new TypeToken<List<IssueReport>>() {}.getType();
+    private final SaveLoadService service;
+    private List<IssueReport> reports;
 
-    private final SaveLoadService saveLoadService;
+    private static final Type ISSUE_REPORT_LIST_TYPE = new TypeToken<List<IssueReport>>() {}.getType();
 
-    public IssueReportService(SaveLoadService saveLoadService) {
-        if (saveLoadService == null) {
-            throw new IllegalArgumentException("saveLoadService must not be null");
-        }
-        this.saveLoadService = saveLoadService;
+    public IssueReportService(SaveLoadService service, List<IssueReport> initial) {
+        this.service = Objects.requireNonNull(service, "service must not be null");
+        this.reports = initial != null ? copyList(initial) : new ArrayList<>();
     }
 
-    public List<IssueReport> listReports() throws IOException {
-        if (!saveLoadService.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
+    public void init() throws IOException {
+        List<IssueReport> loaded = loadFromDb();
+        this.reports = copyList(loaded);
+    }
+
+    // Convenience create for controllers
+    public IssueReport create(String title, String description) throws IOException {
+        return create(title, description, LocalDateTime.now());
+    }
+
+    public IssueReport create(String title, String description, LocalDateTime createdAt) throws IOException {
+        validateTitle(title);
+        validateDescription(description);
+        validateCreatedAt(createdAt);
+
+        IssueReport report = new IssueReport(title, description, createdAt);
+        create(report);
+        return copy(report);
+    }
+
+    @Override
+    public void create(IssueReport prototype) throws IllegalArgumentException, IOException {
+        validateClass(prototype);
+
+        IssueReport toStore = copy(prototype);
+
+        if (toStore.getId() == null || toStore.getId().isBlank()) {
+            toStore.setId(java.util.UUID.randomUUID().toString());
+        }
+
+        if (exists(toStore.getId())) {
+            throw new IllegalArgumentException("IssueReport with id=" + toStore.getId() + " already exists");
+        }
+
+        reports.add(toStore);
+        saveToDb();
+    }
+
+    @Override
+    public Optional<IssueReport> get(String id) throws IllegalArgumentException {
+        validateId(id);
+
+        for (IssueReport r : reports) {
+            if (Objects.equals(r.getId(), id)) {
+                return Optional.of(copy(r));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public List<IssueReport> getAll() {
+        return copyList(reports);
+    }
+
+    @Override
+    public void update(String id, IssueReport prototype) throws IllegalArgumentException, IOException {
+        validateId(id);
+        validateClass(prototype);
+
+        for (int i = 0; i < reports.size(); i++) {
+            IssueReport current = reports.get(i);
+            if (Objects.equals(current.getId(), id)) {
+                IssueReport updatedCopy = copy(prototype);
+                updatedCopy.setId(id);
+                reports.set(i, updatedCopy);
+                saveToDb();
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("IssueReport with id=" + id + " not found");
+    }
+
+    @Override
+    public void delete(String id) throws IllegalArgumentException, IOException {
+        validateId(id);
+
+        for (int i = 0; i < reports.size(); i++) {
+            if (Objects.equals(reports.get(i).getId(), id)) {
+                reports.remove(i);
+                saveToDb();
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("IssueReport with id=" + id + " not found");
+    }
+
+    @Override
+    public boolean exists(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (IssueReport r : reports) {
+            if (Objects.equals(r.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<IssueReport> loadFromDb() throws IOException {
+        if (!service.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
             return new ArrayList<>();
         }
 
-        Object loaded = saveLoadService.load(DataSaveKeys.ISSUE_REPORTS, REPORT_LIST_TYPE);
+        Object loaded = service.load(DataSaveKeys.ISSUE_REPORTS, ISSUE_REPORT_LIST_TYPE);
 
         if (loaded == null) {
             throw new IOException("Loaded issue reports are null. Stored data might be corrupted");
         }
 
-        if (!(loaded instanceof List<?> rawList)) {
+        if (!(loaded instanceof List<?> raw)) {
             throw new IOException("Loaded issue reports have unexpected type " + loaded.getClass().getName());
         }
 
         List<IssueReport> result = new ArrayList<>();
-        for (Object item : rawList) {
-            if (!(item instanceof IssueReport report)) {
-                throw new IOException("Loaded list contains non IssueReport element " +
-                        (item == null ? "null" : item.getClass().getName()));
+        for (Object o : raw) {
+            if (!(o instanceof IssueReport report)) {
+                throw new IOException("Loaded issue reports contain non IssueReport element");
             }
+            validateClass(report);
             result.add(report);
         }
 
         return result;
     }
 
-    public Optional<IssueReport> getReportById(Long id) throws IOException {
-        if (id == null) return Optional.empty();
-        return listReports().stream().filter(r -> id.equals(r.getId())).findFirst();
+    private void saveToDb() throws IOException {
+        service.save(DataSaveKeys.ISSUE_REPORTS, reports);
     }
 
-    public IssueReport addReport(String title, String description) throws IOException {
-        return addReport(nextId(), title, description, LocalDateTime.now());
+    private static IssueReport copy(IssueReport r) {
+        if (r == null) return null;
+        return new IssueReport(r.getId(), r.getTitle(), r.getDescription(), r.getCreatedAt());
     }
 
-    public IssueReport addReport(Long id, String title, String description, LocalDateTime createdAt) throws IOException {
-        validateId(id);
-        validateTitle(title);
-        validateDescription(description);
-        validateCreatedAt(createdAt);
-
-        List<IssueReport> reports = listReports();
-        boolean exists = reports.stream().anyMatch(r -> id.equals(r.getId()));
-        if (exists) {
-            throw new IllegalArgumentException("IssueReport with id " + id + " already exists");
+    private static List<IssueReport> copyList(List<IssueReport> list) {
+        List<IssueReport> out = new ArrayList<>();
+        if (list == null) return out;
+        for (IssueReport r : list) {
+            out.add(copy(r));
         }
-
-        IssueReport report = IssueReport.builder()
-                .id(id)
-                .title(title)
-                .description(description)
-                .createdAt(createdAt)
-                .build();
-
-        reports.add(report);
-        saveAllReports(reports);
-        return report;
+        return out;
     }
 
-    public IssueReport updateReport(Long id, String title, String description) throws IOException {
-        validateId(id);
-        validateTitle(title);
-        validateDescription(description);
-
-        List<IssueReport> reports = listReports();
-
-        IssueReport existing = reports.stream()
-                .filter(r -> id.equals(r.getId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("IssueReport with id " + id + " not found"));
-
-        existing.setTitle(title);
-        existing.setDescription(description);
-
-        saveAllReports(reports);
-        return existing;
-    }
-
-    public boolean deleteReport(Long id) throws IOException {
-        validateId(id);
-
-        List<IssueReport> reports = listReports();
-        boolean removed = reports.removeIf(r -> id.equals(r.getId()));
-
-        if (removed) {
-            saveAllReports(reports);
+    private static void validateId(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be null or blank");
         }
-        return removed;
-    }
-
-    private void saveAllReports(List<IssueReport> reports) throws IOException {
-        saveLoadService.save(DataSaveKeys.ISSUE_REPORTS, reports);
-    }
-
-    private Long nextId() throws IOException {
-        return listReports().stream()
-                .map(IssueReport::getId)
-                .filter(x -> x != null)
-                .max(Comparator.naturalOrder())
-                .orElse(0L) + 1L;
-    }
-
-    private static void validateId(Long id) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
     }
 
     private static void validateTitle(String title) {
-        if (title == null || title.isBlank()) throw new IllegalArgumentException("title must not be blank");
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("title must not be blank");
+        }
     }
 
     private static void validateDescription(String description) {
-        if (description == null || description.isBlank()) throw new IllegalArgumentException("description must not be blank");
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException("description must not be blank");
+        }
     }
 
     private static void validateCreatedAt(LocalDateTime createdAt) {
-        if (createdAt == null) throw new IllegalArgumentException("createdAt must not be null");
+        if (createdAt == null) {
+            throw new IllegalArgumentException("createdAt must not be null");
+        }
+    }
+
+    private static void validateClass(IssueReport prototype) {
+        if (prototype == null) {
+            throw new IllegalArgumentException("IssueReport must not be null");
+        }
+        validateTitle(prototype.getTitle());
+        validateDescription(prototype.getDescription());
+        validateCreatedAt(prototype.getCreatedAt());
+        // id is allowed to be blank in create, we generate it
     }
 }
