@@ -426,12 +426,12 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
         Admin prototype = new Admin(
-                "John",
-                "Smith",
-                "Doe",
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
                 dob,
-                "123456789",
-                "john.smith@test.com",
+                "10203040",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin
         );
@@ -443,6 +443,6 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals(1, all.size());
         Admin stored = all.getFirst();
         assertNotEquals("CHANGED", stored.getFirstName());
-        assertEquals("John", stored.getFirstName());
+        assertEquals("Yumi", stored.getFirstName());
     }
 }
