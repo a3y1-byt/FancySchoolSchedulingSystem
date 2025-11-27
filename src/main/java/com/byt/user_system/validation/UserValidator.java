@@ -32,7 +32,7 @@ public final class UserValidator {
             Pattern.compile("^[0-9]{7,13}$");
 
     private static final int MIN_AGE = 16;
-    private static final int MAX_AGE = 100;
+    private static final int MAX_AGE = 140;
 
     private UserValidator() {
     }
