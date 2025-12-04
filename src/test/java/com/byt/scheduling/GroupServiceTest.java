@@ -3,11 +3,6 @@ package com.byt.scheduling;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-
-
 class GroupServiceTest extends CRUDServiceTest<Group> {
 
     protected GroupServiceTest() {

@@ -3,8 +3,6 @@ package com.byt.scheduling;
 import com.byt.user_system.data.Student;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Data

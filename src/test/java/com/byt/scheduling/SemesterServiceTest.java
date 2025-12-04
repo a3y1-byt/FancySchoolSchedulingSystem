@@ -1,12 +1,8 @@
 package com.byt.scheduling;
 
-import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.services.CRUDService;
 import com.byt.services.CRUDServiceTest;
-
 import java.time.LocalDate;
-import java.util.function.Function;
 
 class SemesterServiceTest extends CRUDServiceTest<Semester> {
 

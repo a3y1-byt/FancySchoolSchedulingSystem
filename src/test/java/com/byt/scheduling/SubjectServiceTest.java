@@ -1,13 +1,9 @@
 package com.byt.scheduling;
 
-import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.scheduling.enums.SubjectType;
-import com.byt.services.CRUDService;
 import com.byt.services.CRUDServiceTest;
-
 import java.util.Arrays;
-import java.util.function.Function;
 
 class SubjectServiceTest extends CRUDServiceTest<Subject> {
 

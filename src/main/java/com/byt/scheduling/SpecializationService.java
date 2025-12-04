@@ -62,6 +62,7 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public List<Specialization> getAll() throws IOException {
+        if (specializations == null) loadSpecializations();
         return specializations.stream()
                 .map(Specialization::copy)
                 .collect(Collectors.toList());
@@ -107,6 +108,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     }
 
     public List<Specialization> listSpecializationsByStudyProgramId(String studyProgramId) {
+        if (specializations == null) return null;
         return specializations.stream()
                 .filter(s -> s.getStudyProgramId() != null && s.getStudyProgramId().equals(studyProgramId))
                 .map(Specialization::copy)
@@ -123,6 +125,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     }
 
     private void saveAllSpecializations(List<Specialization> specializations) {
+        if (specializations == null) return;
         try {
             saveLoadService.save(DataSaveKeys.SPECIALIZATIONS, specializations);
         } catch (IOException e) {
