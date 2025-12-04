@@ -29,7 +29,8 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public void create(StudyProgram prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("StudyProgram already exists");
 
         studyPrograms.add(StudyProgram.copy(prototype));
@@ -39,8 +40,6 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public Optional<StudyProgram> get(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
-
         StudyProgram program = findById(id);
         if (program == null) return Optional.empty();
 
@@ -59,7 +58,8 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public void update(String id, StudyProgram prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("StudyProgram with id " + id + " does not exist");
 
         List<StudyProgram> updatedList = studyPrograms.stream()
@@ -89,11 +89,13 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public boolean exists(String id) throws IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
         loadStudyPrograms();
         return studyPrograms.stream().anyMatch(p -> p.getId().equals(id));
     }
 
     private StudyProgram findById(String id) {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
         return this.studyPrograms.stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst()
@@ -120,6 +122,30 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
             this.studyPrograms = new ArrayList<>(loadedPrograms);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(StudyProgram program) {
+        List<String> errors = new ArrayList<>();
+
+        if (program == null) {
+            throw new IllegalArgumentException("StudyProgram cannot be null");
+        }
+
+        if (program.getId() == null || program.getId().trim().isEmpty()) {
+            errors.add("StudyProgram ID is required");
+        }
+
+        if (program.getName() == null || program.getName().trim().isEmpty()) {
+            errors.add("StudyProgram name is required");
+        }
+
+        if (program.getLevel() == null) {
+            errors.add("StudyProgram level is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

@@ -39,7 +39,8 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public void create(Specialization prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("Specialization already exists");
 
         specializations.add(Specialization.copy(prototype));
@@ -68,7 +69,8 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public void update(String id, Specialization prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Specialization id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("Specialization with id " + id + " does not exist");
 
         List<Specialization> updatedList = specializations.stream()
@@ -98,6 +100,8 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public boolean exists(String id) throws IOException {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Specialization id is null or empty");
+
         loadSpecializations();
         return specializations.stream().anyMatch(s -> s.getId().equals(id));
     }
@@ -138,6 +142,30 @@ public class SpecializationService implements CRUDService<Specialization> {
             this.specializations = new ArrayList<>(loadedSpecializations);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(Specialization specialization) {
+        List<String> errors = new ArrayList<>();
+
+        if (specialization == null) {
+            throw new IllegalArgumentException("Specialization cannot be null");
+        }
+
+        if (specialization.getId() == null || specialization.getId().trim().isEmpty()) {
+            errors.add("Specialization ID is required");
+        }
+
+        if (specialization.getName() == null || specialization.getName().trim().isEmpty()) {
+            errors.add("Specialization name is required");
+        }
+
+        if (specialization.getStudyProgramId() == null || specialization.getStudyProgramId().trim().isEmpty()) {
+            errors.add("Study Program ID is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

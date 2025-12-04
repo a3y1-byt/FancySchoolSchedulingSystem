@@ -37,7 +37,8 @@ public class LessonService implements CRUDService<Lesson> {
 
     @Override
     public void create(Lesson prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("Lesson already exists");
 
         lessons.add(Lesson.copy(prototype));
@@ -65,7 +66,8 @@ public class LessonService implements CRUDService<Lesson> {
 
     @Override
     public void update(String id, Lesson prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Lesson id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("Lesson with id " + id + " does not exist");
 
         List<Lesson> updatedList = lessons.stream()
@@ -163,6 +165,62 @@ public class LessonService implements CRUDService<Lesson> {
             this.lessons = new ArrayList<>(loadedLessons);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(Lesson lesson) {
+        List<String> errors = new ArrayList<>();
+
+        if (lesson == null) {
+            throw new IllegalArgumentException("Lesson cannot be null");
+        }
+
+        if (lesson.getId() == null || lesson.getId().trim().isEmpty()) {
+            errors.add("Lesson ID is required");
+        }
+
+        if (lesson.getType() == null) {
+            errors.add("Lesson type is required");
+        }
+
+        if (lesson.getMode() == null) {
+            errors.add("Lesson mode is required");
+        }
+
+        if (lesson.getDayOfWeek() == null) {
+            errors.add("Day of week is required");
+        }
+
+        if (lesson.getStartTime() == null) {
+            errors.add("Start time is required");
+        }
+
+        if (lesson.getEndTime() == null) {
+            errors.add("End time is required");
+        }
+
+        if (lesson.getLanguage() == null || lesson.getLanguage().trim().isEmpty()) {
+            errors.add("Lesson language is required");
+        }
+
+        if (lesson.getClassRoomId() == null || lesson.getClassRoomId().trim().isEmpty()) {
+            errors.add("ClassRoom ID is required");
+        }
+
+        if (lesson.getSubjectId() == null || lesson.getSubjectId().trim().isEmpty()) {
+            errors.add("Subject ID is required");
+        }
+
+        if (lesson.getSemesterId() == null || lesson.getSemesterId().trim().isEmpty()) {
+            errors.add("Semester ID is required");
+        }
+
+        if (lesson.getGroupId() == null || lesson.getGroupId().trim().isEmpty()) {
+            errors.add("Group ID is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

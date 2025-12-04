@@ -39,7 +39,8 @@ public class SemesterService implements CRUDService<Semester> {
 
     @Override
     public void create(Semester prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("Semester already exists");
 
         semesters.add(Semester.copy(prototype));
@@ -68,7 +69,7 @@ public class SemesterService implements CRUDService<Semester> {
 
     @Override
     public void update(String id, Semester prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
+        validate(prototype);
         if (!exists(id)) throw new IllegalArgumentException("Semester with id " + id + " does not exist");
 
         List<Semester> updatedList = semesters.stream()
@@ -131,6 +132,34 @@ public class SemesterService implements CRUDService<Semester> {
             this.semesters = new ArrayList<>(loadedSemesters);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(Semester semester) {
+        List<String> errors = new ArrayList<>();
+
+        if (semester == null) {
+            throw new IllegalArgumentException("Semester cannot be null");
+        }
+
+        if (semester.getId() == null || semester.getId().trim().isEmpty()) {
+            errors.add("Semester ID is required");
+        }
+
+        if (semester.getName() == null || semester.getName().trim().isEmpty()) {
+            errors.add("Semester name is required");
+        }
+
+        if (semester.getStartDate() == null) {
+            errors.add("Semester start date is required");
+        }
+
+        if (semester.getEndDate() == null) {
+            errors.add("Semester end date is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

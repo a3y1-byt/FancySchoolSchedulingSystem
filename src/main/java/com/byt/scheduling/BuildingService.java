@@ -29,7 +29,8 @@ public class BuildingService implements CRUDService<Building> {
 
     @Override
     public void create(Building prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if(exists(prototype.getId())) throw new IllegalArgumentException("Building already exists");
 
         buildings.add(Building.copy(prototype));
@@ -39,9 +40,8 @@ public class BuildingService implements CRUDService<Building> {
 
     @Override
     public Optional<Building> get(String id) throws IllegalArgumentException, IOException {
-        if(id == null || id.isEmpty()) throw new IllegalArgumentException("Building id is null or empty");
-
         Building building =  findById(id);
+
         if(building == null) return Optional.empty();
         List<ClassRoom> classRooms = classRoomService.listClassRoomsByBuildingId(building.getId());
         Building buildingCopy = Building.copy(building, classRooms);
@@ -57,7 +57,8 @@ public class BuildingService implements CRUDService<Building> {
 
     @Override
     public void update(String id, Building prototype) throws IllegalArgumentException, IOException {
-        if(id == null || id.isEmpty()) throw new IllegalArgumentException("Building id is null or empty");
+        validate(prototype);
+
         if(!exists(id)) throw new IllegalArgumentException("Building with id " + id + " does not exist");
 
         List<Building> updatedList = buildings.stream()
@@ -88,11 +89,14 @@ public class BuildingService implements CRUDService<Building> {
 
     @Override
     public boolean exists(String id) throws IOException {
+        if(id == null || id.isEmpty()) throw new IllegalArgumentException("Building id is null or empty");
         loadBuildings();
         return buildings.stream().anyMatch(b -> b.getId().equals(id));
     }
 
     private Building findById(String id) {
+        if(id == null || id.isEmpty()) throw new IllegalArgumentException("Building id is null or empty");
+
         return this.buildings.stream()
                 .filter(b -> b.getId().equals(id))
                 .findFirst()
@@ -119,6 +123,30 @@ public class BuildingService implements CRUDService<Building> {
             this.buildings = new ArrayList<>(loadedBuildings);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(Building building) {
+        List<String> errors = new ArrayList<>();
+
+        if (building == null) {
+            throw new IllegalArgumentException("Building cannot be null");
+        }
+
+        if (building.getId() == null || building.getId().trim().isEmpty()) {
+            errors.add("Building ID is required");
+        }
+
+        if (building.getName() == null || building.getName().trim().isEmpty()) {
+            errors.add("Building name is required");
+        }
+
+        if (building.getAddress() == null || building.getAddress().trim().isEmpty()) {
+            errors.add("Building address is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

@@ -1,9 +1,7 @@
 package com.byt.scheduling;
 
-
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -37,7 +37,8 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
     @Override
     public void create(ClassRoom prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("ClassRoom already exists");
 
         classRooms.add(ClassRoom.copy(prototype));
@@ -47,7 +48,6 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
     @Override
     public Optional<ClassRoom> get(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
         ClassRoom classRoom = findById(id);
         if (classRoom == null) return Optional.empty();
         ClassRoom classRoomCopy = ClassRoom.copy(classRoom);
@@ -63,7 +63,8 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
     @Override
     public void update(String id, ClassRoom prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("ClassRoom with id " + id + " does not exist");
 
         List<ClassRoom> updatedList = classRooms.stream()
@@ -106,6 +107,8 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     }
 
     private ClassRoom findById(String id) {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ClassRoom id is null or empty");
+
         return this.classRooms.stream()
                 .filter(r -> r.getId().equals(id))
                 .findFirst()
@@ -132,6 +135,34 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
             this.classRooms = new ArrayList<>(loadedClassRooms);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(ClassRoom classRoom) {
+        List<String> errors = new ArrayList<>();
+
+        if (classRoom == null) {
+            throw new IllegalArgumentException("ClassRoom cannot be null");
+        }
+
+        if (classRoom.getId() == null || classRoom.getId().trim().isEmpty()) {
+            errors.add("ClassRoom ID is required");
+        }
+
+        if (classRoom.getName() == null || classRoom.getName().trim().isEmpty()) {
+            errors.add("ClassRoom name is required");
+        }
+
+        if (classRoom.getCapacity() <= 0) {
+            errors.add("ClassRoom capacity must be positive");
+        }
+
+        if (classRoom.getBuildingId() == null || classRoom.getBuildingId().trim().isEmpty()) {
+            errors.add("Building ID is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

@@ -39,7 +39,8 @@ public class SubjectService implements CRUDService<Subject> {
 
     @Override
     public void create(Subject prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("Subject already exists");
 
         subjects.add(Subject.copy(prototype));
@@ -49,8 +50,6 @@ public class SubjectService implements CRUDService<Subject> {
 
     @Override
     public Optional<Subject> get(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
-
         Subject subject = findById(id);
         if (subject == null) return Optional.empty();
 
@@ -68,7 +67,8 @@ public class SubjectService implements CRUDService<Subject> {
 
     @Override
     public void update(String id, Subject prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Subject id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("Subject with id " + id + " does not exist");
 
         List<Subject> updatedList = subjects.stream()
@@ -140,6 +140,34 @@ public class SubjectService implements CRUDService<Subject> {
             this.subjects = new ArrayList<>(loadedSubjects);
         } catch (IOException e) {
             throw new RuntimeException(cannotLoadMessage, e);
+        }
+    }
+
+    private void validate(Subject subject) {
+        List<String> errors = new ArrayList<>();
+
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
+
+        if (subject.getId() == null || subject.getId().trim().isEmpty()) {
+            errors.add("Subject ID is required");
+        }
+
+        if (subject.getName() == null || subject.getName().trim().isEmpty()) {
+            errors.add("Subject name is required");
+        }
+
+        if (subject.getHours() <= 0) {
+            errors.add("Subject hours must be positive");
+        }
+
+        if (subject.getSpecializationId() == null || subject.getSpecializationId().trim().isEmpty()) {
+            errors.add("Specialization ID is required");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
         }
     }
 }

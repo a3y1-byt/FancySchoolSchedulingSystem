@@ -27,7 +27,6 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
                 .name("Introduction to Programming")
                 .types(Arrays.asList(SubjectType.NORMAL_SUBJECT, SubjectType.EXAM_SUBJECT))
                 .hours(60)
-                .ects(6)
                 .specializationId("SPEC-SE")
                 .lessons(null)
                 .build();

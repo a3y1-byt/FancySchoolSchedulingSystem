@@ -5,6 +5,7 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -38,7 +39,8 @@ public class GroupService implements CRUDService<Group> {
 
     @Override
     public void create(Group prototype) throws IllegalArgumentException, IOException {
-        if (prototype == null) throw new IllegalArgumentException("Prototype is null");
+        validate(prototype);
+
         if (exists(prototype.getId())) throw new IllegalArgumentException("Group already exists");
 
         groups.add(Group.copy(prototype));
@@ -67,7 +69,8 @@ public class GroupService implements CRUDService<Group> {
 
     @Override
     public void update(String id, Group prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Group id is null or empty");
+        validate(prototype);
+
         if (!exists(id)) throw new IllegalArgumentException("Group with id " + id + " does not exist");
 
         List<Group> updatedList = groups.stream()
@@ -132,4 +135,37 @@ public class GroupService implements CRUDService<Group> {
             throw new RuntimeException(cannotLoadMessage, e);
         }
     }
+
+    private void validate(Group group) {
+        List<String> errors = new ArrayList<>();
+
+        if (group == null) {
+            throw new IllegalArgumentException("Group cannot be null");
+        }
+
+        if (group.getId() == null || group.getId().trim().isEmpty()) {
+            errors.add("Group ID is required");
+        }
+
+        if (group.getName() == null || group.getName().trim().isEmpty()) {
+            errors.add("Group name is required");
+        }
+
+        if (group.getLanguage() == null || group.getLanguage().trim().isEmpty()) {
+            errors.add("Group language is required");
+        }
+
+        if (group.getMaxCapacity() <= 0) {
+            errors.add("Group max capacity must be positive");
+        }
+
+        if (group.getMinCapacity() <= 0) {
+            errors.add("Group min capacity must be positive");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
+        }
+    }
+
 }
