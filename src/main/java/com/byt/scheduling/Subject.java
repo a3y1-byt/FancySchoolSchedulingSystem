@@ -9,13 +9,17 @@ import java.util.List;
 @Data
 @Builder
 public class Subject {
+    public static final int HOURS_PER_ECTS = 25;
     String id;
     String name;
     List<SubjectType> types;
     int hours;
-    int ects;
     String specializationId;
     List<Lesson> lessons;
+
+    public int getEcts() {
+        return hours / HOURS_PER_ECTS;
+    }
 
     public static Subject copy(Subject subject, List<Lesson> lessons) {
         return Subject.builder()
@@ -25,7 +29,6 @@ public class Subject {
                         ? new ArrayList<>(subject.getTypes())
                         : new ArrayList<>())
                 .hours(subject.getHours())
-                .ects(subject.getEcts())
                 .specializationId(subject.getSpecializationId())
                 .lessons(lessons)
                 .build();
@@ -39,7 +42,6 @@ public class Subject {
                         ? new ArrayList<>(subject.getTypes())
                         : new ArrayList<>())
                 .hours(subject.getHours())
-                .ects(subject.getEcts())
                 .specializationId(subject.getSpecializationId())
                 .lessons(null)
                 .build();
