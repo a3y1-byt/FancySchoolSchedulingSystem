@@ -53,6 +53,9 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                 dateOfBirth, phoneNumber, email,
                 new ArrayList<>(languagesOfStudies), notes
         );
+        if (freeListener.getId() != null && exists(freeListener.getId())) {
+            throw new IllegalStateException("freeListener exists with this id already");
+        }
 
         freeListeners.add(freeListener);
         saveToDb();
@@ -62,6 +65,9 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
+        if (prototype.getId() != null && exists(prototype.getId())) {
+            throw new IllegalArgumentException("freeListener with id = " + prototype.getId() + " already exists");
+        }
         validateClass(prototype);
 
         FreeListener toStore = copy(prototype);
