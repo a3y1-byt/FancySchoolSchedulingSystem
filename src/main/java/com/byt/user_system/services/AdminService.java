@@ -48,6 +48,7 @@ public class AdminService implements CRUDService<Admin> {
                         LocalDate dateOfBirth, String phoneNumber, String email,
                         LocalDate hireDate, LocalDateTime lastLoginTime, String superadminId) throws IOException {
 
+
         validateClassData(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime);
@@ -64,6 +65,10 @@ public class AdminService implements CRUDService<Admin> {
                 hireDate, lastLoginTime, superadminId
         );
 
+        if (admin.getId() != null && exists(admin.getId())) {
+            throw new IllegalStateException("Admin exists with this id already");
+        }
+
         admins.add(admin);
         saveToDb();
 
@@ -72,7 +77,11 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
+        if (prototype.getId() != null && exists(prototype.getId())) {
+            throw new IllegalArgumentException("Admin with id = " + prototype.getId() + " already exists");
+        }
         validateClass(prototype);
+
 
         String superadminId = prototype.getSuperadminId();
         if (superadminId != null ) {

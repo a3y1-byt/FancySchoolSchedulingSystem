@@ -55,6 +55,9 @@ public class StudentService implements CRUDService<Student> {
                 new ArrayList<>(languagesOfStudies), studiesStatus
         );
 
+        if (student.getId() != null && exists(student.getId())) {
+            throw new IllegalStateException("student exists with this id already");
+        }
 
         students.add(student);
         saveToDb();
@@ -64,6 +67,9 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public void create(Student prototype) throws IllegalArgumentException, IOException {
+        if (prototype.getId() != null && exists(prototype.getId())) {
+            throw new IllegalArgumentException("student with id = " + prototype.getId() + " already exists");
+        }
         validateClass(prototype);
 
         Student toStore = copy(prototype);
