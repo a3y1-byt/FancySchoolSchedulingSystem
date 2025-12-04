@@ -15,15 +15,17 @@ import java.time.LocalDateTime;
 public class Admin extends Staff {
 
     private LocalDateTime lastLoginTime;
+    private String superadminId;
 
     public Admin(String firstName, String lastName, String familyName,
                  LocalDate dateOfBirth, String phoneNumber, String email,
-                 LocalDate  hireDate, LocalDateTime lastLoginTime) {
+                 LocalDate  hireDate, LocalDateTime lastLoginTime,String superadminId) {
 
         super(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate);
 
         this.lastLoginTime = lastLoginTime;
+        this.superadminId = superadminId;
     }
 }

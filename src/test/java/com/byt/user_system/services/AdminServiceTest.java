@@ -39,7 +39,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "10203040",
                 "yumi@gmail.com",
                 hireDate,
-                lastLogin
+                lastLogin,
+                null
         );
         admin.setId(TEST_OBJECT_ID);
         return admin;
@@ -75,7 +76,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "3809691046",
                 "yumiii@gmail.com",
                 hireDate,
-                lastLogin
+                lastLogin,
+                null
         );
 
         service.update(id, prototype);
@@ -116,7 +118,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -141,7 +144,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         null,
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -166,7 +170,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi_at_gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -191,7 +196,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "48505ab505",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -216,7 +222,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "4850",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -241,7 +248,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -266,12 +274,161 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
 
     // ------------------- TESTS FOR ADMIN FIELDS -------------------
+
+    // make Super Admin
+    @Test
+    public void makeSuperAdmin() throws IOException {
+        AdminService service = (AdminService) emptyService;
+
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(21);
+        LocalDate hireDate = today.minusYears(2);
+        LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
+
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
+
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                superA.getId()
+        );
+
+        Optional<Admin> before = service.get(subA.getId());
+        assertTrue(before.isPresent());
+        assertEquals(superA.getId(), before.get().getSuperadminId());
+
+        // робимо його супер-адміном
+        service.makeSuperAdmin(subA.getId());
+
+        Optional<Admin> after = service.get(subA.getId());
+        assertTrue(after.isPresent());
+        assertNull(after.get().getSuperadminId());
+    }
+
+    // delete superadmin via simple delete
+    @Test
+    public void deleteSuperAdminViaDelete() throws IOException {
+        AdminService service = (AdminService) emptyService;
+
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(21);
+        LocalDate hireDate = today.minusYears(2);
+        LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
+
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
+
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                superA.getId()
+        );
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.delete(superA.getId())
+        );
+    }
+
+    //delete superadmin via deleteSuperAdmin
+    @Test
+    public void deleteSuperAdmin() throws IOException {
+        AdminService service = (AdminService) emptyService;
+
+
+        LocalDate today = LocalDate.now();
+        LocalDate dob = today.minusYears(21);
+        LocalDate hireDate = today.minusYears(2);
+        LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
+
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
+
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                superA.getId()
+        );
+
+        Admin newSuperA = service.create(
+                "AAYumi",
+                "AAHnatiuk",
+                "AAPies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
+
+        service.deleteSuperAdmin(superA.getId(), newSuperA.getId());
+
+        assertTrue(service.get(superA.getId()).isEmpty());
+
+        Optional<Admin> newSuperAfter = service.get(newSuperA.getId());
+        assertTrue(newSuperAfter.isPresent());
+        assertNull(newSuperAfter.get().getSuperadminId());
+
+        Optional<Admin> subAfter = service.get(subA.getId());
+        assertTrue(subAfter.isPresent());
+        assertEquals(newSuperA.getId(), subAfter.get().getSuperadminId());
+    }
 
     // valid data
     @Test
@@ -293,7 +450,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "10203040",
                 "yumi@gmail.com",
                 hireDate,
-                lastLogin
+                lastLogin,
+                null
         );
 
         assertNotNull(created);
@@ -322,7 +480,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         null,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -347,7 +506,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -372,7 +532,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -397,7 +558,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -422,7 +584,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -447,7 +610,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "10203040",
                         "yumi@gmail.com",
                         hireDate,
-                        lastLogin
+                        lastLogin,
+                        null
                 )
         );
     }
@@ -477,7 +641,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "10203040",
                 "yumi@gmail.com",
                 hireDate,
-                lastLogin
+                lastLogin,
+                null
         );
 
         service.create(prototype);
