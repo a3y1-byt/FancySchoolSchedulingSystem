@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class CRUDServiceTest<TEntity> {
+public abstract class   CRUDServiceTest<TEntity> {
     protected static final String TEST_OBJECT_ID = "TestObject";
 
     protected final CRUDService<TEntity> emptyService;
@@ -126,20 +126,6 @@ public abstract class CRUDServiceTest<TEntity> {
         try {
             List<TEntity> allEntities = serviceWithData.getAll();
             assertEquals(1, allEntities.size());
-        } catch (IOException e) {
-            fail(e);
-        }
-    }
-
-    @Disabled("Java's type erasure makes this test impossible for now")
-    @Test
-    public void testCreateAddsObjectToService() {
-        CRUDService<TEntity> service = emptyService;
-        try {
-            service.create(getSampleObject());
-
-            String repositoryRecordWithCreatedObject = emptyRepository.read(dataRepositoryKey.repositoryKey);
-            String expectedRecord = oneElementRepository.read(dataRepositoryKey.repositoryKey);
         } catch (IOException e) {
             fail(e);
         }

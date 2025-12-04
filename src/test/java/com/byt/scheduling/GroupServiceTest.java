@@ -2,6 +2,9 @@ package com.byt.scheduling;
 
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
+import com.byt.user_system.enums.StudyLanguage;
+
+
 
 class GroupServiceTest extends CRUDServiceTest<Group> {
 
@@ -19,7 +22,7 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
         return Group.builder()
                 .id("G-2025")
                 .name("G-2025-Fall")
-                .language("English")
+                .language(StudyLanguage.ENGLISH)
                 .maxCapacity(25)
                 .minCapacity(15)
                 .yearOfStudy(3)

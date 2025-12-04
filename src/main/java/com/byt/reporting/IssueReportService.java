@@ -1,4 +1,4 @@
-package com.byt.reporting.services;
+package com.byt.reporting;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,39 +15,33 @@ import java.util.Optional;
 
 public class IssueReportService implements CRUDService<IssueReport> {
 
-    private final SaveLoadService service;
-    private List<IssueReport> reports;
-
     private static final Type ISSUE_REPORT_LIST_TYPE = new TypeToken<List<IssueReport>>() {}.getType();
 
-    public IssueReportService(SaveLoadService service, List<IssueReport> initial) {
-        this.service = Objects.requireNonNull(service, "service must not be null");
+    private final SaveLoadService saveLoadService;
+    private List<IssueReport> reports;
+
+    public IssueReportService(SaveLoadService saveLoadService) {
+        this(saveLoadService, null);
+    }
+
+    public IssueReportService(SaveLoadService saveLoadService, List<IssueReport> initial) {
+        this.saveLoadService = Objects.requireNonNull(saveLoadService, "saveLoadService must not be null");
         this.reports = initial != null ? copyList(initial) : new ArrayList<>();
     }
 
+    @Override
+    public void initialize() throws IOException {
+        this.reports = copyList(loadFromDb());
+    }
+
+    @Deprecated
     public void init() throws IOException {
-        List<IssueReport> loaded = loadFromDb();
-        this.reports = copyList(loaded);
-    }
-
-    // Convenience create for controllers
-    public IssueReport create(String title, String description) throws IOException {
-        return create(title, description, LocalDateTime.now());
-    }
-
-    public IssueReport create(String title, String description, LocalDateTime createdAt) throws IOException {
-        validateTitle(title);
-        validateDescription(description);
-        validateCreatedAt(createdAt);
-
-        IssueReport report = new IssueReport(title, description, createdAt);
-        create(report);
-        return copy(report);
+        initialize();
     }
 
     @Override
     public void create(IssueReport prototype) throws IllegalArgumentException, IOException {
-        validateClass(prototype);
+        validatePrototype(prototype);
 
         IssueReport toStore = copy(prototype);
 
@@ -85,7 +78,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
     @Override
     public void update(String id, IssueReport prototype) throws IllegalArgumentException, IOException {
         validateId(id);
-        validateClass(prototype);
+        validatePrototype(prototype);
 
         for (int i = 0; i < reports.size(); i++) {
             IssueReport current = reports.get(i);
@@ -118,9 +111,8 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     @Override
     public boolean exists(String id) {
-        if (id == null || id.isBlank()) {
-            return false;
-        }
+        if (id == null || id.isBlank()) return false;
+
         for (IssueReport r : reports) {
             if (Objects.equals(r.getId(), id)) {
                 return true;
@@ -130,11 +122,11 @@ public class IssueReportService implements CRUDService<IssueReport> {
     }
 
     private List<IssueReport> loadFromDb() throws IOException {
-        if (!service.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
+        if (!saveLoadService.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
             return new ArrayList<>();
         }
 
-        Object loaded = service.load(DataSaveKeys.ISSUE_REPORTS, ISSUE_REPORT_LIST_TYPE);
+        Object loaded = saveLoadService.load(DataSaveKeys.ISSUE_REPORTS, ISSUE_REPORT_LIST_TYPE);
 
         if (loaded == null) {
             throw new IOException("Loaded issue reports are null. Stored data might be corrupted");
@@ -149,7 +141,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
             if (!(o instanceof IssueReport report)) {
                 throw new IOException("Loaded issue reports contain non IssueReport element");
             }
-            validateClass(report);
+            validatePrototype(report);
             result.add(report);
         }
 
@@ -157,7 +149,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
     }
 
     private void saveToDb() throws IOException {
-        service.save(DataSaveKeys.ISSUE_REPORTS, reports);
+        saveLoadService.save(DataSaveKeys.ISSUE_REPORTS, reports);
     }
 
     private static IssueReport copy(IssueReport r) {
@@ -180,31 +172,17 @@ public class IssueReportService implements CRUDService<IssueReport> {
         }
     }
 
-    private static void validateTitle(String title) {
-        if (title == null || title.isBlank()) {
+    private static void validatePrototype(IssueReport prototype) {
+        if (prototype == null) throw new IllegalArgumentException("IssueReport must not be null");
+
+        if (prototype.getTitle() == null || prototype.getTitle().isBlank()) {
             throw new IllegalArgumentException("title must not be blank");
         }
-    }
-
-    private static void validateDescription(String description) {
-        if (description == null || description.isBlank()) {
+        if (prototype.getDescription() == null || prototype.getDescription().isBlank()) {
             throw new IllegalArgumentException("description must not be blank");
         }
-    }
-
-    private static void validateCreatedAt(LocalDateTime createdAt) {
-        if (createdAt == null) {
+        if (prototype.getCreatedAt() == null) {
             throw new IllegalArgumentException("createdAt must not be null");
         }
-    }
-
-    private static void validateClass(IssueReport prototype) {
-        if (prototype == null) {
-            throw new IllegalArgumentException("IssueReport must not be null");
-        }
-        validateTitle(prototype.getTitle());
-        validateDescription(prototype.getDescription());
-        validateCreatedAt(prototype.getCreatedAt());
-        // id is allowed to be blank in create, we generate it
     }
 }
