@@ -1,8 +1,8 @@
-package com.byt.reporting;
+package com.byt.services.reporting;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
-import com.byt.reporting.IssueReport;
+import com.byt.data.reporting.IssueReport;
 import com.byt.services.CRUDService;
 import com.google.gson.reflect.TypeToken;
 

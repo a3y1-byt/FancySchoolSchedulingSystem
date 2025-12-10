@@ -1,4 +1,4 @@
-package com.byt.reporting;
+package com.byt.data.reporting;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
