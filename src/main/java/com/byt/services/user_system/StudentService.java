@@ -59,8 +59,8 @@ public class StudentService implements CRUDService<Student> {
                 new ArrayList<>(languagesOfStudies), studiesStatus
         );
 
-        if (student.getId() != null && exists(student.getId())) {
-            throw new IllegalStateException("student exists with this id already");
+        if (student.getEmail() != null && exists(student.getEmail())) {
+            throw new IllegalStateException("student exists with this email already");
         }
 
         students.add(student);
@@ -74,8 +74,8 @@ public class StudentService implements CRUDService<Student> {
 
         validateClass(prototype);
 
-        if (prototype.getId() != null && exists(prototype.getId())) {
-            throw new IllegalArgumentException("student with id = " + prototype.getId() + " already exists");
+        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
+            throw new IllegalArgumentException("student with email = " + prototype.getEmail() + " already exists");
         }
 
         Student toStore = copy(prototype);
@@ -84,13 +84,13 @@ public class StudentService implements CRUDService<Student> {
     }
 
     @Override
-    public Optional<Student> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public Optional<Student> get(String email) throws IllegalArgumentException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (Student student : students) {
-            if (Objects.equals(student.getId(), id)) {
+            if (Objects.equals(student.getEmail(), email)) {
                 return Optional.of(copy(student));
             }
         }
@@ -99,54 +99,71 @@ public class StudentService implements CRUDService<Student> {
     }
 
     @Override
-    public List<Student> getAll() throws IOException{
+    public List<Student> getAll() throws IOException {
         return copyList(students);
     }
 
     @Override
-    public void update(String id, Student prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void update(String email, Student prototype) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         validateClass(prototype);
 
+        int index = -1;
         for (int i = 0; i < students.size(); i++) {
-            Student current = students.get(i);
-            if (Objects.equals(current.getId(), id)) {
-                Student updatedCopy = copy(prototype);
-                updatedCopy.setId(id);
-                students.set(i, updatedCopy);
-                saveToDb();
-                return;
+            if (Objects.equals(students.get(i).getEmail(), email)) {
+                index = i;
+                break;
             }
         }
-        throw new IllegalArgumentException("Student with id=" + id + " not found");
+
+        if (index == -1) {
+            throw new IllegalArgumentException("Student with email=" + email + " not found");
+        }
+
+        String newEmail = prototype.getEmail();
+
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
+            }
+            students.remove(index);
+
+            Student toStore = copy(prototype);
+            students.add(toStore);
+        } else {
+            Student updatedCopy = copy(prototype);
+            students.set(index, updatedCopy);
+        }
+
+        saveToDb();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void delete(String email) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (int i = 0; i < students.size(); i++) {
-            if (Objects.equals(students.get(i).getId(), id)) {
+            if (Objects.equals(students.get(i).getEmail(), email)) {
                 students.remove(i);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("Student with id=" + id + " not found");
+        throw new IllegalArgumentException("Student with email=" + email + " not found");
     }
 
     @Override
-    public boolean exists(String id) throws IOException{
-        if (id == null || id.isBlank()) {
+    public boolean exists(String email) throws IOException {
+        if (email == null || email.isBlank()) {
             return false;
         }
         for (Student student : students) {
-            if (Objects.equals(student.getId(), id)) {
+            if (Objects.equals(student.getEmail(), email)) {
                 return true;
             }
         }
@@ -173,7 +190,7 @@ public class StudentService implements CRUDService<Student> {
                 langsCopy,
                 adm.getStudiesStatus()
         );
-        copy.setId(adm.getId());
+        copy.setEmail(adm.getEmail());
         return copy;
     }
 

@@ -6,6 +6,7 @@ import com.byt.data.user_system.Student;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
 import com.byt.validation.user_system.ValidationException;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -16,7 +17,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Nested
 public class StudentServiceTest extends CRUDServiceTest<Student> {
+
+    private static final String SAMPLE_EMAIL = "yumi@gmail.com";
 
     public StudentServiceTest() {
         super(DataSaveKeys.STUDENTS, saveLoadService -> new StudentService(saveLoadService));
@@ -24,7 +28,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
 
     @Override
     protected String getSampleObjectId() {
-        return TEST_OBJECT_ID;
+        return SAMPLE_EMAIL;
     }
 
     @Override
@@ -37,11 +41,10 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                SAMPLE_EMAIL,
                 List.of(StudyLanguage.ENGLISH),
                 StudyStatus.ACTIVE
         );
-        student.setId(TEST_OBJECT_ID);
         return student;
     }
 
@@ -61,24 +64,25 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(25);
 
-        String id = getSampleObjectId();
-        Optional<Student> beforeOpt = service.get(id);
+        String oldEmail = getSampleObjectId();
+        Optional<Student> beforeOpt = service.get(oldEmail);
         assertTrue(beforeOpt.isPresent());
 
+        String newEmail = "yumiii@gmail.com";
         Student prototype = new Student(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                "yumiii@gmail.com",
+                newEmail,
                 List.of(StudyLanguage.POLISH),
                 StudyStatus.SUSPENDED
         );
 
-        service.update(id, prototype);
+        service.update(oldEmail, prototype);
 
-        Optional<Student> afterOpt = service.get(id);
+        Optional<Student> afterOpt = service.get(newEmail);
         assertTrue(afterOpt.isPresent());
         Student updated = afterOpt.get();
 
@@ -86,11 +90,9 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         assertEquals("Hnatiukk", updated.getLastName());
         assertEquals("Piess", updated.getFamilyName());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(newEmail, updated.getEmail());
         assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
         assertEquals(StudyStatus.SUSPENDED, updated.getStudiesStatus());
-
-        assertEquals(id, updated.getId());
     }
 
     // firstName contains ukrainian letters
@@ -278,7 +280,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<Student> after = service.getAll();
         assertEquals(before + 1, after.size());

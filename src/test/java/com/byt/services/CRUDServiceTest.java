@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class   CRUDServiceTest<TEntity> {
-    protected static final String TEST_OBJECT_ID = "TestObject";
+    protected static  String TEST_OBJECT_ID = "TestObject";
 
     protected final CRUDService<TEntity> emptyService;
     protected final CRUDService<TEntity> serviceWithData;

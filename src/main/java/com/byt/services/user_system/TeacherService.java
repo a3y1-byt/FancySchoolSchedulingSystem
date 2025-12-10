@@ -1,5 +1,6 @@
 package com.byt.services.user_system;
 
+import com.byt.data.user_system.Student;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
@@ -19,7 +20,7 @@ import com.byt.validation.user_system.ValidationException;
 
 
 public class TeacherService implements CRUDService<Teacher> {
-    // comments explaining how everything works are in Teacher Service
+    // comments explaining how everything works are in Admin Service
     private final SaveLoadService service;
     private List<Teacher> teachers;
 
@@ -57,8 +58,8 @@ public class TeacherService implements CRUDService<Teacher> {
                 dateOfBirth, phoneNumber, email,
                 hireDate, title, position
         );
-        if (teacher.getId() != null && exists(teacher.getId())) {
-            throw new IllegalStateException("teacher exists with this id already");
+        if (teacher.getEmail() != null && exists(teacher.getEmail())) {
+            throw new IllegalStateException("teacher exists with this email already");
         }
         teachers.add(teacher);
         saveToDb();
@@ -71,8 +72,8 @@ public class TeacherService implements CRUDService<Teacher> {
 
         validateClass(prototype);
 
-        if (prototype.getId() != null && exists(prototype.getId())) {
-            throw new IllegalArgumentException("teacher with id = " + prototype.getId() + " already exists");
+        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
+            throw new IllegalArgumentException("teacher with email = " + prototype.getEmail() + " already exists");
         }
 
         Teacher toStore = copy(prototype);
@@ -81,13 +82,13 @@ public class TeacherService implements CRUDService<Teacher> {
     }
 
     @Override
-    public Optional<Teacher> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public Optional<Teacher> get(String email) throws IllegalArgumentException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (Teacher teacher : teachers) {
-            if (Objects.equals(teacher.getId(), id)) {
+            if (Objects.equals(teacher.getEmail(), email)) {
                 return Optional.of(copy(teacher));
             }
         }
@@ -96,54 +97,71 @@ public class TeacherService implements CRUDService<Teacher> {
     }
 
     @Override
-    public List<Teacher> getAll() throws IOException{
+    public List<Teacher> getAll() throws IOException {
         return copyList(teachers);
     }
 
     @Override
-    public void update(String id, Teacher prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void update(String email, Teacher prototype) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         validateClass(prototype);
 
+        int index = -1;
         for (int i = 0; i < teachers.size(); i++) {
-            Teacher current = teachers.get(i);
-            if (Objects.equals(current.getId(), id)) {
-                Teacher updatedCopy = copy(prototype);
-                updatedCopy.setId(id);
-                teachers.set(i, updatedCopy);
-                saveToDb();
-                return;
+            if (Objects.equals(teachers.get(i).getEmail(), email)) {
+                index = i;
+                break;
             }
         }
-        throw new IllegalArgumentException("Teacher with id=" + id + " not found");
+
+        if (index == -1) {
+            throw new IllegalArgumentException("Teacher with email=" + email + " not found");
+        }
+
+        String newEmail = prototype.getEmail();
+
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("Teacher with email=" + newEmail + " already exists");
+            }
+            teachers.remove(index);
+
+            Teacher toStore = copy(prototype);
+            teachers.add(toStore);
+        } else {
+            Teacher updatedCopy = copy(prototype);
+            teachers.set(index, updatedCopy);
+        }
+
+        saveToDb();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void delete(String email) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (int i = 0; i < teachers.size(); i++) {
-            if (Objects.equals(teachers.get(i).getId(), id)) {
+            if (Objects.equals(teachers.get(i).getEmail(), email)) {
                 teachers.remove(i);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("Teacher with id=" + id + " not found");
+        throw new IllegalArgumentException("Teacher with email=" + email + " not found");
     }
 
     @Override
-    public boolean exists(String id) throws IOException{
-        if (id == null || id.isBlank()) {
+    public boolean exists(String email) throws IOException {
+        if (email == null || email.isBlank()) {
             return false;
         }
         for (Teacher teacher : teachers) {
-            if (Objects.equals(teacher.getId(), id)) {
+            if (Objects.equals(teacher.getEmail(), email)) {
                 return true;
             }
         }
@@ -165,7 +183,7 @@ public class TeacherService implements CRUDService<Teacher> {
                 adm.getTitle(),
                 adm.getPosition()
         );
-        copy.setId(adm.getId());
+        copy.setEmail(adm.getEmail());
         return copy;
     }
 

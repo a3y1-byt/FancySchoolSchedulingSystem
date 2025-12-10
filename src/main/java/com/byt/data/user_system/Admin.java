@@ -28,4 +28,6 @@ public class Admin extends Staff {
         this.lastLoginTime = lastLoginTime;
         this.superadminId = superadminId;
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.byt.services.user_system;
 
+import com.byt.data.user_system.Student;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
@@ -57,8 +58,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                 dateOfBirth, phoneNumber, email,
                 new ArrayList<>(languagesOfStudies), notes
         );
-        if (freeListener.getId() != null && exists(freeListener.getId())) {
-            throw new IllegalStateException("freeListener exists with this id already");
+        if (freeListener.getEmail() != null && exists(freeListener.getEmail())) {
+            throw new IllegalStateException("freeListener exists with this email already");
         }
 
         freeListeners.add(freeListener);
@@ -72,8 +73,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
         validateClass(prototype);
 
-        if (prototype.getId() != null && exists(prototype.getId())) {
-            throw new IllegalArgumentException("freeListener with id = " + prototype.getId() + " already exists");
+        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
+            throw new IllegalArgumentException("freeListener with email = " + prototype.getEmail() + " already exists");
         }
 
         FreeListener toStore = copy(prototype);
@@ -82,13 +83,13 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     }
 
     @Override
-    public Optional<FreeListener> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public Optional<FreeListener> get(String email) throws IllegalArgumentException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (FreeListener freeListener : freeListeners) {
-            if (Objects.equals(freeListener.getId(), id)) {
+            if (Objects.equals(freeListener.getEmail(), email)) {
                 return Optional.of(copy(freeListener));
             }
         }
@@ -97,54 +98,71 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     }
 
     @Override
-    public List<FreeListener> getAll() throws IOException{
+    public List<FreeListener> getAll() throws IOException {
         return copyList(freeListeners);
     }
 
     @Override
-    public void update(String id, FreeListener prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void update(String email, FreeListener prototype) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         validateClass(prototype);
 
+        int index = -1;
         for (int i = 0; i < freeListeners.size(); i++) {
-            FreeListener current = freeListeners.get(i);
-            if (Objects.equals(current.getId(), id)) {
-                FreeListener updatedCopy = copy(prototype);
-                updatedCopy.setId(id);
-                freeListeners.set(i, updatedCopy);
-                saveToDb();
-                return;
+            if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
+                index = i;
+                break;
             }
         }
-        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
+
+        if (index == -1) {
+            throw new IllegalArgumentException("FreeListener with email=" + email + " not found");
+        }
+
+        String newEmail = prototype.getEmail();
+
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("FreeListener with email=" + newEmail + " already exists");
+            }
+            freeListeners.remove(index);
+
+            FreeListener toStore = copy(prototype);
+            freeListeners.add(toStore);
+        } else {
+            FreeListener updatedCopy = copy(prototype);
+            freeListeners.set(index, updatedCopy);
+        }
+
+        saveToDb();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void delete(String email) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (int i = 0; i < freeListeners.size(); i++) {
-            if (Objects.equals(freeListeners.get(i).getId(), id)) {
+            if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
                 freeListeners.remove(i);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
+        throw new IllegalArgumentException("FreeListener with email=" + email + " not found");
     }
 
     @Override
-    public boolean exists(String id) throws IOException{
-        if (id == null || id.isBlank()) {
+    public boolean exists(String email) throws IOException {
+        if (email == null || email.isBlank()) {
             return false;
         }
         for (FreeListener freeListener : freeListeners) {
-            if (Objects.equals(freeListener.getId(), id)) {
+            if (Objects.equals(freeListener.getEmail(), email)) {
                 return true;
             }
         }
@@ -171,7 +189,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                 langsCopy,
                 adm.getNotes()
         );
-        copy.setId(adm.getId());
+        copy.setEmail(adm.getEmail());
         return copy;
     }
 
