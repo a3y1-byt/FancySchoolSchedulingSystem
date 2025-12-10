@@ -15,13 +15,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
+    private static final String SAMPLE_EMAIL = "yumi@gmail.com";
+
     public TeacherServiceTest() {
         super(DataSaveKeys.TEACHERS, saveLoadService -> new TeacherService(saveLoadService));
     }
 
     @Override
     protected String getSampleObjectId() {
-        return TEST_OBJECT_ID;
+        return SAMPLE_EMAIL;
     }
 
     @Override
@@ -35,12 +37,11 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                SAMPLE_EMAIL,
                 hireDate,
                 "DogTeacher",
                 "Dean"
         );
-        teacher.setId(TEST_OBJECT_ID);
         return teacher;
     }
 
@@ -57,29 +58,29 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
     public void updateTeacherWithValidData() throws IOException {
         TeacherService service = (TeacherService) serviceWithData;
 
-        String id = getSampleObjectId();
-        Optional<Teacher> beforeOpt = service.get(id);
+        String oldEmail = getSampleObjectId();
+        Optional<Teacher> beforeOpt = service.get(oldEmail);
         assertTrue(beforeOpt.isPresent());
 
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(25);
         LocalDate hireDate = today.minusYears(2);
-
+        String newEmail = "yumiii@gmail.com";
         Teacher prototype = new Teacher(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                "yumiii@gmail.com",
+                newEmail,
                 hireDate,
                 "DogTeacher",
                 "Dean"
         );
 
-        service.update(id, prototype);
-
-        Optional<Teacher> afterOpt = service.get(id);
+        service.update(oldEmail, prototype);
+        assertTrue(service.get(oldEmail).isEmpty());
+        Optional<Teacher> afterOpt = service.get(newEmail);
         assertTrue(afterOpt.isPresent());
         Teacher updated = afterOpt.get();
 
@@ -88,15 +89,14 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
         assertEquals("Piess", updated.getFamilyName());
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(newEmail, updated.getEmail());
         assertEquals(hireDate, updated.getHireDate());
         assertEquals("DogTeacher", updated.getTitle());
         assertEquals("Dean", updated.getPosition());
-
-        assertEquals(id, updated.getId());
     }
 
-                // firstName contains ukrainian letters
+
+    // firstName contains ukrainian letters
     @Test
     public void createTeacherWithNonLatinFirstName() {
         TeacherService service = (TeacherService) emptyService;
@@ -297,7 +297,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<Teacher> after = service.getAll();
         assertEquals(before + 1, after.size());

@@ -24,7 +24,6 @@ public class Teacher extends Staff {
         super(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate);
-
         this.title = title;
         this.position = position;
     }

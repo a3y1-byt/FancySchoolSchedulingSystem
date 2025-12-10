@@ -17,13 +17,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
 
+    private static final String SAMPLE_EMAIL = "yumi@gmail.com";
+
     public FreeListenerServiceTest() {
         super(DataSaveKeys.FREE_LISTENERS, saveLoadService -> new FreeListenerService(saveLoadService));
     }
 
     @Override
     protected String getSampleObjectId() {
-        return TEST_OBJECT_ID;
+        return SAMPLE_EMAIL;
     }
 
     @Override
@@ -36,11 +38,10 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                SAMPLE_EMAIL,
                 List.of(StudyLanguage.ENGLISH),
                 "Some notes"
         );
-        freeListener.setId(TEST_OBJECT_ID);
         return freeListener;
     }
 
@@ -57,27 +58,28 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
     public void updateFreeListenerWithValidData() throws IOException {
         FreeListenerService service = (FreeListenerService) serviceWithData;
 
-        String id = getSampleObjectId();
-        Optional<FreeListener> beforeOpt = service.get(id);
+        String oldEmail = getSampleObjectId();
+        Optional<FreeListener> beforeOpt = service.get(oldEmail);
         assertTrue(beforeOpt.isPresent());
 
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(25);
 
+        String newEmail = "yumiii@gmail.com";
         FreeListener prototype = new FreeListener(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                "yumiii@gmail.com",
+                newEmail,
                 List.of(StudyLanguage.POLISH),
                 "woof woof woof"
         );
 
-        service.update(id, prototype);
-
-        Optional<FreeListener> afterOpt = service.get(id);
+        service.update(oldEmail, prototype);
+        assertTrue(service.get(oldEmail).isEmpty());
+        Optional<FreeListener> afterOpt = service.get(newEmail);
         assertTrue(afterOpt.isPresent());
         FreeListener updated = afterOpt.get();
 
@@ -86,11 +88,9 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
         assertEquals("Piess", updated.getFamilyName());
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals("yumiii@gmail.com", updated.getEmail());
+        assertEquals(newEmail, updated.getEmail());
         assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
         assertEquals("woof woof woof", updated.getNotes());
-
-        assertEquals(id, updated.getId());
     }
 
     // firstName contains ukrainian letters
@@ -278,7 +278,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<FreeListener> after = service.getAll();
         assertEquals(before + 1, after.size());
@@ -375,7 +375,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
     }
 
 
