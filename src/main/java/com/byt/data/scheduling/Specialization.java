@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 @Builder
 public class Specialization {
+    @Deprecated
     String id;
     String name;
     String description;

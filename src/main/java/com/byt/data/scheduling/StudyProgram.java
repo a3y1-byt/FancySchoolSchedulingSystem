@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class StudyProgram {
+    @Deprecated
     String id;
     String name;
     StudyProgramLevel level;

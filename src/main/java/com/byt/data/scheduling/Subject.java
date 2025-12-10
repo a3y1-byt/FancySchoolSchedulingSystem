@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 public class Subject {
     public static final int HOURS_PER_ECTS = 25;
+    @Deprecated
     String id;
     String name;
     List<SubjectType> types;

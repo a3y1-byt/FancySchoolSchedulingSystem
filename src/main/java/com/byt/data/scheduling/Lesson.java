@@ -12,6 +12,7 @@ import java.time.LocalTime;
 @Data
 @Builder
 public class Lesson {
+    @Deprecated
     String id;
     LessonType type;
     LessonMode mode;

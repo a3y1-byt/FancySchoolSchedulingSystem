@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class Semester {
+
     String id;
     String name;
     LocalDate startDate;

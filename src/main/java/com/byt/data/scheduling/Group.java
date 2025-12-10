@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @Builder
 public class Group {
+    @Deprecated
     String id;
     String name;
     StudyLanguage language;

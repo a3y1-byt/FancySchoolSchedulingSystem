@@ -5,6 +5,7 @@ import lombok.Builder;
 @Data
 @Builder
 public class ClassRoom {
+    @Deprecated
     String id;
     String name;
     int floor;
