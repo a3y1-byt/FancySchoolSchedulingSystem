@@ -196,9 +196,15 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin with id = " + id + " not found");
         }
 
-        List<Admin> subordinateAdmins = getSubordinates(id);
+        boolean hasSubordinates = false;
+        for (Admin a : admins) {
+            if (Objects.equals(a.getSuperadminId(), id)) {
+                hasSubordinates = true;
+                break;
+            }
+        }
 
-        if (!subordinateAdmins.isEmpty()) {
+        if (hasSubordinates) {
             if (newSuperadminId == null || newSuperadminId.isBlank()) {
                 throw new IllegalArgumentException("You must provide new SuperAdmin Id");
             }
@@ -210,12 +216,12 @@ public class AdminService implements CRUDService<Admin> {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
             }
 
-            // нормалізуємо: новий керівник стає супер-адміном
             makeSuperAdmin(newSuperadminId);
 
-            // перепризначаємо підлеглих
-            for (Admin sub : subordinateAdmins) {
-                sub.setSuperadminId(newSuperadminId);
+            for (Admin a : admins) {
+                if (Objects.equals(a.getSuperadminId(), id)) {
+                    a.setSuperadminId(newSuperadminId);
+                }
             }
         }
         admins.remove(adminToDelete);
