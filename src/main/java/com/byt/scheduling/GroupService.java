@@ -3,6 +3,8 @@ package com.byt.scheduling;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
+import com.byt.user_system.data.Student;
+import com.byt.user_system.services.StudentService;
 import com.google.gson.reflect.TypeToken;
 
 import javax.swing.*;
@@ -14,11 +16,13 @@ import java.util.stream.Collectors;
 public class GroupService implements CRUDService<Group> {
     private final SaveLoadService saveLoadService;
     private final LessonService lessonService;
+    private final StudentService studentService;
     private List<Group> groups;
 
     public GroupService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
         this.lessonService = new LessonService(saveLoadService);
+        this.studentService = new StudentService(saveLoadService, null);
     }
 
     @Override
@@ -56,7 +60,8 @@ public class GroupService implements CRUDService<Group> {
         if (group == null) return Optional.empty();
 
         List<Lesson> lessons = lessonService.listLessonsByGroupId(id);
-        Group groupCopy = Group.copy(group, lessons);
+        List<Student> students = studentService.getAll();
+        Group groupCopy = Group.copy(group, lessons, students);
         return Optional.of(groupCopy);
     }
 
@@ -149,10 +154,6 @@ public class GroupService implements CRUDService<Group> {
 
         if (group.getName() == null || group.getName().trim().isEmpty()) {
             errors.add("Group name is required");
-        }
-
-        if (group.getLanguage() == null || group.getLanguage().trim().isEmpty()) {
-            errors.add("Group language is required");
         }
 
         if (group.getMaxCapacity() <= 0) {

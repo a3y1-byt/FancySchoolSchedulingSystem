@@ -19,7 +19,7 @@ public class Group {
     List<Lesson> lessons;
     List<Student> students;
 
-    public static Group copy(Group group, List<Lesson> lessons) {
+    public static Group copy(Group group, List<Lesson> lessons, List<Student> student) {
         return Group.builder()
                 .id(group.getId())
                 .name(group.getName())
@@ -29,6 +29,7 @@ public class Group {
                 .yearOfStudy(group.getYearOfStudy())
                 .notes(group.getNotes())
                 .lessons(lessons)
+                .students(student)
                 .build();
     }
 
