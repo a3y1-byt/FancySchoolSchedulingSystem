@@ -1,4 +1,4 @@
-package com.byt.user_system.data;
+package com.byt.data.user_system;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

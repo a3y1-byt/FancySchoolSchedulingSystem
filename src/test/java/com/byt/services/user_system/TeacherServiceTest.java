@@ -1,14 +1,13 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
-import com.byt.user_system.data.Teacher;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.data.user_system.Teacher;
+import com.byt.validation.user_system.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

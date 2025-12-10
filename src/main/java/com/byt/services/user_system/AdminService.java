@@ -1,9 +1,9 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.user_system.data.Admin;
+import com.byt.data.user_system.Admin;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.byt.user_system.validation.UserValidator;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.validation.user_system.UserValidator;
+import com.byt.validation.user_system.ValidationException;
 
 public class AdminService implements CRUDService<Admin> {
 
@@ -33,6 +33,10 @@ public class AdminService implements CRUDService<Admin> {
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
         this.admins = admins != null ? copyList(admins) : new ArrayList<>();
+    }
+
+    public AdminService(SaveLoadService service) {
+        this(service, null);
     }
 
     @Override
@@ -77,10 +81,12 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
+
+        validateClass(prototype);
+
         if (prototype.getId() != null && exists(prototype.getId())) {
             throw new IllegalArgumentException("Admin with id = " + prototype.getId() + " already exists");
         }
-        validateClass(prototype);
 
 
         String superadminId = prototype.getSuperadminId();

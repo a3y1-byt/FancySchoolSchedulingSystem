@@ -1,8 +1,7 @@
-package com.byt.user_system.data;
+package com.byt.data.user_system;
 
 import lombok.*;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Getter

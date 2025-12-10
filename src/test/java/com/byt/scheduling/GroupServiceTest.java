@@ -2,7 +2,7 @@ package com.byt.scheduling;
 
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
-import com.byt.user_system.enums.StudyLanguage;
+import com.byt.enums.user_system.StudyLanguage;
 
 
 

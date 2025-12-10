@@ -1,11 +1,10 @@
-package com.byt.user_system.data;
+package com.byt.data.user_system;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Getter

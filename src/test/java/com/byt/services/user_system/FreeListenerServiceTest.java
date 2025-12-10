@@ -1,10 +1,10 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
-import com.byt.user_system.data.FreeListener;
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.data.user_system.FreeListener;
+import com.byt.enums.user_system.StudyLanguage;
+import com.byt.validation.user_system.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

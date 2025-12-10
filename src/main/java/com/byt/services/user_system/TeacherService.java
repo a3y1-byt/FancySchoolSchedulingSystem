@@ -1,9 +1,9 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.user_system.data.Teacher;
+import com.byt.data.user_system.Teacher;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.byt.user_system.validation.UserValidator;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.validation.user_system.UserValidator;
+import com.byt.validation.user_system.ValidationException;
 
 
 public class TeacherService implements CRUDService<Teacher> {
@@ -29,6 +29,10 @@ public class TeacherService implements CRUDService<Teacher> {
     public TeacherService(SaveLoadService service, List<Teacher> teachers) {
         this.service = service;
         this.teachers = teachers != null ? copyList(teachers) : new ArrayList<>();
+    }
+
+    public TeacherService(SaveLoadService service) {
+        this(service, null);
     }
 
     @Override
@@ -64,10 +68,12 @@ public class TeacherService implements CRUDService<Teacher> {
 
     @Override
     public void create(Teacher prototype) throws IllegalArgumentException, IOException {
+
+        validateClass(prototype);
+
         if (prototype.getId() != null && exists(prototype.getId())) {
             throw new IllegalArgumentException("teacher with id = " + prototype.getId() + " already exists");
         }
-        validateClass(prototype);
 
         Teacher toStore = copy(prototype);
         teachers.add(toStore);

@@ -1,7 +1,8 @@
-package com.byt.user_system.data;
+package com.byt.enums.user_system.user_system;
 
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.enums.StudyStatus;
+import com.byt.data.user_system.Attendee;
+import com.byt.enums.user_system.StudyLanguage;
+import com.byt.enums.user_system.StudyStatus;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
