@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class Semester {
-
+    @Deprecated
     String id;
     String name;
     LocalDate startDate;
