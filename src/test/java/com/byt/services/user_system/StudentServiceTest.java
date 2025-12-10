@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class StudentServiceTest extends CRUDServiceTest<Student> {
 
     public StudentServiceTest() {
-        super(DataSaveKeys.STUDENTS, saveLoadService -> new StudentService(saveLoadService, null));
+        super(DataSaveKeys.STUDENTS, saveLoadService -> new StudentService(saveLoadService));
     }
 
     @Override

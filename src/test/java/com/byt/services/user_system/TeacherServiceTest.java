@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
     public TeacherServiceTest() {
-        super(DataSaveKeys.TEACHERS, saveLoadService -> new TeacherService(saveLoadService, null));
+        super(DataSaveKeys.TEACHERS, saveLoadService -> new TeacherService(saveLoadService));
     }
 
     @Override
