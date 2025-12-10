@@ -1,7 +1,7 @@
 package com.byt.scheduling;
 
-import com.byt.user_system.data.Student;
-import com.byt.user_system.enums.StudyLanguage;
+import com.byt.data.user_system.Student;
+import com.byt.enums.user_system.StudyLanguage;
 import lombok.Builder;
 import lombok.Data;
 import java.util.List;

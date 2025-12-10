@@ -5,14 +5,14 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.reporting.IssueReport;
 import com.byt.reporting.IssueReportService;
 import com.byt.scheduling.*;
-import com.byt.user_system.data.Admin;
-import com.byt.user_system.data.FreeListener;
-import com.byt.user_system.data.Student;
-import com.byt.user_system.data.Teacher;
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.enums.StudyStatus;
-import com.byt.user_system.services.AdminService;
-import com.byt.user_system.services.StudentService;
+import com.byt.data.user_system.Admin;
+import com.byt.data.user_system.FreeListener;
+import com.byt.data.user_system.Student;
+import com.byt.data.user_system.Teacher;
+import com.byt.enums.user_system.StudyLanguage;
+import com.byt.enums.user_system.StudyStatus;
+import com.byt.services.user_system.AdminService;
+import com.byt.services.user_system.StudentService;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -109,5 +109,10 @@ public class FancySchedulingApplication {
         reportService.create(superRealReport);
 
         System.out.println("Issue title: " + reportService.get("1").orElseThrow().getTitle()); // THIS PROJECT IS TOO GOOD!
+
+        // Just joking. We'll not take this report seriously!
+        reportService.delete(superRealReport.getId());
+
+
     }
 }
