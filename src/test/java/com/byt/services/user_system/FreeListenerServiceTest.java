@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
 
     public FreeListenerServiceTest() {
-        super(DataSaveKeys.FREE_LISTENERS, saveLoadService -> new FreeListenerService(saveLoadService, null));
+        super(DataSaveKeys.FREE_LISTENERS, saveLoadService -> new FreeListenerService(saveLoadService));
     }
 
     @Override

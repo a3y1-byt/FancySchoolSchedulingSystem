@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
     public AdminServiceTest() {
-        super(DataSaveKeys.ADMINS, saveLoadService -> new AdminService(saveLoadService, null));
+        super(DataSaveKeys.ADMINS, saveLoadService -> new AdminService(saveLoadService));
     }
 
     @Override
