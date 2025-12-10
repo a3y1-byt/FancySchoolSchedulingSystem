@@ -1,7 +1,6 @@
-package com.byt.user_system.validation;
+package com.byt.validation.user_system;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.regex.Pattern;
 
 // General class for validating User.

@@ -1,11 +1,11 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.user_system.data.Student;
-import com.byt.user_system.enums.StudyLanguage;
-import com.byt.user_system.enums.StudyStatus;
+import com.byt.data.user_system.Student;
+import com.byt.enums.user_system.StudyLanguage;
+import com.byt.enums.user_system.StudyStatus;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.byt.user_system.validation.UserValidator;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.validation.user_system.UserValidator;
+import com.byt.validation.user_system.ValidationException;
 
 public class StudentService implements CRUDService<Student> {
     // comments explaining how everything works are in Student Service
@@ -30,6 +30,10 @@ public class StudentService implements CRUDService<Student> {
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
         this.students = students != null ? copyList(students) : new ArrayList<>();
+    }
+
+    public StudentService(SaveLoadService service) {
+        this(service, null);
     }
 
     @Override
@@ -67,10 +71,12 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public void create(Student prototype) throws IllegalArgumentException, IOException {
+
+        validateClass(prototype);
+
         if (prototype.getId() != null && exists(prototype.getId())) {
             throw new IllegalArgumentException("student with id = " + prototype.getId() + " already exists");
         }
-        validateClass(prototype);
 
         Student toStore = copy(prototype);
         students.add(toStore);

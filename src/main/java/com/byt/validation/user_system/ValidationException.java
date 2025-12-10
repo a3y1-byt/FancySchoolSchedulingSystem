@@ -1,4 +1,4 @@
-package com.byt.user_system.validation;
+package com.byt.validation.user_system;
 
 public class ValidationException extends RuntimeException {
     public ValidationException(String message) {

@@ -1,10 +1,10 @@
-package com.byt.user_system.services;
+package com.byt.services.user_system;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.user_system.data.FreeListener;
-import com.byt.user_system.enums.StudyLanguage;
+import com.byt.data.user_system.FreeListener;
+import com.byt.enums.user_system.StudyLanguage;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.byt.user_system.validation.UserValidator;
-import com.byt.user_system.validation.ValidationException;
+import com.byt.validation.user_system.UserValidator;
+import com.byt.validation.user_system.ValidationException;
 
 public class FreeListenerService implements CRUDService<FreeListener> {
 
@@ -30,6 +30,10 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners) {
         this.service = service;
         this.freeListeners = freeListeners != null ? copyList(freeListeners) : new ArrayList<>();
+    }
+
+    public FreeListenerService(SaveLoadService service) {
+        this(service, null);
     }
 
     @Override
@@ -65,10 +69,12 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
+
+        validateClass(prototype);
+
         if (prototype.getId() != null && exists(prototype.getId())) {
             throw new IllegalArgumentException("freeListener with id = " + prototype.getId() + " already exists");
         }
-        validateClass(prototype);
 
         FreeListener toStore = copy(prototype);
         freeListeners.add(toStore);

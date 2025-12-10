@@ -1,4 +1,4 @@
-package com.byt.user_system.enums;
+package com.byt.enums.user_system;
 
 public enum StudyLanguage {
     ENGLISH,
