@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IssueReport {
+    @Deprecated
     private String id;
     private String title;
     private String description;
