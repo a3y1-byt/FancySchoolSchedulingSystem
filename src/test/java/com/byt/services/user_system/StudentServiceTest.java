@@ -5,7 +5,8 @@ import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Student;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

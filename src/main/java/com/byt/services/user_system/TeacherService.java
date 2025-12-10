@@ -16,7 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 
 
 public class TeacherService implements CRUDService<Teacher> {
@@ -245,7 +246,10 @@ public class TeacherService implements CRUDService<Teacher> {
 
         //  only Teacher validation
         if (hireDate == null) {
-            throw new ValidationException("Hire date must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Hire date must not be null"
+            );
         }
 
         LocalDate today = LocalDate.now();
@@ -256,31 +260,47 @@ public class TeacherService implements CRUDService<Teacher> {
             LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
             if (hireDate.isBefore(minHireDateByDob)) {
                 throw new ValidationException(
+                        ExceptionCode.VALUE_OUT_OF_RANGE,
                         "Person must be at least " + min_age_at_hire + " years old at hire date"
                 );
             }
         }
 
         if (hireDate.isAfter(today)) {
-            throw new ValidationException("Hire date must not be in the future");
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Hire date must not be in the future"
+            );
         }
 
         if (dateOfBirth != null && hireDate.isBefore(dateOfBirth)) {
-            throw new ValidationException("Hire date cannot be before date of birth");
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Hire date cannot be before date of birth"
+            );
         }
 
         if (title == null || title.isBlank()) {
-            throw new ValidationException("Title must not be empty");
+            throw new ValidationException(
+                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    "Title must not be empty"
+            );
         }
 
         if (position == null || position.isBlank()) {
-            throw new ValidationException("Position must not be empty");
+            throw new ValidationException(
+                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    "Position must not be empty"
+            );
         }
     }
 
     private void validateClass(Teacher prototype) {
         if (prototype == null) {
-            throw new ValidationException("Teacher prototype must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Teacher prototype must not be null"
+            );
         }
 
         validateClassData(

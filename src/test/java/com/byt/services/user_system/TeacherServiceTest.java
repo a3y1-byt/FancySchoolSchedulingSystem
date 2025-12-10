@@ -3,7 +3,8 @@ package com.byt.services.user_system;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Teacher;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

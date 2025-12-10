@@ -17,7 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 
 public class StudentService implements CRUDService<Student> {
     // comments explaining how everything works are in Student Service
@@ -251,17 +252,26 @@ public class StudentService implements CRUDService<Student> {
 
         //  only Student validation
         if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
-            throw new ValidationException("Student must have at least one study language");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Student must have at least one study language"
+            );
         }
 
         if (studiesStatus == null) {
-            throw new ValidationException("Study status must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Study status must not be null"
+            );
         }
     }
 
     private void validateClass(Student prototype) {
         if (prototype == null) {
-            throw new ValidationException("Student prototype must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Student prototype must not be null"
+            );
         }
 
         validateClassData(

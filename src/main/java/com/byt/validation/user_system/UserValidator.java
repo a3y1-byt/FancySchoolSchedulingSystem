@@ -2,6 +2,8 @@ package com.byt.validation.user_system;
 
 import java.time.LocalDate;
 import java.util.regex.Pattern;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 
 // General class for validating User.
 public final class UserValidator {
@@ -65,7 +67,10 @@ public final class UserValidator {
     private static void validateName(String fieldName, String value, boolean required) {
         if (value == null || value.isBlank()) {
             if (required) {
-                throw new ValidationException(fieldName + " must not be empty");
+                throw new ValidationException(
+                        ExceptionCode.NOT_EMPTY_VIOLATION,
+                        fieldName + " must not be empty"
+                );
             } else {
                 return;
             }
@@ -74,70 +79,104 @@ public final class UserValidator {
         String trimmed = value.trim();
 
         if (trimmed.length() < NAME_MIN || trimmed.length() > NAME_MAX) {
-            throw new ValidationException(fieldName + " length must be between " +
-                    NAME_MIN + " and " + NAME_MAX);
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    fieldName + " length must be between " +
+                            NAME_MIN + " and " + NAME_MAX
+            );
         }
 
         if (!NAME_PATTERN.matcher(trimmed).matches()) {
-            throw new ValidationException(fieldName + " can contain only latin letters");
+            throw new ValidationException(
+                    ExceptionCode.INVALID_FORMAT,
+                    fieldName + " can contain only latin letters"
+            );
         }
     }
 
     private static void validateDateOfBirth(LocalDate date) {
         if (date == null) {
-            throw new ValidationException("Date of birth must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Date of birth must not be null"
+            );
         }
 
         LocalDate today = LocalDate.now();
 
         if (!date.isBefore(today)) {
-            throw new ValidationException("Date of birth must be in past");
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Date of birth must be in past"
+            );
         }
 
         LocalDate minAllowed = today.minusYears(MIN_AGE);
         LocalDate maxAllowed = today.minusYears(MAX_AGE);
 
         if (date.isAfter(minAllowed)) {
-            throw new ValidationException("User must be at least " + MIN_AGE);
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "User must be at least " + MIN_AGE
+            );
         }
         if (date.isBefore(maxAllowed)) {
-            throw new ValidationException("User age must be less than " + MAX_AGE);
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "User age must be less than " + MAX_AGE
+            );
         }
     }
 
     private static void validatePhoneNumber(String phone) {
         if (phone == null || phone.isBlank()) {
-            throw new ValidationException("Phone number must not be empty");
+            throw new ValidationException(
+                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    "Phone number must not be empty"
+            );
         }
 
         String trimmed = phone.trim();
 
         if (!PHONE_PATTERN.matcher(trimmed).matches()) {
             throw new ValidationException(
-                    "Phone number can contain only digits");
+                    ExceptionCode.INVALID_FORMAT,
+                    "Phone number can contain only digits"
+            );
         }
 
         long digitsCount = trimmed.chars().filter(Character::isDigit).count();
 
         if (digitsCount < PHONE_MIN || digitsCount > PHONE_MAX) {
             throw new ValidationException(
-                    "Phone number must be between " + PHONE_MIN + " and " + PHONE_MAX);
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Phone number must be between " + PHONE_MIN + " and " + PHONE_MAX
+            );
         }
     }
 
     private static void validateEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new ValidationException("Email must not be empty");
+            throw new ValidationException(
+                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    "Email must not be empty"
+            );
         }
 
         String trimmed = email.trim();
 
         if (trimmed.length() > EMAIL_MAX) {
-            throw new ValidationException("Email is too long");
+            throw new ValidationException(
+                    ExceptionCode.LENGTH_TOO_LONG,
+                    "Email is too long"
+            );
         }
 
         if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
-            throw new ValidationException("Invalid email address");
+            throw new ValidationException(
+                    ExceptionCode.INVALID_FORMAT,
+                    "Invalid email address"
+            );
         }
     }
 }
