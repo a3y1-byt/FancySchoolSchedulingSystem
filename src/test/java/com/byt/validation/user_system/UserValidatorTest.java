@@ -1,7 +1,8 @@
 package com.byt.validation.user_system;
 
 import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

@@ -17,7 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 
 public class FreeListenerService implements CRUDService<FreeListener> {
 
@@ -250,19 +251,27 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
         //  only FreeListener validation
         if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
-            throw new ValidationException("FreeListener must have at least one study language");
+            throw new ValidationException(
+                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    "FreeListener must have at least one study language");
         }
 
         // notes are nullable but I think it is ok to set them at max  = 1000
         int max_notes = 1000;
         if (notes != null && notes.length() > max_notes) {
-            throw new ValidationException("Notes are too long");
+            throw new ValidationException(
+                    ExceptionCode.LENGTH_TOO_LONG,
+                    "Notes are too long"
+            );
         }
     }
 
     private void validateClass(FreeListener prototype) {
         if (prototype == null) {
-            throw new ValidationException("FreeListener prototype must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "FreeListener prototype must not be null"
+            );
         }
 
         validateClassData(

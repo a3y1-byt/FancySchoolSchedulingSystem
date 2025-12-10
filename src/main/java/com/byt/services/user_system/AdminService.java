@@ -16,7 +16,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
+
 
 public class AdminService implements CRUDService<Admin> {
 
@@ -60,7 +62,7 @@ public class AdminService implements CRUDService<Admin> {
         // if superadminId == null - admin is superAdmin,
         // so we are checking if ordinary admin has his superAdmin's email
         if (superadminId != null && !exists(superadminId)) {
-            throw new IllegalArgumentException("Superadmin with email = " +  superadminId + " does not exist");
+            throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
         }
 
 
@@ -90,9 +92,9 @@ public class AdminService implements CRUDService<Admin> {
 
 
         String superadminId = prototype.getSuperadminId();
-        if (superadminId != null ) {
+        if (superadminId != null) {
             if (!exists(superadminId)) {
-                throw new IllegalArgumentException("Superadmin with email = " +  superadminId + " does not exist");
+                throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
             }
             if (superadminId.equals(prototype.getEmail())) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
@@ -120,7 +122,7 @@ public class AdminService implements CRUDService<Admin> {
     }
 
     @Override
-    public List<Admin> getAll() throws IOException{
+    public List<Admin> getAll() throws IOException {
         return copyList(admins);
     }
 
@@ -291,7 +293,7 @@ public class AdminService implements CRUDService<Admin> {
 
 
     @Override
-    public boolean exists(String email) throws IOException{
+    public boolean exists(String email) throws IOException {
         if (email == null || email.isBlank()) {
             return false;
         }
@@ -325,7 +327,7 @@ public class AdminService implements CRUDService<Admin> {
         return copy;
     }
 
-    private List<Admin> getSubordinates(String superadminId){
+    private List<Admin> getSubordinates(String superadminId) {
         List<Admin> raw = new ArrayList<>();
         for (Admin admin : admins) {
             if (Objects.equals(admin.getSuperadminId(), superadminId)) {
@@ -335,13 +337,13 @@ public class AdminService implements CRUDService<Admin> {
         return copyList(raw);
     }
 
-    private Optional<Admin> getSupervisor(String adminId){
+    private Optional<Admin> getSupervisor(String adminId) {
         Optional<Admin> superadmin = get(adminId);
-        if(superadmin.isEmpty()){
+        if (superadmin.isEmpty()) {
             return Optional.empty();
         }
         String superId = superadmin.get().getSuperadminId();
-        if(superId == null){
+        if (superId == null) {
             return Optional.empty();
         }
         return get(superId);
@@ -412,7 +414,10 @@ public class AdminService implements CRUDService<Admin> {
 
         //  only Admin validation
         if (hireDate == null) {
-            throw new ValidationException("Hire date must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Hire date must not be null"
+            );
         }
 
         LocalDate today = LocalDate.now();
@@ -422,36 +427,52 @@ public class AdminService implements CRUDService<Admin> {
             LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
             if (hireDate.isBefore(minHireDateByDob)) {
                 throw new ValidationException(
+                        ExceptionCode.VALUE_OUT_OF_RANGE,
                         "Person must be at least " + min_age_at_hire + " years old at hire date"
                 );
             }
         }
 
         if (hireDate.isAfter(today)) {
-            throw new ValidationException("Hire date must not be in the future");
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Hire date must not be in the future"
+            );
         }
 
         if (dateOfBirth != null && hireDate.isBefore(dateOfBirth)) {
-            throw new ValidationException("Hire date cannot be before date of birth");
+            throw new ValidationException(
+                    ExceptionCode.VALUE_OUT_OF_RANGE,
+                    "Hire date cannot be before date of birth"
+            );
         }
 
         if (lastLoginTime != null) {
             LocalDateTime now = LocalDateTime.now();
 
             if (lastLoginTime.isAfter(now)) {
-                throw new ValidationException("Last login time cannot be in the future");
+                throw new ValidationException(
+                        ExceptionCode.VALUE_OUT_OF_RANGE,
+                        "Last login time cannot be in the future"
+                );
             }
 
             LocalDateTime hireStartLocalDateTime = hireDate.atStartOfDay(java.time.ZoneOffset.UTC).toLocalDateTime();
             if (lastLoginTime.isBefore(hireStartLocalDateTime)) {
-                throw new ValidationException("Last login time cannot be before hire date");
+                throw new ValidationException(
+                        ExceptionCode.VALUE_OUT_OF_RANGE,
+                        "Last login time cannot be before hire date"
+                );
             }
         }
     }
 
     private void validateClass(Admin prototype) {
         if (prototype == null) {
-            throw new ValidationException("Admin prototype must not be null");
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Admin prototype must not be null"
+            );
         }
 
         validateClassData(
