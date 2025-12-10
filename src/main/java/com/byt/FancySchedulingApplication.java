@@ -109,5 +109,10 @@ public class FancySchedulingApplication {
         reportService.create(superRealReport);
 
         System.out.println("Issue title: " + reportService.get("1").orElseThrow().getTitle()); // THIS PROJECT IS TOO GOOD!
+
+        // Just joking. We'll not take this report seriously!
+        reportService.delete(superRealReport.getId());
+
+
     }
 }
