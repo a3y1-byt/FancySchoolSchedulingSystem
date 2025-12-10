@@ -1,6 +1,7 @@
 package com.byt.reporting;
 
 import com.byt.persistence.util.DataSaveKeys;
+import com.byt.reporting.IssueReport;
 import com.byt.services.CRUDServiceTest;
 
 import java.time.LocalDateTime;
