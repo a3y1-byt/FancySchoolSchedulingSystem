@@ -53,7 +53,9 @@ public class TeacherService implements CRUDService<Teacher> {
                 dateOfBirth, phoneNumber, email,
                 hireDate, title, position
         );
-
+        if (teacher.getId() != null && exists(teacher.getId())) {
+            throw new IllegalStateException("teacher exists with this id already");
+        }
         teachers.add(teacher);
         saveToDb();
 
@@ -62,6 +64,9 @@ public class TeacherService implements CRUDService<Teacher> {
 
     @Override
     public void create(Teacher prototype) throws IllegalArgumentException, IOException {
+        if (prototype.getId() != null && exists(prototype.getId())) {
+            throw new IllegalArgumentException("teacher with id = " + prototype.getId() + " already exists");
+        }
         validateClass(prototype);
 
         Teacher toStore = copy(prototype);

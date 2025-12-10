@@ -46,16 +46,28 @@ public class AdminService implements CRUDService<Admin> {
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
-                        LocalDate hireDate, LocalDateTime lastLoginTime) throws IOException {
+                        LocalDate hireDate, LocalDateTime lastLoginTime, String superadminId) throws IOException {
+
 
         validateClassData(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime);
 
+        // if superadminId == null - admin is superAdmin,
+        // so we are checking if ordinary admin has his superAdmin's id
+        if (superadminId != null && !exists(superadminId)) {
+            throw new IllegalArgumentException("Superadmin with id = " +  superadminId + " does not exist");
+        }
+
+
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime
+                hireDate, lastLoginTime, superadminId
         );
+
+        if (admin.getId() != null && exists(admin.getId())) {
+            throw new IllegalStateException("Admin exists with this id already");
+        }
 
         admins.add(admin);
         saveToDb();
@@ -65,7 +77,21 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
+        if (prototype.getId() != null && exists(prototype.getId())) {
+            throw new IllegalArgumentException("Admin with id = " + prototype.getId() + " already exists");
+        }
         validateClass(prototype);
+
+
+        String superadminId = prototype.getSuperadminId();
+        if (superadminId != null ) {
+            if (!exists(superadminId)) {
+                throw new IllegalArgumentException("Superadmin with id = " +  superadminId + " does not exist");
+            }
+            if (superadminId.equals(prototype.getId())) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+        }
 
         Admin toStore = copy(prototype);
         admins.add(toStore);
@@ -75,7 +101,7 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public Optional<Admin> get(String id) throws IllegalArgumentException {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+            throw new IllegalArgumentException("Admin id must not be null or blank");
         }
 
         for (Admin admin : admins) {
@@ -95,7 +121,7 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public void update(String id, Admin prototype) throws IllegalArgumentException, IOException {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+            throw new IllegalArgumentException("Admin id must not be null or blank");
         }
 
         validateClass(prototype);
@@ -105,18 +131,37 @@ public class AdminService implements CRUDService<Admin> {
             if (Objects.equals(current.getId(), id)) {
                 Admin updatedCopy = copy(prototype);
                 updatedCopy.setId(id);
+                String superadminId = updatedCopy.getSuperadminId();
+                if (superadminId != null ) {
+                    if (!exists(superadminId)) {
+                        throw new IllegalArgumentException("Superadmin with id = " +  superadminId + " does not exist");
+                    }
+                    if (superadminId.equals(updatedCopy.getId())) {
+                        throw new IllegalArgumentException("Admin cannot supervise himself");
+                    }
+                }
                 admins.set(i, updatedCopy);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("Admin with id=" + id + " not found");
+        throw new IllegalArgumentException("Admin with id = " + id + " not found");
     }
 
+    // so rn if Admin does not have SuperAdminId in his class (it is null)
+    // - it means that HE IS superAdmin. So when deleting -
+    // you must provide new superAdminId that will be supervising admins
+    // that are "under" Admin that we are deleting
     @Override
     public void delete(String id) throws IllegalArgumentException, IOException {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+            throw new IllegalArgumentException("Admin id must not be null or blank");
+        }
+
+        List<Admin> subordinates = getSubordinates(id);
+        if (!subordinates.isEmpty()) {
+            throw new IllegalStateException(
+                    "You are trying to delete SuperAdmin. Use deleteSuperAdmin(id, newSuperAdminId)");
         }
 
         for (int i = 0; i < admins.size(); i++) {
@@ -126,8 +171,96 @@ public class AdminService implements CRUDService<Admin> {
                 return;
             }
         }
-        throw new IllegalArgumentException("Admin with id=" + id + " not found");
+        throw new IllegalArgumentException("Admin with id = " + id + " not found");
     }
+
+    public void deleteSuperAdmin(String id, String newSuperadminId) throws IllegalArgumentException, IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Admin id must not be null or blank");
+        }
+
+        Admin adminToDelete = null;
+        for (Admin a : admins) {
+            if (Objects.equals(a.getId(), id)) {
+                adminToDelete = a;
+                break;
+            }
+        }
+        if (adminToDelete == null) {
+            throw new IllegalArgumentException("Admin with id = " + id + " not found");
+        }
+
+        List<Admin> subordinateAdmins = getSubordinates(id);
+
+        if (!subordinateAdmins.isEmpty()) {
+            if (newSuperadminId == null || newSuperadminId.isBlank()) {
+                throw new IllegalArgumentException("You must provide new SuperAdmin Id");
+            }
+            if (!exists(newSuperadminId)) {
+                throw new IllegalArgumentException(
+                        "Admin with id = " + newSuperadminId + " not found. Assign valid new SuperAdmin");
+            }
+            if (Objects.equals(newSuperadminId, id)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            // нормалізуємо: новий керівник стає супер-адміном
+            makeSuperAdmin(newSuperadminId);
+
+            // перепризначаємо підлеглих
+            for (Admin sub : subordinateAdmins) {
+                sub.setSuperadminId(newSuperadminId);
+            }
+        }
+        admins.remove(adminToDelete);
+        saveToDb();
+    }
+
+    public void makeSuperAdmin(String id) throws IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Admin id must not be null or blank");
+        }
+
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getId(), id)) {
+                admin.setSuperadminId(null);
+                saveToDb();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Admin with id = " + id + " not found");
+    }
+
+    public void assignSupervisor(String id, String superadminId) throws IOException {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Admin id must not be null or blank");
+        }
+        if (superadminId == null || superadminId.isBlank()) {
+            throw new IllegalArgumentException("Superadmin id must not be null or blank");
+        }
+        if (id.equals(superadminId)) {
+            throw new IllegalArgumentException("Admin cannot supervise himself");
+        }
+
+        if (!exists(superadminId)) {
+            throw new IllegalArgumentException("Superadmin with id = " + superadminId + " does not exist");
+        }
+
+        Admin adm = null;
+        for (Admin a : admins) {
+            if (Objects.equals(a.getId(), id)) {
+                adm = a;
+                break;
+            }
+        }
+        if (adm == null) {
+            throw new IllegalArgumentException("Admin with id = " + id + " not found");
+        }
+
+        adm.setSuperadminId(superadminId);
+        saveToDb();
+    }
+
 
     @Override
     public boolean exists(String id) throws IOException{
@@ -157,10 +290,33 @@ public class AdminService implements CRUDService<Admin> {
                 adm.getPhoneNumber(),
                 adm.getEmail(),
                 adm.getHireDate(),
-                adm.getLastLoginTime()
+                adm.getLastLoginTime(),
+                adm.getSuperadminId()
         );
         copy.setId(adm.getId());
         return copy;
+    }
+
+    private List<Admin> getSubordinates(String superadminId){
+        List<Admin> raw = new ArrayList<>();
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getSuperadminId(), superadminId)) {
+                raw.add(admin);
+            }
+        }
+        return copyList(raw);
+    }
+
+    private Optional<Admin> getSupervisor(String adminId){
+        Optional<Admin> superadmin = get(adminId);
+        if(superadmin.isEmpty()){
+            return Optional.empty();
+        }
+        String superId = superadmin.get().getSuperadminId();
+        if(superId == null){
+            return Optional.empty();
+        }
+        return get(superId);
     }
 
     // just a new list with copies of Admins.
@@ -232,7 +388,6 @@ public class AdminService implements CRUDService<Admin> {
         }
 
         LocalDate today = LocalDate.now();
-        LocalDate earliest_hire_date = LocalDate.of(2000, 1, 1);
         int min_age_at_hire = 18;
 
         if (dateOfBirth != null) {
