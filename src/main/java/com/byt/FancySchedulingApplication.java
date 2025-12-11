@@ -82,6 +82,7 @@ public class FancySchedulingApplication {
                 .name("BYT-2025")
                 .language(StudyLanguage.ENGLISH)
                 .yearOfStudy(2025)
+                .minCapacity(100)
                 .maxCapacity(15)
                 .students(studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
                 .build();
@@ -94,8 +95,9 @@ public class FancySchedulingApplication {
         groupService.create(bytGroupPrototype);
 
         // Now, let's try to update the group we just created, because its name doesn't fully represent how cool this subject is
+        String oldGroupName = bytGroupPrototype.getName();
         bytGroupPrototype.setName("SUPER-BYT-2025");
-        groupService.update(bytGroupPrototype.getName(), bytGroupPrototype); // Still, no escaping references
+        groupService.update(oldGroupName, bytGroupPrototype); // Still, no escaping references
 
         System.out.println("Group name: " + groupService.get(bytGroupPrototype.getName()).orElseThrow().getName()); // SUPER-BYT-2025
 
