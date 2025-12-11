@@ -10,8 +10,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IssueReport {
-    private String id;
+
+    private String email;
     private String title;
     private String description;
     private LocalDateTime createdAt;
+
+//    @Deprecated
+//    private String id;
 }
+

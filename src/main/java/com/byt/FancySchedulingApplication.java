@@ -107,8 +107,15 @@ public class FancySchedulingApplication {
         IssueReportService reportService = new IssueReportService(database);
         reportService.initialize();
 
-        IssueReport superRealReport = new IssueReport("1", "THIS PROJECT IS TOO GOOD!", "Plz fix that", LocalDateTime.now());
-        reportService.create(superRealReport);
+        IssueReport superRealReport =
+                new IssueReport(
+                        "admin@school.com",                 // email instead of "1"
+                        "THIS PROJECT IS TOO GOOD!",              // title
+                        "Plz fix that",                           // description
+                        LocalDateTime.now(),                      // createdAt
+                        null                                      // deprecated id not used anymore
+                );
+
 
         System.out.println("Issue title: " + reportService.get("1").orElseThrow().getTitle()); // THIS PROJECT IS TOO GOOD!
 
