@@ -18,8 +18,8 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
                 "sample@mail.com",
                 "Sample title",
                 "Sample description",
-                LocalDateTime.of(2025, 1, 2, 10, 0),
-                null
+                LocalDateTime.of(2025, 1, 2, 10, 0)
+//                null
         );
     }
 

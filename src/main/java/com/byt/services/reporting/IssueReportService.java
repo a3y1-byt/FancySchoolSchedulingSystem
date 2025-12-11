@@ -201,8 +201,8 @@ public class IssueReportService implements CRUDService<IssueReport> {
                 r.getEmail(),
                 r.getTitle(),
                 r.getDescription(),
-                r.getCreatedAt(),
-                r.getId()    // deprecated field kept as is
+                r.getCreatedAt()
+//                r.getId()    // deprecated field kept as is
         );
     }
 

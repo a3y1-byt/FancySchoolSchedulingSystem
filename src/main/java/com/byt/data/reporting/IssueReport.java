@@ -16,7 +16,7 @@ public class IssueReport {
     private String description;
     private LocalDateTime createdAt;
 
-    @Deprecated
-    private String id;
+//    @Deprecated
+//    private String id;
 }
 
