@@ -9,7 +9,8 @@ import java.util.List;
 @Data
 @Builder
 public class Group {
-    String id;
+    public static final int MAX_CAPACITY = 20;
+    public static final int MIN_CAPACITY = 1;
     String name;
     StudyLanguage language;
     int maxCapacity;
@@ -19,30 +20,14 @@ public class Group {
     List<Lesson> lessons;
     List<Student> students;
 
-    public static Group copy(Group group, List<Lesson> lessons, List<Student> student) {
-        return Group.builder()
-                .id(group.getId())
-                .name(group.getName())
-                .language(group.getLanguage())
-                .maxCapacity(group.getMaxCapacity())
-                .minCapacity(group.getMinCapacity())
-                .yearOfStudy(group.getYearOfStudy())
-                .notes(group.getNotes())
-                .lessons(lessons)
-                .students(null)
-                .build();
-    }
-
     public static Group copy(Group group) {
         return Group.builder()
-                .id(group.getId())
                 .name(group.getName())
                 .language(group.getLanguage())
                 .maxCapacity(group.getMaxCapacity())
                 .minCapacity(group.getMinCapacity())
                 .yearOfStudy(group.getYearOfStudy())
                 .notes(group.getNotes())
-                .lessons(null)
                 .build();
     }
 }

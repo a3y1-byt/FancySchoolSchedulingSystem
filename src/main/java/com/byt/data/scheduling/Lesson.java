@@ -4,6 +4,7 @@ import com.byt.enums.scheduling.DayOfWeek;
 import com.byt.enums.scheduling.LessonMode;
 import com.byt.enums.scheduling.LessonType;
 import com.byt.enums.scheduling.WeekPattern;
+import com.byt.enums.user_system.StudyLanguage;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,23 +13,20 @@ import java.time.LocalTime;
 @Data
 @Builder
 public class Lesson {
-    String id;
+    String name;
     LessonType type;
     LessonMode mode;
     String note;
     DayOfWeek dayOfWeek;
     LocalTime startTime;
     LocalTime endTime;
-    String language;
+    StudyLanguage language;
     WeekPattern weekPattern;
-    String classRoomId;
-    String subjectId;
-    String semesterId;
-    String groupId;
+
 
     public static Lesson copy(Lesson lesson) {
         return Lesson.builder()
-                .id(lesson.getId())
+                .name(lesson.getName())
                 .type(lesson.getType())
                 .mode(lesson.getMode())
                 .note(lesson.getNote())
@@ -37,10 +35,6 @@ public class Lesson {
                 .endTime(lesson.getEndTime())
                 .language(lesson.getLanguage())
                 .weekPattern(lesson.getWeekPattern())
-                .classRoomId(lesson.getClassRoomId())
-                .subjectId(lesson.getSubjectId())
-                .semesterId(lesson.getSemesterId())
-                .groupId(lesson.getGroupId())
                 .build();
     }
 }

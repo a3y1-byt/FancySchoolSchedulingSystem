@@ -1,13 +1,11 @@
 package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Group;
-import com.byt.data.scheduling.Lesson;
-import com.byt.data.user_system.Student;
+import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-
-import com.byt.services.user_system.StudentService;
+import com.byt.validation.scheduling.Validation;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -17,158 +15,122 @@ import java.util.stream.Collectors;
 
 public class GroupService implements CRUDService<Group> {
     private final SaveLoadService saveLoadService;
-    private final LessonService lessonService;
-    private final StudentService studentService;
     private List<Group> groups;
 
     public GroupService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.lessonService = new LessonService(saveLoadService);
-        this.studentService = new StudentService(saveLoadService, null);
     }
 
     @Override
     public void initialize() throws IOException {
-        String cannotLoadMessage = "Error loading groups";
-        if (!saveLoadService.canLoad(DataSaveKeys.GROUPS)) {
-            throw new RuntimeException(cannotLoadMessage);
-        }
-
-        Type type = new TypeToken<List<Group>>(){}.getType();
-        try {
-            List<Group> loadedGroups = (List<Group>) saveLoadService.load(DataSaveKeys.GROUPS, type);
-            this.groups = new ArrayList<>(loadedGroups);
-        } catch (IOException e) {
-            throw new RuntimeException(cannotLoadMessage, e);
-        }
-    }
-
-    @Override
-    public void create(Group prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
-
-        if (exists(prototype.getId())) throw new IllegalArgumentException("Group already exists");
-
-        groups.add(Group.copy(prototype));
-        saveAllGroups(groups);
         loadGroups();
     }
 
     @Override
-    public Optional<Group> get(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Group id is null or empty");
+    public void create(Group prototype)
+            throws IllegalArgumentException, ValidationException, IOException
+    {
+        validate(prototype);
 
-        Group group = findById(id);
+        if (exists(prototype.getName())) throw new IllegalArgumentException("Group already exists");
+
+        groups.add(Group.copy(prototype));
+        saveAllGroups(groups);
+    }
+
+    @Override
+    public Optional<Group> get(String name) {
+        Group group = findOne(name);
         if (group == null) return Optional.empty();
 
-        List<Lesson> lessons = lessonService.listLessonsByGroupId(id);
-        List<Student> students = studentService.getAll();
-        Group groupCopy = Group.copy(group, lessons, students);
+        Group groupCopy = Group.copy(group);
         return Optional.of(groupCopy);
     }
 
     @Override
-    public List<Group> getAll() throws IOException {
+    public List<Group> getAll() {
+        if (groups == null) return null;
+
         return groups.stream()
                 .map(Group::copy)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void update(String id, Group prototype) throws IllegalArgumentException, IOException {
+    public void update(String name, Group prototype)
+            throws IllegalArgumentException, IOException, ValidationException
+    {
         validate(prototype);
 
-        if (!exists(id)) throw new IllegalArgumentException("Group with id " + id + " does not exist");
+        if (!exists(name)) throw new IllegalArgumentException("Group not found");
 
         List<Group> updatedList = groups.stream()
-                .map(g -> g.getId().equals(id) ? Group.copy(prototype) : g)
+                .map(g -> g.getName().equals(name) ? Group.copy(prototype) : g)
                 .collect(Collectors.toList());
 
         saveAllGroups(updatedList);
-        loadGroups();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Group id is null or empty");
-        if (!exists(id)) throw new IllegalArgumentException("Group with id " + id + " does not exist");
+    public void delete(String name) throws IllegalArgumentException, IOException {
+        Validation.notEmptyArgument(name);
+
+        if (!exists(name)) throw new IllegalArgumentException("Group not found");
 
         int originalSize = groups.size();
 
         List<Group> updatedGroups = groups.stream()
-                .filter(g -> !g.getId().equals(id))
+                .filter(g -> !g.getName().equals(name))
                 .collect(Collectors.toList());
 
         if (updatedGroups.size() < originalSize) {
             saveAllGroups(updatedGroups);
         }
-        loadGroups();
     }
 
     @Override
-    public boolean exists(String id) throws IOException {
-        loadGroups();
-        return groups.stream().anyMatch(g -> g.getId().equals(id));
+    public boolean exists(String name) throws IOException {
+        if(groups == null || name == null || name.isEmpty()) return false;
+
+        return groups.stream()
+                .anyMatch(g -> g.getName()
+                .equals(name));
     }
 
-    private Group findById(String id) {
-        if(this.groups == null || this.groups.isEmpty()) return null;
+    private Group findOne(String name) {
+        if(groups == null || name == null || name.isEmpty()) return null;
 
         return this.groups.stream()
-                .filter(g -> g.getId().equals(id))
+                .filter(g -> g.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
-    private void saveAllGroups(List<Group> groups) {
-        try {
-            saveLoadService.save(DataSaveKeys.GROUPS, groups);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save groups", e);
-        }
+    private void saveAllGroups(List<Group> groups) throws IOException {
+        saveLoadService.save(DataSaveKeys.GROUPS, groups);
+        loadGroups();
     }
 
-    private void loadGroups() {
+    private void loadGroups()  throws IOException {
         String cannotLoadMessage = "Error loading groups";
         if (!saveLoadService.canLoad(DataSaveKeys.GROUPS)) {
             throw new RuntimeException(cannotLoadMessage);
         }
 
         Type type = new TypeToken<List<Group>>(){}.getType();
-        try {
-            List<Group> loadedGroups = (List<Group>) saveLoadService.load(DataSaveKeys.GROUPS, type);
-            this.groups = new ArrayList<>(loadedGroups);
-        } catch (IOException e) {
-            throw new RuntimeException(cannotLoadMessage, e);
-        }
+        List<Group> loadedGroups =
+                (List<Group>) saveLoadService.load(DataSaveKeys.GROUPS, type);
+        this.groups = new ArrayList<>(loadedGroups);
     }
 
-    private void validate(Group group) {
-        List<String> errors = new ArrayList<>();
-
-        if (group == null) {
-            throw new IllegalArgumentException("Group cannot be null");
-        }
-
-        if (group.getId() == null || group.getId().trim().isEmpty()) {
-            errors.add("Group ID is required");
-        }
-
-        if (group.getName() == null || group.getName().trim().isEmpty()) {
-            errors.add("Group name is required");
-        }
-
-        if (group.getMaxCapacity() <= 0) {
-            errors.add("Group max capacity must be positive");
-        }
-
-        if (group.getMinCapacity() <= 0) {
-            errors.add("Group min capacity must be positive");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
-        }
+    private void validate(Group group) throws ValidationException {
+        Validation.notNull(group);
+        Validation.notEmpty(group.getName());
+        Validation.checkMin(group.getMinCapacity(), Group.MIN_CAPACITY);
+        Validation.checkMin(group.getMaxCapacity(), Group.MIN_CAPACITY);
+        Validation.checkMax(group.getMaxCapacity(), Group.MAX_CAPACITY);
+        Validation.notNull(group.getLanguage());
+        Validation.notNull(group.getYearOfStudy());
     }
 
 }

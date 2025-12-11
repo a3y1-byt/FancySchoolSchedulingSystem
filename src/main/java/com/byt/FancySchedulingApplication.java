@@ -79,7 +79,6 @@ public class FancySchedulingApplication {
 
         // ...or with builders!
         Group bytGroupPrototype = Group.builder()
-                .id("BYT-1")
                 .name("BYT-2025")
                 .language(StudyLanguage.ENGLISH)
                 .yearOfStudy(2025)
@@ -96,9 +95,9 @@ public class FancySchedulingApplication {
 
         // Now, let's try to update the group we just created, because its name doesn't fully represent how cool this subject is
         bytGroupPrototype.setName("SUPER-BYT-2025");
-        groupService.update(bytGroupPrototype.getId(), bytGroupPrototype); // Still, no escaping references
+        groupService.update(bytGroupPrototype.getName(), bytGroupPrototype); // Still, no escaping references
 
-        System.out.println("Group name: " + groupService.get(bytGroupPrototype.getId()).orElseThrow().getName()); // SUPER-BYT-2025
+        System.out.println("Group name: " + groupService.get(bytGroupPrototype.getName()).orElseThrow().getName()); // SUPER-BYT-2025
 
         // OMG, this project is so amazing that it might be illegal!
         // Let's report this issue to the developers (us) so that they make the application worse.
