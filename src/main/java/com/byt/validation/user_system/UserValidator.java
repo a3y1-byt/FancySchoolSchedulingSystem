@@ -72,7 +72,7 @@ public final class UserValidator {
                         fieldName + " must not be empty"
                 );
             } else {
-                return;
+                if(value == null)  return;
             }
         }
 
