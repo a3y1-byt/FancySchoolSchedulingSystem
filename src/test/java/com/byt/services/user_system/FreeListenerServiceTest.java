@@ -426,6 +426,48 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
         assertNotNull(created.getEmail());
     }
 
+    // notes is blank
+    @Test
+    public void createFreeListenerWithBlankNotes() {
+        FreeListenerService service = (FreeListenerService) emptyService;
+
+        LocalDate dob = LocalDate.now().minusYears(21);
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        List.of(StudyLanguage.ENGLISH),
+                        " "
+                )
+        );
+    }
+
+    // notes is ""
+    @Test
+    public void createFreeListenerWithEmptyNotes() {
+        FreeListenerService service = (FreeListenerService) emptyService;
+
+        LocalDate dob = LocalDate.now().minusYears(21);
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        List.of(StudyLanguage.ENGLISH),
+                        ""
+                )
+        );
+    }
+
 
     // creating prototype with null
     @Test
