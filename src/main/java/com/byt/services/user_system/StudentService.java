@@ -258,6 +258,27 @@ public class StudentService implements CRUDService<Student> {
             );
         }
 
+        // null and duplicate check
+        for (int i = 0; i < languagesOfStudies.size(); i++) {
+            StudyLanguage sl = languagesOfStudies.get(i);
+
+            if (sl == null) {
+                throw new ValidationException(
+                        ExceptionCode.NOT_NULL_VIOLATION,
+                        "Study language must not be null"
+                );
+            }
+
+            for (int j = i + 1; j < languagesOfStudies.size(); j++) {
+                if (sl == languagesOfStudies.get(j)) { // enum -> можна порівнювати через ==
+                    throw new ValidationException(
+                            ExceptionCode.INVALID_FORMAT,
+                            "Study languages must be unique"
+                    );
+                }
+            }
+        }
+
         if (studiesStatus == null) {
             throw new ValidationException(
                     ExceptionCode.NOT_NULL_VIOLATION,
