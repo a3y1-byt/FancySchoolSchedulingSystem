@@ -9,7 +9,8 @@ public enum ExceptionCode {
     VALUE_OUT_OF_RANGE("Field value is out of permitted range"),
     LENGTH_TOO_SHORT("Field length is shorter than allowed"),
     LENGTH_TOO_LONG("Field length is longer than allowed"),
-    INVALID_FORMAT("Field format is invalid");
+    INVALID_FORMAT("Field format is invalid"),
+    NO_DUPLICATES_VIOLATION("The collection contains duplicate elements");
 
     private final String message;
     ExceptionCode(String message) {

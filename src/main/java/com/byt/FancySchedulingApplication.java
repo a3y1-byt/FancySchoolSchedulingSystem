@@ -112,16 +112,9 @@ public class FancySchedulingApplication {
                         "admin@school.com",                 // email instead of "1"
                         "THIS PROJECT IS TOO GOOD!",              // title
                         "Plz fix that",                           // description
-                        LocalDateTime.now(),                      // createdAt
-                        null                                      // deprecated id not used anymore
+                        LocalDateTime.now()                      // createdAt
                 );
 
-
-        System.out.println("Issue title: " + reportService.get("1").orElseThrow().getTitle()); // THIS PROJECT IS TOO GOOD!
-
-        // Just joking. We'll not take this report seriously!
-        reportService.delete(superRealReport.getId());
-
-
+        reportService.create(superRealReport);
     }
 }
