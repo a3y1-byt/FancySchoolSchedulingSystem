@@ -79,4 +79,46 @@ public class CollectionValidatorTest {
                     fail();
                 });
     }
+
+    @Test
+    public void testAllValidDoesntThrowOnEmptyCollection() {
+        List<?> emptyList = new ArrayList<>();
+        Object[] emptyArray = {};
+
+        assertAll( () -> {
+                    assertDoesNotThrow(() -> CollectionValidator.assertAllElementsAreValid(emptyList, element -> false));
+                    assertDoesNotThrow(() -> CollectionValidator.assertAllElementsAreValid(emptyList, element -> false));
+                });
+    }
+
+    @Test
+    public void testAllValidDoesntThrowWhenAllAreValid() {
+        List<?> list = new ArrayList<>() {{
+            add(new Object());
+            add(new Object());
+            add(new Object());
+        }};
+        Object[] array = { new Object(), new Object(), new Object() };
+
+        assertAll( () -> {
+            assertDoesNotThrow(() -> CollectionValidator.assertAllElementsAreValid(list, element -> true));
+        });
+    }
+
+    @Test
+    public void testAllValidThrowsWhenInvalidElementsAreThere() {
+        Object invalidObject = new Object();
+
+        List<?> list = new ArrayList<>() {{
+            add(new Object());
+            add(new Object());
+            add(invalidObject);
+        }};
+        Object[] array = { new Object(), new Object(), invalidObject };
+
+        assertAll( () -> {
+            assertThrows(ValidationException.class, () -> CollectionValidator.assertAllElementsAreValid(list, element -> element == invalidObject));
+            assertThrows(ValidationException.class, () -> CollectionValidator.assertAllElementsAreValid(array, element -> element == invalidObject));
+        });
+    }
 }
