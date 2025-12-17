@@ -331,6 +331,53 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         );
     }
 
+    // list contains only null element
+    @Test
+    public void createFreeListenerWithNullLanguageElement() {
+        StudentService service = (StudentService) emptyService;
+
+        LocalDate dob = LocalDate.now().minusYears(21);
+
+        List<StudyLanguage> langs = new ArrayList<>();
+        langs.add(StudyLanguage.ENGLISH);
+        langs.add(null);
+
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        langs,
+                        StudyStatus.ACTIVE
+                )
+        );
+    }
+
+    // list contains duplicate
+    @Test
+    public void createFreeListenerWithDuplicateLanguages() {
+        StudentService service = (StudentService) emptyService;
+        LocalDate dob = LocalDate.now().minusYears(21);
+
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        List.of(StudyLanguage.ENGLISH, StudyLanguage.ENGLISH),
+                        StudyStatus.ACTIVE
+                )
+        );
+    }
+
     // study status = null
     @Test
     public void createStudentWithNullStudyStatus() {

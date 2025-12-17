@@ -256,13 +256,45 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                     "FreeListener must have at least one study language");
         }
 
+        // null and duplicate check
+        for (int i = 0; i < languagesOfStudies.size(); i++) {
+            StudyLanguage sl = languagesOfStudies.get(i);
+
+            if (sl == null) {
+                throw new ValidationException(
+                        ExceptionCode.NOT_NULL_VIOLATION,
+                        "Study language must not be null"
+                );
+            }
+
+            for (int j = i + 1; j < languagesOfStudies.size(); j++) {
+                if (sl == languagesOfStudies.get(j)) { // enum -> можна порівнювати через ==
+                    throw new ValidationException(
+                            ExceptionCode.INVALID_FORMAT,
+                            "Study languages must be unique"
+                    );
+                }
+            }
+        }
+
         // notes are nullable but I think it is ok to set them at max  = 1000
         int max_notes = 1000;
-        if (notes != null && notes.length() > max_notes) {
-            throw new ValidationException(
-                    ExceptionCode.LENGTH_TOO_LONG,
-                    "Notes are too long"
-            );
+        if (notes != null) {
+            String trimmed = notes.trim();
+
+            if (trimmed.isEmpty()) {
+                throw new ValidationException(
+                        ExceptionCode.NOT_EMPTY_VIOLATION,
+                        "Notes must not be empty"
+                );
+            }
+
+            if (trimmed.length() > max_notes) {
+                throw new ValidationException(
+                        ExceptionCode.LENGTH_TOO_LONG,
+                        "Notes are too long"
+                );
+            }
         }
     }
 

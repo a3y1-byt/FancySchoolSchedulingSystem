@@ -80,6 +80,54 @@ public class UserValidatorTest {
         );
     }
 
+    // family name = " "
+    @Test
+    public void familyNameIsBlank() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        " ",
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
+    // family name = ""
+    @Test
+    public void familyNameIsEmpty() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        "",
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
+    // family name contains gibberish
+    @Test
+    public void familyNameIsBad() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        " 2!",
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
     // first name contains ukrainian characters
     @Test
     public void nameWithNonLatinCharacters() {
