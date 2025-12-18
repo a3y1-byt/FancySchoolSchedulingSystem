@@ -133,5 +133,6 @@ public class LessonService implements CRUDService<Lesson> {
         Validation.notNull(lesson.getEndTime());
         Validation.notNull(lesson.getLanguage());
         Validation.notNull(lesson.getDayOfWeek());
+        Validation.notEmpty(lesson.getNote(), true);
     }
 }

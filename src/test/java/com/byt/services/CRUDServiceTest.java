@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class   CRUDServiceTest<TEntity> {
+public abstract class CRUDServiceTest<TEntity> {
     protected static  String TEST_OBJECT_ID = "TestObject";
 
     protected final CRUDService<TEntity> emptyService;
@@ -79,7 +79,6 @@ public abstract class   CRUDServiceTest<TEntity> {
             fail(e);
         }
     }
-
 
     @Test
     public void testReturnsNullOnGetByNonExistentId() {

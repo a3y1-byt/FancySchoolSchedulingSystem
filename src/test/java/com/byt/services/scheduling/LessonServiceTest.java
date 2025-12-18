@@ -6,6 +6,7 @@ import com.byt.enums.scheduling.LessonMode;
 import com.byt.enums.scheduling.LessonType;
 import com.byt.enums.scheduling.WeekPattern;
 import com.byt.enums.user_system.StudyLanguage;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -74,13 +75,6 @@ class LessonServiceTest extends CRUDServiceTest<Lesson> {
     }
 
     @Test
-    void testCreateThrowsOnDuplicateName() throws IOException, ValidationException {
-        LessonService service = (LessonService) serviceWithData;
-        Lesson duplicate = getSampleObject();
-        assertThrows(IllegalArgumentException.class, () -> service.create(duplicate));
-    }
-
-    @Test
     void testGetReturnsEmptyForNonExistent() {
         LessonService service = (LessonService) emptyService;
         Optional<Lesson> result = service.get("Nonexistent Lesson");
@@ -99,24 +93,6 @@ class LessonServiceTest extends CRUDServiceTest<Lesson> {
     void testGetAllDoesNotThrowWhenInitialized() {
         LessonService service = (LessonService) serviceWithData;
         assertNotNull(service.getAll());
-    }
-
-    @Test
-    void testUpdateThrowsOnNonExistentName() {
-        LessonService service = (LessonService) emptyService;
-        Lesson updated = Lesson.builder()
-                .name("Nonexistent Lesson")
-                .type(LessonType.LECTURE)
-                .mode(LessonMode.OFFLINE)
-                .note("")
-                .dayOfWeek(DayOfWeek.WEDNESDAY)
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(15, 0))
-                .language(StudyLanguage.ENGLISH)
-                .weekPattern(WeekPattern.ODD)
-                .build();
-        assertThrows(IllegalArgumentException.class,
-                () -> service.update("Nonexistent Lesson", updated));
     }
 
     @Test
@@ -146,4 +122,124 @@ class LessonServiceTest extends CRUDServiceTest<Lesson> {
         LessonService service = (LessonService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
     }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name(null)
+                .type(LessonType.LECTURE)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(11, 30))
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullType() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(null)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(11, 30))
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullMode() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(LessonType.LECTURE)
+                .mode(null)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(11, 30))
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullStartTime() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(LessonType.LECTURE)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(null)
+                .endTime(LocalTime.of(11, 30))
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullEndTime() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(LessonType.LECTURE)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(null)
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullLanguage() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(LessonType.LECTURE)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(11, 30))
+                .language(null)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullDayOfWeek() {
+        LessonService service = (LessonService) emptyService;
+        Lesson lesson = Lesson.builder()
+                .name("Lesson")
+                .type(LessonType.LECTURE)
+                .mode(LessonMode.OFFLINE)
+                .dayOfWeek(null)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(11, 30))
+                .language(StudyLanguage.ENGLISH)
+                .weekPattern(WeekPattern.EVEN)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(lesson));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
 }

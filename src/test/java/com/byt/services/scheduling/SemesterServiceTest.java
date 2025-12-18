@@ -1,6 +1,7 @@
 package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Semester;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -153,5 +154,57 @@ class SemesterServiceTest extends CRUDServiceTest<Semester> {
     void testExistsReturnsTrueForExistingName() throws IOException {
         SemesterService service = (SemesterService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
+    }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        SemesterService service = (SemesterService) emptyService;
+        Semester semester = Semester.builder()
+                .name(null)
+                .startDate(LocalDate.of(2025, 9, 1))
+                .endDate(LocalDate.of(2025, 12, 20))
+                .academicYear(2025)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(semester));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        SemesterService service = (SemesterService) emptyService;
+        Semester semester = Semester.builder()
+                .name("  ")
+                .startDate(LocalDate.of(2025, 9, 1))
+                .endDate(LocalDate.of(2025, 12, 20))
+                .academicYear(2025)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(semester));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullStartDate() {
+        SemesterService service = (SemesterService) emptyService;
+        Semester semester = Semester.builder()
+                .name("Semester")
+                .startDate(null)
+                .endDate(LocalDate.of(2025, 12, 20))
+                .academicYear(2025)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(semester));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullEndDate() {
+        SemesterService service = (SemesterService) emptyService;
+        Semester semester = Semester.builder()
+                .name("Semester")
+                .startDate(LocalDate.of(2025, 9, 1))
+                .endDate(null)
+                .academicYear(2025)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(semester));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
     }
 }

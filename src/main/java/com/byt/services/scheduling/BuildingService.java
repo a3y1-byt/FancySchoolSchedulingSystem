@@ -131,5 +131,7 @@ public class BuildingService implements CRUDService<Building> {
         Validation.notNull(building);
         Validation.notEmpty(building.getName());
         Validation.notEmpty(building.getAddress());
+        Validation.notEmpty(building.getDescription(), true);
     }
+
 }

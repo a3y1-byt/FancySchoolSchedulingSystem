@@ -3,6 +3,7 @@ package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Group;
 import com.byt.enums.user_system.StudyLanguage;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -31,7 +32,6 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .name("G-2025-Fall")
                 .language(StudyLanguage.ENGLISH)
                 .maxCapacity(20)
-                .minCapacity(10)
                 .yearOfStudy(3)
                 .notes(null)
                 .lessons(null)
@@ -51,7 +51,6 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .name("Placeholder Group")
                 .language(StudyLanguage.ENGLISH)
                 .maxCapacity(15)
-                .minCapacity(5)
                 .yearOfStudy(1)
                 .notes(null)
                 .lessons(null)
@@ -104,7 +103,6 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .name(getSampleObjectId())
                 .language(StudyLanguage.ENGLISH)
                 .maxCapacity(18)
-                .minCapacity(9)
                 .yearOfStudy(4)
                 .notes(null)
                 .lessons(null)
@@ -124,7 +122,6 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .name("Nonexistent Group")
                 .language(StudyLanguage.ENGLISH)
                 .maxCapacity(10)
-                .minCapacity(5)
                 .yearOfStudy(1)
                 .notes(null)
                 .lessons(null)
@@ -166,5 +163,57 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
     void testExistsReturnsTrueForExistingName() throws IOException {
         GroupService service = (GroupService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
+    }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        GroupService service = (GroupService) emptyService;
+        Group group = Group.builder()
+                .name(null)
+                .language(StudyLanguage.ENGLISH)
+                .maxCapacity(20)
+                .yearOfStudy(1)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(group));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        GroupService service = (GroupService) emptyService;
+        Group group = Group.builder()
+                .name("")
+                .language(StudyLanguage.ENGLISH)
+                .maxCapacity(20)
+                .yearOfStudy(1)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(group));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullLanguage() {
+        GroupService service = (GroupService) emptyService;
+        Group group = Group.builder()
+                .name("Group")
+                .language(null)
+                .maxCapacity(20)
+                .yearOfStudy(1)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(group));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnMaxCapacityTooHigh() {
+        GroupService service = (GroupService) emptyService;
+        Group group = Group.builder()
+                .name("Group")
+                .language(StudyLanguage.ENGLISH)
+                .maxCapacity(25)
+                .yearOfStudy(1)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(group));
+        assertEquals(ExceptionCode.MAX_VALUE_VIOLATION, ex.getExceptionCode());
     }
 }
