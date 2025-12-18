@@ -131,6 +131,9 @@ public class SubjectService implements CRUDService<Subject> {
         Validation.notNull(subject);
         Validation.notEmpty(subject.getName());
         Validation.notNull(subject.getHours());
+        Validation.checkMin(subject.getEcts(), 1);
 
+        if(subject.getTypes() != null)
+            subject.getTypes().forEach(Validation::notNull);
     }
 }

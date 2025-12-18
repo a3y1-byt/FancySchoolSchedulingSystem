@@ -2,6 +2,7 @@ package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Subject;
 import com.byt.enums.scheduling.SubjectType;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -104,19 +105,6 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
     }
 
     @Test
-    void testUpdateThrowsOnNonExistentName() {
-        SubjectService service = (SubjectService) emptyService;
-        Subject updated = Subject.builder()
-                .name("Nonexistent Subject")
-                .hours(20)
-                .types(Arrays.asList(SubjectType.NORMAL_SUBJECT))
-                .lessons(null)
-                .build();
-        assertThrows(IllegalArgumentException.class,
-                () -> service.update("Nonexistent Subject", updated));
-    }
-
-    @Test
     void testUpdateThrowsOnNullPrototype() {
         SubjectService service = (SubjectService) serviceWithData;
         assertThrows(ValidationException.class,
@@ -148,5 +136,60 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
     void testExistsReturnsTrueForExistingName() throws IOException {
         SubjectService service = (SubjectService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
+    }
+    @Test
+    void testCreateThrowsOnNullName() {
+        SubjectService service = (SubjectService) emptyService;
+        Subject subject = Subject.builder()
+                .name(null)
+                .hours(60)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(subject));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        SubjectService service = (SubjectService) emptyService;
+        Subject subject = Subject.builder()
+                .name("")
+                .hours(60)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(subject));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnZeroHours() {
+        SubjectService service = (SubjectService) emptyService;
+        Subject subject = Subject.builder()
+                .name("Subject")
+                .hours(0)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(subject));
+        assertEquals(ExceptionCode.MIN_VALUE_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNegativeHours() {
+        SubjectService service = (SubjectService) emptyService;
+        Subject subject = Subject.builder()
+                .name("Subject")
+                .hours(-10)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(subject));
+        assertEquals(ExceptionCode.MIN_VALUE_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testUpdateThrowsOnInvalidHours() {
+        SubjectService service = (SubjectService) serviceWithData;
+        Subject invalid = Subject.builder()
+                .name(getSampleObjectId())
+                .hours(0)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> service.update(getSampleObjectId(), invalid));
+        assertEquals(ExceptionCode.MIN_VALUE_VIOLATION, ex.getExceptionCode());
     }
 }

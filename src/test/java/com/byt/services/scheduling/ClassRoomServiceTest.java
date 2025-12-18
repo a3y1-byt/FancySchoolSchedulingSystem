@@ -1,6 +1,7 @@
 package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.ClassRoom;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -142,4 +143,29 @@ class ClassRoomServiceTest extends CRUDServiceTest<ClassRoom> {
         ClassRoomService service = (ClassRoomService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
     }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        ClassRoomService service = (ClassRoomService) emptyService;
+        ClassRoom classRoom = ClassRoom.builder()
+                .name(null)
+                .floor(1)
+                .capacity(50)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(classRoom));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        ClassRoomService service = (ClassRoomService) emptyService;
+        ClassRoom classRoom = ClassRoom.builder()
+                .name("  ")
+                .floor(1)
+                .capacity(50)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(classRoom));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
 }

@@ -126,11 +126,11 @@ public class GroupService implements CRUDService<Group> {
     private void validate(Group group) throws ValidationException {
         Validation.notNull(group);
         Validation.notEmpty(group.getName());
-        Validation.checkMin(group.getMinCapacity(), Group.MIN_CAPACITY);
-        Validation.checkMin(group.getMaxCapacity(), Group.MIN_CAPACITY);
         Validation.checkMax(group.getMaxCapacity(), Group.MAX_CAPACITY);
         Validation.notNull(group.getLanguage());
         Validation.notNull(group.getYearOfStudy());
+        if(group.getNotes() != null){
+            group.getNotes().forEach(Validation::notEmpty);
+        }
     }
-
 }

@@ -130,6 +130,6 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
         Validation.notNull(classRoom);
         Validation.notEmpty(classRoom.getName());
         Validation.notNull(classRoom.getFloor());
-        Validation.checkMin(classRoom.getCapacity(), 1);
+        Validation.checkMax(classRoom.getFloor(), 30);
     }
 }

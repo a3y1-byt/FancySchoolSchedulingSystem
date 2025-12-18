@@ -3,6 +3,8 @@ package com.byt.validation.scheduling;
 import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 
+import java.util.Collection;
+
 public class Validation {
 
     public static void notNull(Object object) throws ValidationException {
@@ -13,6 +15,13 @@ public class Validation {
 
     public static void notEmpty(String value) throws ValidationException {
         if (value == null || value.trim().isEmpty()) {
+            throw new ValidationException(ExceptionCode.NOT_EMPTY_VIOLATION);
+        }
+    }
+
+    public static void notEmpty(String value, boolean isOptional) throws ValidationException {
+        if(isOptional && value == null) return;
+        if (value.trim().isEmpty()) {
             throw new ValidationException(ExceptionCode.NOT_EMPTY_VIOLATION);
         }
     }
@@ -28,6 +37,7 @@ public class Validation {
             throw new ValidationException(ExceptionCode.MAX_VALUE_VIOLATION);
         }
     }
+
 
     public static void notNullArgument(Object object) throws IllegalArgumentException {
         if (object == null) {

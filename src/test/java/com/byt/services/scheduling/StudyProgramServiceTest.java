@@ -2,6 +2,7 @@ package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.StudyProgram;
 import com.byt.enums.scheduling.StudyProgramLevel;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -143,4 +144,38 @@ class StudyProgramServiceTest extends CRUDServiceTest<StudyProgram> {
         StudyProgramService service = (StudyProgramService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
     }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        StudyProgramService service = (StudyProgramService) emptyService;
+        StudyProgram program = StudyProgram.builder()
+                .name(null)
+                .level(StudyProgramLevel.BACHELOR)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(program));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        StudyProgramService service = (StudyProgramService) emptyService;
+        StudyProgram program = StudyProgram.builder()
+                .name("  ")
+                .level(StudyProgramLevel.BACHELOR)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(program));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullLevel() {
+        StudyProgramService service = (StudyProgramService) emptyService;
+        StudyProgram program = StudyProgram.builder()
+                .name("Program")
+                .level(null)
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(program));
+        assertEquals(ExceptionCode.NOT_NULL_VIOLATION, ex.getExceptionCode());
+    }
+
 }

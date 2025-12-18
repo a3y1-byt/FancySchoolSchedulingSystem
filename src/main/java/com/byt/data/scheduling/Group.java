@@ -10,11 +10,9 @@ import java.util.List;
 @Builder
 public class Group {
     public static final int MAX_CAPACITY = 20;
-    public static final int MIN_CAPACITY = 1;
     String name;
     StudyLanguage language;
     int maxCapacity;
-    int minCapacity;
     int yearOfStudy;
     List<String> notes;
     List<Lesson> lessons;
@@ -25,7 +23,6 @@ public class Group {
                 .name(group.getName())
                 .language(group.getLanguage())
                 .maxCapacity(group.getMaxCapacity())
-                .minCapacity(group.getMinCapacity())
                 .yearOfStudy(group.getYearOfStudy())
                 .notes(group.getNotes())
                 .build();

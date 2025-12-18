@@ -82,7 +82,6 @@ public class FancySchedulingApplication {
                 .name("BYT-2025")
                 .language(StudyLanguage.ENGLISH)
                 .yearOfStudy(2025)
-                .minCapacity(100)
                 .maxCapacity(15)
                 .students(studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
                 .build();

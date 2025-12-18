@@ -24,7 +24,6 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public void initialize() throws IOException {
-        // CRUDService.super.initialize();
         loadStudyPrograms();
     }
 

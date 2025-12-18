@@ -1,6 +1,7 @@
 package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Specialization;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
@@ -140,5 +141,49 @@ class SpecializationServiceTest extends CRUDServiceTest<Specialization> {
     void testExistsReturnsTrueForExistingName() {
         SpecializationService service = (SpecializationService) serviceWithData;
         assertTrue(service.exists(getSampleObjectId()));
+    }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        SpecializationService service = (SpecializationService) emptyService;
+        Specialization specialization = Specialization.builder()
+                .name(null)
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(specialization));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        SpecializationService service = (SpecializationService) emptyService;
+        Specialization specialization = Specialization.builder()
+                .name("")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(specialization));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateAcceptsNullDescription() throws IOException {
+        SpecializationService service = (SpecializationService) emptyService;
+        Specialization specialization = Specialization.builder()
+                .name("Spec Without Description")
+                .description(null)
+                .build();
+        assertDoesNotThrow(() -> service.create(specialization));
+        assertTrue(service.exists("Spec Without Description"));
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyDescription() {
+        SpecializationService service = (SpecializationService) emptyService;
+        Specialization specialization = Specialization.builder()
+                .name("Specialization")
+                .description("  ")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(specialization));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
     }
 }

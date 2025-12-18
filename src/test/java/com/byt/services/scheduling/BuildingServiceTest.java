@@ -1,5 +1,6 @@
 package com.byt.services.scheduling;
 import com.byt.data.scheduling.Building;
+import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 
@@ -44,7 +45,6 @@ class BuildingServiceTest extends CRUDServiceTest<Building> {
                 .address("Created Address")
                 .description("Created description")
                 .build();
-        service.initialize();
         service.create(building);
         Optional<Building> loaded = service.get(building.getName());
         assertTrue(loaded.isPresent());
@@ -96,5 +96,77 @@ class BuildingServiceTest extends CRUDServiceTest<Building> {
         BuildingService service = (BuildingService) emptyService;
         service.initialize();
         assertThrows(IllegalArgumentException.class, () -> service.delete("NON-EXISTENT"));
+    }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name(null)
+                .address("Address")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("   ")
+                .address("Address")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullAddress() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address(null)
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyAddress() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address("")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateAcceptsNullDescription() throws IOException {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Without Description")
+                .address("Address")
+                .description(null)
+                .build();
+        assertDoesNotThrow(() -> service.create(building));
+        assertTrue(service.exists("Building Without Description"));
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyDescription() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address("Address")
+                .description("  ")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
     }
 }

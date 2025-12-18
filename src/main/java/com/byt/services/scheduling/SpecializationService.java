@@ -133,6 +133,6 @@ public class SpecializationService implements CRUDService<Specialization> {
     private void validate(Specialization specialization) {
         Validation.notNull(specialization);
         Validation.notEmpty(specialization.getName());
-
+        Validation.notEmpty(specialization.getDescription(), true);
     }
 }
