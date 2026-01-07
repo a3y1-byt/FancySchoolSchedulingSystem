@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class FancySchedulingApplication {
     public static void main(String[] args) {
@@ -83,7 +84,7 @@ public class FancySchedulingApplication {
                 .language(StudyLanguage.ENGLISH)
                 .yearOfStudy(2025)
                 .maxCapacity(15)
-                .students(studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
+                .students((Set<Student>) studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
                 .build();
 
         // Student will be used as a prototype. Under the hood, a separate instance is constructed.

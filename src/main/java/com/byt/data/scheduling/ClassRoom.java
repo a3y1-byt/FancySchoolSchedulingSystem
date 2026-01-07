@@ -12,6 +12,7 @@ public class ClassRoom {
     int floor;
     int capacity;
 
+    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     Building building;
 
@@ -51,6 +52,10 @@ public class ClassRoom {
 
     public HashSet<Lesson> getLessons() {
         return new HashSet<>(lessons);
+    }
+
+    public Building getBuilding() {
+        return building;
     }
 
     public static ClassRoom copy(ClassRoom original) {

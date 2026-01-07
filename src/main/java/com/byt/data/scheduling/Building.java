@@ -14,6 +14,7 @@ public class Building {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     HashSet<ClassRoom> classRooms;
 
     public void addClassRoom(ClassRoom classRoom) {
