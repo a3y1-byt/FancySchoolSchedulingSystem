@@ -15,6 +15,8 @@ public abstract class User {
     private String familyName;
     private LocalDate dateOfBirth;
     private String phoneNumber;
+
+    @EqualsAndHashCode.Include
     private String email;
 
     public User(String firstName, String lastName,

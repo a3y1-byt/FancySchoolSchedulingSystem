@@ -37,7 +37,7 @@ public class Student extends Attendee {
     @Setter(AccessLevel.NONE)
     private Set<Specialization> specializations = new HashSet<>();
 
-    public Set<Specialization> getSpecialization() {
+    public Set<Specialization> getSpecializations() {
         return new HashSet<>(specializations);
     }
 
@@ -68,7 +68,7 @@ public class Student extends Attendee {
     @Setter(AccessLevel.NONE)
     private Set<Group> groups = new HashSet<>();
 
-    public Set<Group> getGroup() {
+    public Set<Group> getGroups() {
         return new HashSet<>(groups);
     }
 

@@ -74,7 +74,7 @@ public class Group {
     @Setter(AccessLevel.NONE)
     private Set<Lesson> lessons = new HashSet<>();
 
-    public Set<Lesson> getLesson() {
+    public Set<Lesson> getLessons() {
         return new HashSet<>(lessons);
     }
 
@@ -113,7 +113,7 @@ public class Group {
     @Setter(AccessLevel.NONE)
     private Set<FreeListener> freeListeners = new HashSet<>();
 
-    public Set<FreeListener> getFreeListener() {
+    public Set<FreeListener> getFreeListeners() {
         return new HashSet<>(freeListeners);
     }
 
