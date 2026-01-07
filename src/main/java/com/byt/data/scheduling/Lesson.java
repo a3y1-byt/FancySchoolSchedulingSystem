@@ -61,15 +61,13 @@ public class Lesson {
         Validator.validateGroup(group);
 
         this.group = group;
-        //TODO
-        // group.addLesson(this);
+         group.addLesson(this);
     }
     public void removeGroup(Group group) {
         if(!this.group.equals(group)) return;
 
         this.group = null;
-        //TODO
-        // group.removeLesson(this);
+        group.removeLesson(this);
     }
 
     public void addTeacher(Teacher teacher) {
