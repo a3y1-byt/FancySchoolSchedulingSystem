@@ -10,7 +10,26 @@ public class TeacherValidator {
 
     public TeacherValidator() {}
 
+    public static void validateTeacher(Teacher teacher) {
+        if (teacher == null) {
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Teacher must not be null"
+            );
+        }
 
+        validateTeacher(
+                teacher.getFirstName(),
+                teacher.getLastName(),
+                teacher.getFamilyName(),
+                teacher.getDateOfBirth(),
+                teacher.getPhoneNumber(),
+                teacher.getEmail(),
+                teacher.getHireDate(),
+                teacher.getTitle(),
+                teacher.getPosition()
+        );
+    }
 
     // VALIDATION METHODS
     public static void validateTeacher(
