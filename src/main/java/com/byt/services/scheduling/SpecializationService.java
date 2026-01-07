@@ -1,12 +1,11 @@
 package com.byt.services.scheduling;
 
 import com.byt.data.scheduling.Specialization;
-import com.byt.data.scheduling.Subject;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     public void create(Specialization prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSpecialization(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("Specialization already exists");
 
@@ -63,7 +62,7 @@ public class SpecializationService implements CRUDService<Specialization> {
     public void update(String name, Specialization prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSpecialization(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("Specialization not found");
 
@@ -76,7 +75,7 @@ public class SpecializationService implements CRUDService<Specialization> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if (!exists(name)) throw new IllegalArgumentException("Specialization not found");
 
@@ -121,18 +120,13 @@ public class SpecializationService implements CRUDService<Specialization> {
             throw new RuntimeException(cannotLoadMessage);
         }
 
-        Type type = new TypeToken<List<Specialization>>(){}.getType();
+        Type type = new TypeToken<List<Specialization>>() {
+        }.getType();
 
         List<Specialization> loadedSpecializations =
                 (List<Specialization>) saveLoadService.load(DataSaveKeys.SPECIALIZATIONS, type);
 
         this.specializations = new ArrayList<>(loadedSpecializations);
 
-    }
-
-    private void validate(Specialization specialization) {
-        Validation.notNull(specialization);
-        Validation.notEmpty(specialization.getName());
-        Validation.notEmpty(specialization.getDescription(), true);
     }
 }

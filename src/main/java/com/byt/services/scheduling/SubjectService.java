@@ -1,12 +1,11 @@
 package com.byt.services.scheduling;
 
-import com.byt.data.scheduling.Lesson;
 import com.byt.data.scheduling.Subject;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class SubjectService implements CRUDService<Subject> {
     public void create(Subject prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSubject(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("Subject already exists");
 
@@ -62,7 +61,7 @@ public class SubjectService implements CRUDService<Subject> {
     public void update(String name, Subject prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSubject(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("Subject not found");
 
@@ -75,7 +74,7 @@ public class SubjectService implements CRUDService<Subject> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
         if (!exists(name)) throw new IllegalArgumentException("Subject not found");
 
         int originalSize = subjects.size();
@@ -125,15 +124,5 @@ public class SubjectService implements CRUDService<Subject> {
 
         this.subjects = new ArrayList<>(loadedSubjects);
 
-    }
-
-    private void validate(Subject subject) {
-        Validation.notNull(subject);
-        Validation.notEmpty(subject.getName());
-        Validation.notNull(subject.getHours());
-        Validation.checkMin(subject.getEcts(), 1);
-
-        if(subject.getTypes() != null)
-            subject.getTypes().forEach(Validation::notNull);
     }
 }

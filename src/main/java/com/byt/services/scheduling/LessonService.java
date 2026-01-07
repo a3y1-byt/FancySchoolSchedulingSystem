@@ -5,7 +5,7 @@ import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class LessonService implements CRUDService<Lesson> {
     public void create(Lesson prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateLesson(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("Lesson already exists");
 
@@ -61,7 +61,7 @@ public class LessonService implements CRUDService<Lesson> {
     public void update(String name, Lesson prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateLesson(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("Lesson not found");
 
@@ -76,7 +76,7 @@ public class LessonService implements CRUDService<Lesson> {
     public void delete(String name)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if (!exists(name)) throw new IllegalArgumentException("Lesson not found");
 
@@ -122,17 +122,5 @@ public class LessonService implements CRUDService<Lesson> {
 
         List<Lesson> loadedLessons = (List<Lesson>) saveLoadService.load(DataSaveKeys.LESSONS, type);
         this.lessons = new ArrayList<>(loadedLessons);
-    }
-
-    private void validate(Lesson lesson) {
-        Validation.notNull(lesson);
-        Validation.notEmpty(lesson.getName());
-        Validation.notNull(lesson.getType());
-        Validation.notNull(lesson.getMode());
-        Validation.notNull(lesson.getStartTime());
-        Validation.notNull(lesson.getEndTime());
-        Validation.notNull(lesson.getLanguage());
-        Validation.notNull(lesson.getDayOfWeek());
-        Validation.notEmpty(lesson.getNote(), true);
     }
 }

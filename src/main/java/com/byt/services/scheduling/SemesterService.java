@@ -1,12 +1,11 @@
 package com.byt.services.scheduling;
 
-import com.byt.data.scheduling.Lesson;
 import com.byt.data.scheduling.Semester;
 import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class SemesterService implements CRUDService<Semester> {
     public void create(Semester prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSemester(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("Semester already exists");
 
@@ -61,7 +60,7 @@ public class SemesterService implements CRUDService<Semester> {
     public void update(String name, Semester prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateSemester(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("Semester not found");
 
@@ -74,7 +73,7 @@ public class SemesterService implements CRUDService<Semester> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException, IllegalArgumentException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if (!exists(name)) throw new IllegalArgumentException("Semester not found");
 
@@ -128,11 +127,5 @@ public class SemesterService implements CRUDService<Semester> {
 
     }
 
-    private void validate(Semester semester) throws ValidationException {
-        Validation.notNull(semester);
-        Validation.notEmpty(semester.getName());
-        Validation.notNull(semester.getStartDate());
-        Validation.notNull(semester.getEndDate());
-        Validation.notNull(semester.getAcademicYear());
-    }
+
 }
