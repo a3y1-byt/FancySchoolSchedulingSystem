@@ -32,6 +32,10 @@ public class Building {
         classRoom.removeBuilding(this);
     }
 
+    public HashSet<ClassRoom> getClassRooms() {
+        return new HashSet<>(classRooms);
+    }
+
     public static Building copy(Building building) {
         return Building.builder()
                 .name(building.getName())

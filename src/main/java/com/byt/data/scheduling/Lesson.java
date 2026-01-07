@@ -26,15 +26,12 @@ public class Lesson {
     StudyLanguage language;
     WeekPattern weekPattern;
 
-    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     Subject subject;
 
-    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     Group group;
 
-    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     Teacher teacher;
 
@@ -116,6 +113,14 @@ public class Lesson {
 
         classRooms.remove(classRoom);
         classRoom.removeLesson(this);
+    }
+
+    public HashSet<ClassRoom> getClassRooms() {
+        return new HashSet<>(classRooms);
+    }
+
+    public HashSet<Semester> getSemesters() {
+        return new HashSet<>(semesters);
     }
 
     public static Lesson copy(Lesson lesson) {
