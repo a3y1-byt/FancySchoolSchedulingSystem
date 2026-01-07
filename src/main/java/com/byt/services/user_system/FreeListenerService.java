@@ -24,7 +24,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners) {
         this.service = service;
-        this.freeListeners = freeListeners != null ? copyList(freeListeners) : new ArrayList<>();
+        this.freeListeners = freeListeners != null ? freeListeners.stream().map(FreeListener::copy).toList() : new ArrayList<>();
     }
 
     public FreeListenerService(SaveLoadService service) {
@@ -34,7 +34,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     @Override
     public void initialize() throws IOException {
         List<FreeListener> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.freeListeners = copyList(loaded); // safe deep copies
+        this.freeListeners = loaded.stream().map(FreeListener::copy).toList(); // safe deep copies
     }
 
     // _________________________________________________________
@@ -56,10 +56,9 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             throw new IllegalStateException("freeListener exists with this email already");
         }
 
-        freeListeners.add(freeListener);
+        freeListeners.add(FreeListener.copy(freeListener));
         saveToDb();
-
-        return copy(freeListener);
+        return FreeListener.copy(freeListener);
     }
 
     @Override
@@ -71,7 +70,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             throw new IllegalArgumentException("freeListener with email = " + prototype.getEmail() + " already exists");
         }
 
-        FreeListener toStore = copy(prototype);
+        FreeListener toStore = FreeListener.copy(prototype);
         freeListeners.add(toStore);
         saveToDb();
     }
@@ -84,7 +83,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
         for (FreeListener freeListener : freeListeners) {
             if (Objects.equals(freeListener.getEmail(), email)) {
-                return Optional.of(copy(freeListener));
+                return Optional.of(FreeListener.copy(freeListener));
             }
         }
 
@@ -93,7 +92,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public List<FreeListener> getAll() throws IOException {
-        return copyList(freeListeners);
+        return freeListeners.stream().map(FreeListener::copy).toList();
     }
 
     @Override
@@ -124,10 +123,10 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             }
             freeListeners.remove(index);
 
-            FreeListener toStore = copy(prototype);
+            FreeListener toStore = FreeListener.copy(prototype);
             freeListeners.add(toStore);
         } else {
-            FreeListener updatedCopy = copy(prototype);
+            FreeListener updatedCopy = FreeListener.copy(prototype);
             freeListeners.set(index, updatedCopy);
         }
 
@@ -164,38 +163,6 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     }
 
     // _________________________________________________________
-
-    private FreeListener copy(FreeListener adm) {
-        if (adm == null) return null;
-
-        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
-        List<StudyLanguage> langsCopy = langs != null
-                ? new ArrayList<>(langs)
-                : new ArrayList<>();
-
-        FreeListener copy = new FreeListener(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                langsCopy,
-                adm.getNotes()
-        );
-        copy.setEmail(adm.getEmail());
-        return copy;
-    }
-
-    private List<FreeListener> copyList(List<FreeListener> source) {
-        List<FreeListener> result = new ArrayList<>();
-        if (source == null) return result;
-        for (FreeListener a : source) {
-            result.add(copy(a));
-        }
-        return result;
-    }
-
     private List<FreeListener> loadFromDb() throws IOException {
         if (!service.canLoad(DataSaveKeys.FREE_LISTENERS)) {
             return new ArrayList<>();

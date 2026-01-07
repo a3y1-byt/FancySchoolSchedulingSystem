@@ -28,4 +28,21 @@ public class Teacher extends Staff {
         this.position = position;
     }
 
+    public static Teacher copy(Teacher teacher) {
+        if (teacher == null) return null;
+
+        return new Teacher(
+                teacher.getFirstName(),
+                teacher.getLastName(),
+                teacher.getFamilyName(),
+                teacher.getDateOfBirth(),
+                teacher.getPhoneNumber(),
+                teacher.getEmail(),
+                teacher.getHireDate(),
+                teacher.getTitle(),
+                teacher.getPosition()
+        );
+    }
+
+
 }

@@ -30,7 +30,7 @@ public class AdminService implements CRUDService<Admin> {
     // Constructor, we just copy inputed List to not share references with external code
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
-        this.admins = admins != null ? copyList(admins) : new ArrayList<>();
+        this.admins = admins != null ? admins.stream().map(Admin::copy).toList() : new ArrayList<>();
     }
 
     public AdminService(SaveLoadService service) {
@@ -40,7 +40,7 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.admins = copyList(loaded); // safe deep copies
+        this.admins = loaded.stream().map(Admin::copy).toList(); // safe deep copies
     }
 
     // _________________________________________________________
@@ -71,10 +71,9 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalStateException("Admin exists with this email already");
         }
 
-        admins.add(admin);
+        admins.add(Admin.copy(admin));
         saveToDb();
-
-        return copy(admin);
+        return Admin.copy(admin);
     }
 
     @Override
@@ -97,7 +96,7 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
 
-        Admin toStore = copy(prototype);
+        Admin toStore = Admin.copy(prototype);
         admins.add(toStore);
         saveToDb();
     }
@@ -110,7 +109,7 @@ public class AdminService implements CRUDService<Admin> {
 
         for (Admin admin : admins) {
             if (Objects.equals(admin.getEmail(), email)) {
-                return Optional.of(copy(admin));
+                return Optional.of(Admin.copy(admin));
             }
         }
 
@@ -119,7 +118,7 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public List<Admin> getAll() throws IOException {
-        return copyList(admins);
+        return admins.stream().map(Admin::copy).toList();
     }
 
     @Override
@@ -163,7 +162,7 @@ public class AdminService implements CRUDService<Admin> {
                 }
             }
         }
-        Admin updatedCopy = copy(prototype);
+        Admin updatedCopy = Admin.copy(prototype);
         admins.set(index, updatedCopy);
         saveToDb();
     }
@@ -305,23 +304,6 @@ public class AdminService implements CRUDService<Admin> {
 
     // creating fully independent copy of Admin,
     // so that code from outside could not change internal objects of service
-    private Admin copy(Admin adm) {
-        if (adm == null) return null;
-
-        Admin copy = new Admin(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                adm.getHireDate(),
-                adm.getLastLoginTime(),
-                adm.getSuperadminId()
-        );
-        copy.setEmail(adm.getEmail());
-        return copy;
-    }
 
     private List<Admin> getSubordinates(String superadminId) {
         List<Admin> raw = new ArrayList<>();
@@ -330,7 +312,7 @@ public class AdminService implements CRUDService<Admin> {
                 raw.add(admin);
             }
         }
-        return copyList(raw);
+        return raw.stream().map(Admin::copy).toList();
     }
 
     private Optional<Admin> getSupervisor(String adminId) {
@@ -343,18 +325,6 @@ public class AdminService implements CRUDService<Admin> {
             return Optional.empty();
         }
         return get(superId);
-    }
-
-    // just a new list with copies of Admins.
-    // It's a deep copy - changes of outer list or inside elements won't affect internal
-    // list of admins
-    private List<Admin> copyList(List<Admin> source) {
-        List<Admin> result = new ArrayList<>();
-        if (source == null) return result;
-        for (Admin a : source) {
-            result.add(copy(a));
-        }
-        return result;
     }
 
     private List<Admin> loadFromDb() throws IOException {

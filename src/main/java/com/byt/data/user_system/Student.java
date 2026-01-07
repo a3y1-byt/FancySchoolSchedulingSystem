@@ -32,6 +32,21 @@ public class Student extends Attendee {
         this.studiesStatus = studiesStatus;
     }
 
+    public static Student copy(Student student) {
+        if (student == null) return null;
+
+        return new Student(
+                student.getFirstName(),
+                student.getLastName(),
+                student.getFamilyName(),
+                student.getDateOfBirth(),
+                student.getPhoneNumber(),
+                student.getEmail(),
+                student.getLanguagesOfStudies(),
+                student.getStudiesStatus()
+        );
+    }
+
     // STUDENT -------- SPECIALIZATION
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
