@@ -7,6 +7,7 @@ import com.byt.enums.scheduling.LessonType;
 import com.byt.enums.scheduling.WeekPattern;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.validation.scheduling.Validator;
+import com.byt.validation.user_system.TeacherValidator;
 import lombok.*;
 
 import java.time.LocalTime;
@@ -73,7 +74,7 @@ public class Lesson {
     }
 
     public void addTeacher(Teacher teacher) {
-
+        TeacherValidator.validateTeacher(teacher);
         this.teacher = teacher;
 //        teacher.addLesson(this);
     }
