@@ -5,7 +5,7 @@ import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
     @Override
     public void create(ClassRoom prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
+        Validator.validateClassRoom(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("ClassRoom already exists");
 
@@ -60,7 +60,7 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     public void update(String name, ClassRoom prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateClassRoom(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("ClassRoom not found.");
 
@@ -75,7 +75,7 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
     public void delete(String name)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
         if (!exists(name)) throw new IllegalArgumentException("ClassRoom not found.");
 
         int originalSize = classRooms.size();
@@ -126,10 +126,5 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
         this.classRooms = new ArrayList<>(loadedClassRooms);
     }
 
-    private void validate(ClassRoom classRoom) throws ValidationException {
-        Validation.notNull(classRoom);
-        Validation.notEmpty(classRoom.getName());
-        Validation.notNull(classRoom.getFloor());
-        Validation.checkMax(classRoom.getFloor(), 30);
-    }
+
 }

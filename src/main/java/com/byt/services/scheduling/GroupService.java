@@ -5,7 +5,7 @@ import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class GroupService implements CRUDService<Group> {
     public void create(Group prototype)
             throws IllegalArgumentException, ValidationException, IOException
     {
-        validate(prototype);
+        Validator.validateGroup(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("Group already exists");
 
@@ -60,7 +60,7 @@ public class GroupService implements CRUDService<Group> {
     public void update(String name, Group prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateGroup(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("Group not found");
 
@@ -73,7 +73,7 @@ public class GroupService implements CRUDService<Group> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if (!exists(name)) throw new IllegalArgumentException("Group not found");
 
@@ -123,14 +123,5 @@ public class GroupService implements CRUDService<Group> {
         this.groups = new ArrayList<>(loadedGroups);
     }
 
-    private void validate(Group group) throws ValidationException {
-        Validation.notNull(group);
-        Validation.notEmpty(group.getName());
-        Validation.checkMax(group.getMaxCapacity(), Group.MAX_CAPACITY);
-        Validation.notNull(group.getLanguage());
-        Validation.notNull(group.getYearOfStudy());
-        if(group.getNotes() != null){
-            group.getNotes().forEach(Validation::notEmpty);
-        }
-    }
+
 }

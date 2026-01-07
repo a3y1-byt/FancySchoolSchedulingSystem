@@ -5,7 +5,7 @@ import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class BuildingService implements CRUDService<Building> {
     public void create(Building prototype)
             throws ValidationException, IllegalArgumentException, IOException
     {
-        validate(prototype);
+        Validator.validateBuilding(prototype);
 
         boolean exists = exists(prototype.getName());
         if(exists) throw new IllegalArgumentException("Building already exists");
@@ -62,7 +62,7 @@ public class BuildingService implements CRUDService<Building> {
     public void update(String name, Building prototype)
             throws IllegalArgumentException, ValidationException, IOException
     {
-        validate(prototype);
+        Validator.validateBuilding(prototype);
 
         if(!exists(name)) throw new IllegalArgumentException("Building not found");
 
@@ -75,7 +75,7 @@ public class BuildingService implements CRUDService<Building> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if(!exists(name)) throw new IllegalArgumentException("Building not found");
 
@@ -127,11 +127,6 @@ public class BuildingService implements CRUDService<Building> {
             this.buildings = new ArrayList<>(loadedBuildings);
     }
 
-    private void validate(Building building) throws ValidationException {
-        Validation.notNull(building);
-        Validation.notEmpty(building.getName());
-        Validation.notEmpty(building.getAddress());
-        Validation.notEmpty(building.getDescription(), true);
-    }
+
 
 }

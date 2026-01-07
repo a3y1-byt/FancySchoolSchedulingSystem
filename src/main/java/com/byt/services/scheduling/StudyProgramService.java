@@ -5,7 +5,7 @@ import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.scheduling.Validation;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     public void create(StudyProgram prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateStudyProgram(prototype);
 
         if (exists(prototype.getName())) throw new IllegalArgumentException("StudyProgram already exists");
 
@@ -62,7 +62,7 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
     public void update(String name, StudyProgram prototype)
             throws IllegalArgumentException, IOException, ValidationException
     {
-        validate(prototype);
+        Validator.validateStudyProgram(prototype);
 
         if (!exists(name)) throw new IllegalArgumentException("StudyProgram not found");
 
@@ -75,7 +75,7 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
 
     @Override
     public void delete(String name) throws IllegalArgumentException, IOException {
-        Validation.notEmptyArgument(name);
+        Validator.notEmptyArgument(name);
 
         if (!exists(name)) throw new IllegalArgumentException("StudyProgram not found");
 
@@ -126,9 +126,5 @@ public class StudyProgramService implements CRUDService<StudyProgram> {
         this.studyPrograms = new ArrayList<>(loadedPrograms);
     }
 
-    private void validate(StudyProgram program) throws ValidationException {
-        Validation.notNull(program);
-        Validation.notEmpty(program.getName());
-        Validation.notNull(program.getLevel());
-    }
+
 }
