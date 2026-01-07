@@ -50,52 +50,56 @@ public class Lesson {
         Validator.validateSubject(subject);
 
         this.subject = subject;
-//        subject.addLesson(this);
+        subject.addLesson(this);
     }
 
     public void removeSubject(Subject subject) {
         if(!this.subject.equals(subject)) return;
 
         this.subject = null;
-//        subject.removeLesson(this);
+        subject.removeLesson(this);
     }
 
     public void addGroup(Group group) {
         Validator.validateGroup(group);
 
         this.group = group;
-//        group.addLesson(this);
+        //TODO
+        // group.addLesson(this);
     }
     public void removeGroup(Group group) {
         if(!this.group.equals(group)) return;
 
         this.group = null;
-//        group.removeLesson(this);
+        //TODO
+        // group.removeLesson(this);
     }
 
     public void addTeacher(Teacher teacher) {
         TeacherValidator.validateTeacher(teacher);
         this.teacher = teacher;
-//        teacher.addLesson(this);
+        //TODO
+        // teacher.addLesson(this);
     }
     public void removeTeacher(Teacher teacher) {
         if(!this.teacher.equals(teacher)) return;
         this.teacher = null;
-//        teacher.removeLesson(this);
+        //TODO
+        // teacher.removeLesson(this);
     }
 
     public void addSemester(Semester semester) {
        Validator.validateSemester(semester);
 
         semesters.add(semester);
-//        semester.addLesson(this);
+        semester.addLesson(this);
     }
 
     public void removeSemester(Semester semester) {
         if(!this.semesters.contains(semester)) return;
 
         this.semesters.remove(semester);
-//        semester.removeLesson(this);
+        semester.removeLesson(this);
     }
 
     public void addClassRoom(ClassRoom classRoom) {
