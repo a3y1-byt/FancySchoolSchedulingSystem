@@ -1,4 +1,5 @@
 package com.byt.services.user_system;
+import com.byt.validation.user_system.AdminValidator;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
@@ -14,11 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.byt.validation.user_system.UserValidator;
-import com.byt.exception.ValidationException;
-import com.byt.exception.ExceptionCode;
-
 
 public class AdminService implements CRUDService<Admin> {
 
@@ -55,7 +51,7 @@ public class AdminService implements CRUDService<Admin> {
                         LocalDate hireDate, LocalDateTime lastLoginTime, String superadminId) throws IOException {
 
 
-        validateClassData(firstName, lastName, familyName,
+        AdminValidator.validateAdmin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime);
 
@@ -84,7 +80,7 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
 
-        validateClass(prototype);
+        AdminValidator.validateClass(prototype);
 
         if (prototype.getEmail() != null && exists(prototype.getEmail())) {
             throw new IllegalArgumentException("Admin with email = " + prototype.getEmail() + " already exists");
@@ -132,7 +128,7 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin email must not be null or blank");
         }
 
-        validateClass(prototype);
+        AdminValidator.validateClass(prototype);
 
         int index = -1;
         for (int i = 0; i < admins.size(); i++) {
@@ -390,101 +386,5 @@ public class AdminService implements CRUDService<Admin> {
         service.save(DataSaveKeys.ADMINS, admins);
     }
 
-
-    // VALIDATION METHODS
-    private void validateClassData(
-            String firstName,
-            String lastName,
-            String familyName,
-            LocalDate dateOfBirth,
-            String phoneNumber,
-            String email,
-            LocalDate hireDate,
-            LocalDateTime lastLoginTime
-    ) {
-        // general USER class validation
-        UserValidator.validateUserFields(
-                firstName,
-                lastName,
-                familyName,
-                dateOfBirth,
-                phoneNumber,
-                email
-        );
-
-        //  only Admin validation
-        if (hireDate == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "Hire date must not be null"
-            );
-        }
-
-        LocalDate today = LocalDate.now();
-        int min_age_at_hire = 18;
-
-        if (dateOfBirth != null) {
-            LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
-            if (hireDate.isBefore(minHireDateByDob)) {
-                throw new ValidationException(
-                        ExceptionCode.VALUE_OUT_OF_RANGE,
-                        "Person must be at least " + min_age_at_hire + " years old at hire date"
-                );
-            }
-        }
-
-        if (hireDate.isAfter(today)) {
-            throw new ValidationException(
-                    ExceptionCode.VALUE_OUT_OF_RANGE,
-                    "Hire date must not be in the future"
-            );
-        }
-
-        if (dateOfBirth != null && hireDate.isBefore(dateOfBirth)) {
-            throw new ValidationException(
-                    ExceptionCode.VALUE_OUT_OF_RANGE,
-                    "Hire date cannot be before date of birth"
-            );
-        }
-
-        if (lastLoginTime != null) {
-            LocalDateTime now = LocalDateTime.now();
-
-            if (lastLoginTime.isAfter(now)) {
-                throw new ValidationException(
-                        ExceptionCode.VALUE_OUT_OF_RANGE,
-                        "Last login time cannot be in the future"
-                );
-            }
-
-            LocalDateTime hireStartLocalDateTime = hireDate.atStartOfDay(java.time.ZoneOffset.UTC).toLocalDateTime();
-            if (lastLoginTime.isBefore(hireStartLocalDateTime)) {
-                throw new ValidationException(
-                        ExceptionCode.VALUE_OUT_OF_RANGE,
-                        "Last login time cannot be before hire date"
-                );
-            }
-        }
-    }
-
-    private void validateClass(Admin prototype) {
-        if (prototype == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "Admin prototype must not be null"
-            );
-        }
-
-        validateClassData(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getHireDate(),
-                prototype.getLastLoginTime()
-        );
-    }
 
 }

@@ -1,6 +1,6 @@
 package com.byt.services.user_system;
+import com.byt.validation.user_system.TeacherValidator;
 
-import com.byt.data.user_system.Student;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
@@ -14,11 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.byt.validation.user_system.UserValidator;
-import com.byt.exception.ValidationException;
-import com.byt.exception.ExceptionCode;
-
 
 public class TeacherService implements CRUDService<Teacher> {
     // comments explaining how everything works are in Admin Service
@@ -50,7 +45,7 @@ public class TeacherService implements CRUDService<Teacher> {
                           LocalDate hireDate, String title,
                           String position) throws IOException {
 
-        validateClassData(firstName, lastName, familyName,
+        TeacherValidator.validateTeacher(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, title, position);
 
@@ -71,7 +66,7 @@ public class TeacherService implements CRUDService<Teacher> {
     @Override
     public void create(Teacher prototype) throws IllegalArgumentException, IOException {
 
-        validateClass(prototype);
+        TeacherValidator.validateClass(prototype);
 
         if (prototype.getEmail() != null && exists(prototype.getEmail())) {
             throw new IllegalArgumentException("teacher with email = " + prototype.getEmail() + " already exists");
@@ -108,7 +103,7 @@ public class TeacherService implements CRUDService<Teacher> {
             throw new IllegalArgumentException("email must not be null or blank");
         }
 
-        validateClass(prototype);
+        TeacherValidator.validateClass(prototype);
 
         int index = -1;
         for (int i = 0; i < teachers.size(); i++) {
@@ -219,101 +214,6 @@ public class TeacherService implements CRUDService<Teacher> {
 
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.TEACHERS, teachers);
-    }
-
-
-    // VALIDATION METHODS
-    private void validateClassData(
-            String firstName,
-            String lastName,
-            String familyName,
-            LocalDate dateOfBirth,
-            String phoneNumber,
-            String email,
-            LocalDate hireDate,
-            String title,
-            String position
-    ) {
-        // general USER class validation
-        UserValidator.validateUserFields(
-                firstName,
-                lastName,
-                familyName,
-                dateOfBirth,
-                phoneNumber,
-                email
-        );
-
-        //  only Teacher validation
-        if (hireDate == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "Hire date must not be null"
-            );
-        }
-
-        LocalDate today = LocalDate.now();
-        LocalDate earliest_hire_date = LocalDate.of(2000, 1, 1);
-        int min_age_at_hire = 18;
-
-        if (dateOfBirth != null) {
-            LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
-            if (hireDate.isBefore(minHireDateByDob)) {
-                throw new ValidationException(
-                        ExceptionCode.VALUE_OUT_OF_RANGE,
-                        "Person must be at least " + min_age_at_hire + " years old at hire date"
-                );
-            }
-        }
-
-        if (hireDate.isAfter(today)) {
-            throw new ValidationException(
-                    ExceptionCode.VALUE_OUT_OF_RANGE,
-                    "Hire date must not be in the future"
-            );
-        }
-
-        if (dateOfBirth != null && hireDate.isBefore(dateOfBirth)) {
-            throw new ValidationException(
-                    ExceptionCode.VALUE_OUT_OF_RANGE,
-                    "Hire date cannot be before date of birth"
-            );
-        }
-
-        if (title == null || title.isBlank()) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_EMPTY_VIOLATION,
-                    "Title must not be empty"
-            );
-        }
-
-        if (position == null || position.isBlank()) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_EMPTY_VIOLATION,
-                    "Position must not be empty"
-            );
-        }
-    }
-
-    private void validateClass(Teacher prototype) {
-        if (prototype == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "Teacher prototype must not be null"
-            );
-        }
-
-        validateClassData(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getHireDate(),
-                prototype.getTitle(),
-                prototype.getPosition()
-        );
     }
 
 }

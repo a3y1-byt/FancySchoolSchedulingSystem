@@ -1,6 +1,6 @@
 package com.byt.services.user_system;
+import com.byt.validation.user_system.FreeListenerValidator;
 
-import com.byt.data.user_system.Student;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
@@ -8,16 +8,11 @@ import com.byt.data.user_system.FreeListener;
 import com.byt.enums.user_system.StudyLanguage;
 import com.google.gson.reflect.TypeToken;
 
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.*;
-
-import com.byt.validation.user_system.UserValidator;
-import com.byt.exception.ValidationException;
-import com.byt.exception.ExceptionCode;
-
-import static com.byt.data.user_system.FreeListener.MAX_NOTES_LENGTH;
 
 public class FreeListenerService implements CRUDService<FreeListener> {
 
@@ -50,7 +45,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
                                List<StudyLanguage> languagesOfStudies,
                                String notes) throws IOException {
 
-        validateClassData(firstName, lastName, familyName,
+        FreeListenerValidator.validateFreeListener(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 languagesOfStudies, notes);
 
@@ -71,7 +66,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     @Override
     public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
 
-        validateClass(prototype);
+        FreeListenerValidator.validateClass(prototype);
 
         if (prototype.getEmail() != null && exists(prototype.getEmail())) {
             throw new IllegalArgumentException("freeListener with email = " + prototype.getEmail() + " already exists");
@@ -108,7 +103,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             throw new IllegalArgumentException("email must not be null or blank");
         }
 
-        validateClass(prototype);
+        FreeListenerValidator.validateClass(prototype);
 
         int index = -1;
         for (int i = 0; i < freeListeners.size(); i++) {
@@ -224,100 +219,6 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.FREE_LISTENERS, freeListeners);
-    }
-
-
-    // VALIDATION METHODS
-    private void validateClassData(
-            String firstName,
-            String lastName,
-            String familyName,
-            LocalDate dateOfBirth,
-            String phoneNumber,
-            String email,
-            List<StudyLanguage> languagesOfStudies,
-            String notes
-    ) {
-        // general USER class validation
-        UserValidator.validateUserFields(
-                firstName,
-                lastName,
-                familyName,
-                dateOfBirth,
-                phoneNumber,
-                email
-        );
-
-        //  only FreeListener validation
-        if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_EMPTY_VIOLATION,
-                    "FreeListener must have at least one study language");
-        }
-
-        // null and duplicate check
-        Set<StudyLanguage> unique = new HashSet<>();
-        for (StudyLanguage sl : languagesOfStudies) {
-            if (sl == null) {
-                throw new ValidationException(
-                        ExceptionCode.NOT_NULL_VIOLATION,
-                        "Study language must not be null"
-                );
-            }
-
-            if (!unique.add(sl)) {
-                throw new ValidationException(
-                        ExceptionCode.INVALID_FORMAT,
-                        "Study languages must be unique"
-                );
-            }
-        }
-
-        if (notes != null) {
-            String trimmed = notes.trim();
-
-            if (trimmed.
-
-                    isEmpty()) {
-                throw new
-
-                        ValidationException(
-                        ExceptionCode.NOT_EMPTY_VIOLATION,
-                        "Notes must not be empty"
-                );
-            }
-
-            if (trimmed.
-
-                    length() > MAX_NOTES_LENGTH) {
-                throw new
-
-                        ValidationException(
-                        ExceptionCode.LENGTH_TOO_LONG,
-                        "Notes are too long"
-                );
-            }
-        }
-    }
-
-    private void validateClass(FreeListener prototype) {
-        if (prototype == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "FreeListener prototype must not be null"
-            );
-        }
-
-        validateClassData(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getLanguagesOfStudies(),
-                prototype.getNotes()
-        );
     }
 
 }
