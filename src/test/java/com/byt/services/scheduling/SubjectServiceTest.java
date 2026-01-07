@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +31,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
         return Subject.builder()
                 .name("Introduction to Programming")
                 .hours(60)
-                .types(Arrays.asList(SubjectType.NORMAL_SUBJECT, SubjectType.EXAM_SUBJECT))
+                .types((Set<SubjectType>) Arrays.asList(SubjectType.NORMAL_SUBJECT, SubjectType.EXAM_SUBJECT))
                 .lessons(null)
                 .build();
     }
@@ -46,7 +47,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
         Subject subject = Subject.builder()
                 .name("Placeholder Subject")
                 .hours(30)
-                .types(Arrays.asList(SubjectType.NORMAL_SUBJECT))
+                .types((Set<SubjectType>) Arrays.asList(SubjectType.NORMAL_SUBJECT))
                 .lessons(null)
                 .build();
         service.create(subject);
@@ -95,7 +96,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
         Subject updated = Subject.builder()
                 .name(getSampleObjectId())
                 .hours(90)
-                .types(Arrays.asList(SubjectType.NORMAL_SUBJECT))
+                .types((Set<SubjectType>) Arrays.asList(SubjectType.NORMAL_SUBJECT))
                 .lessons(null)
                 .build();
         service.update(getSampleObjectId(), updated);
