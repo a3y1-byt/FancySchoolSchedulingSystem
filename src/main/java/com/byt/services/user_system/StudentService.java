@@ -29,7 +29,9 @@ public class StudentService implements CRUDService<Student> {
 
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
-        this.students = students != null ? copyList(students) : new ArrayList<>();
+        this.students = students != null
+                ? students.stream().map(Student::copy).toList()
+                : new ArrayList<>();
     }
 
     public StudentService(SaveLoadService service) {
@@ -39,7 +41,7 @@ public class StudentService implements CRUDService<Student> {
     @Override
     public void initialize() throws IOException {
         List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.students = copyList(loaded); // safe deep copies
+        this.students = loaded.stream().map(Student::copy).toList();
     }
 
     // _________________________________________________________
@@ -63,10 +65,9 @@ public class StudentService implements CRUDService<Student> {
             throw new IllegalStateException("student exists with this email already");
         }
 
-        students.add(student);
+        students.add(Student.copy(student));
         saveToDb();
-
-        return copy(student);
+        return Student.copy(student);
     }
 
     @Override
@@ -78,7 +79,7 @@ public class StudentService implements CRUDService<Student> {
             throw new IllegalArgumentException("student with email = " + prototype.getEmail() + " already exists");
         }
 
-        Student toStore = copy(prototype);
+        Student toStore = Student.copy(prototype);
         students.add(toStore);
         saveToDb();
     }
@@ -91,7 +92,7 @@ public class StudentService implements CRUDService<Student> {
 
         for (Student student : students) {
             if (Objects.equals(student.getEmail(), email)) {
-                return Optional.of(copy(student));
+                return Optional.of(Student.copy(student));
             }
         }
 
@@ -100,7 +101,7 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public List<Student> getAll() throws IOException {
-        return copyList(students);
+        return students.stream().map(Student::copy).toList();
     }
 
     @Override
@@ -131,10 +132,10 @@ public class StudentService implements CRUDService<Student> {
             }
             students.remove(index);
 
-            Student toStore = copy(prototype);
+            Student toStore = Student.copy(prototype);
             students.add(toStore);
         } else {
-            Student updatedCopy = copy(prototype);
+            Student updatedCopy = Student.copy(prototype);
             students.set(index, updatedCopy);
         }
 
@@ -171,37 +172,6 @@ public class StudentService implements CRUDService<Student> {
     }
 
     // _________________________________________________________
-
-    private Student copy(Student adm) {
-        if (adm == null) return null;
-
-        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
-        List<StudyLanguage> langsCopy = langs != null
-                ? new ArrayList<>(langs)
-                : new ArrayList<>();
-
-        Student copy = new Student(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                langsCopy,
-                adm.getStudiesStatus()
-        );
-        copy.setEmail(adm.getEmail());
-        return copy;
-    }
-
-    private List<Student> copyList(List<Student> source) {
-        List<Student> result = new ArrayList<>();
-        if (source == null) return result;
-        for (Student a : source) {
-            result.add(copy(a));
-        }
-        return result;
-    }
 
     private List<Student> loadFromDb() throws IOException {
         if (!service.canLoad(DataSaveKeys.STUDENTS)) {

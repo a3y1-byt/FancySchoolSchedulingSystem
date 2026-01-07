@@ -29,5 +29,20 @@ public class Admin extends Staff {
         this.superadminId = superadminId;
     }
 
+    public static Admin copy(Admin admin) {
+        if (admin == null) return null;
+
+        return new Admin(
+                admin.getFirstName(),
+                admin.getLastName(),
+                admin.getFamilyName(),
+                admin.getDateOfBirth(),
+                admin.getPhoneNumber(),
+                admin.getEmail(),
+                admin.getHireDate(),
+                admin.getLastLoginTime(),
+                admin.getSuperadminId()
+        );
+    }
 
 }
