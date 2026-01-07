@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class FreeListener extends Attendee {
-
+    public static final int MAX_NOTES_LENGTH = 1000;
     private String notes;
 
     public FreeListener(String firstName, String lastName, String familyName,

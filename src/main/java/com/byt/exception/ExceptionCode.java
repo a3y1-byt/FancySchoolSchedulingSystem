@@ -10,8 +10,8 @@ public enum ExceptionCode {
     LENGTH_TOO_SHORT("Field length is shorter than allowed"),
     LENGTH_TOO_LONG("Field length is longer than allowed"),
     INVALID_FORMAT("Field format is invalid"),
-    NO_DUPLICATES_VIOLATION("The collection contains duplicate elements");
-
+    NO_DUPLICATES_VIOLATION("The collection contains duplicate elements"),
+    MULTIPLICITY_VIOLATION("Incorrect multiplicity"),;
     private final String message;
     ExceptionCode(String message) {
         this.message = message;
