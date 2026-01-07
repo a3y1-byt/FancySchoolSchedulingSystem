@@ -66,22 +66,16 @@ public class FreeListenerValidator {
         if (notes != null) {
             String trimmed = notes.trim();
 
-            if (trimmed.
-
-                    isEmpty()) {
+            if (trimmed.isEmpty()) {
                 throw new
-
                         ValidationException(
                         ExceptionCode.NOT_EMPTY_VIOLATION,
                         "Notes must not be empty"
                 );
             }
 
-            if (trimmed.
-
-                    length() > MAX_NOTES_LENGTH) {
+            if (trimmed.length() > MAX_NOTES_LENGTH) {
                 throw new
-
                         ValidationException(
                         ExceptionCode.LENGTH_TOO_LONG,
                         "Notes are too long"
