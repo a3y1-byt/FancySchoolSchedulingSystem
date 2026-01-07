@@ -35,7 +35,7 @@ public class FreeListener extends Attendee {
     @Setter(AccessLevel.NONE)
     private Set<Group> groups = new HashSet<>();
 
-    public Set<Group> getGroup() {
+    public Set<Group> getGroups() {
         return new HashSet<>(groups);
     }
 
