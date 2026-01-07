@@ -30,10 +30,6 @@ public class FreeListener extends Attendee {
         this.notes = notes;
     }
 
-    public void _setGroupsRaw(Set<Group> groups) {
-        this.groups = (groups != null) ? new HashSet<>(groups) : new HashSet<>();
-    }
-
     public static FreeListener copy(FreeListener fl) {
         if (fl == null) return null;
 
