@@ -1,4 +1,9 @@
 package com.byt.services.user_system;
+
+import com.byt.data.scheduling.Specialization;
+import com.byt.exception.ExceptionCode;
+import com.byt.exception.ValidationException;
+import com.byt.validation.scheduling.Validator;
 import com.byt.validation.user_system.StudentValidator;
 
 import com.byt.persistence.SaveLoadService;
@@ -12,10 +17,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class StudentService implements CRUDService<Student> {
     // comments explaining how everything works are in Student Service

@@ -13,6 +13,25 @@ public class StudentValidator {
 
     public StudentValidator() {}
 
+    public static void validateStudent(Student student) {
+        if (student == null) {
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Student must not be null"
+            );
+        }
+
+        validateStudent(
+                student.getFirstName(),
+                student.getLastName(),
+                student.getFamilyName(),
+                student.getDateOfBirth(),
+                student.getPhoneNumber(),
+                student.getEmail(),
+                student.getLanguagesOfStudies(),
+                student.getStudiesStatus()
+        );
+    }
 
     // VALIDATION METHODS
     public static void validateStudent(

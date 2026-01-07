@@ -12,6 +12,26 @@ public class AdminValidator {
     private AdminValidator() {
     }
 
+    public static void validateAdmin(Admin admin) {
+        if (admin == null) {
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Admin must not be null"
+            );
+        }
+
+        validateAdmin(
+                admin.getFirstName(),
+                admin.getLastName(),
+                admin.getFamilyName(),
+                admin.getDateOfBirth(),
+                admin.getPhoneNumber(),
+                admin.getEmail(),
+                admin.getHireDate(),
+                admin.getLastLoginTime()
+        );
+    }
+
     // VALIDATION METHODS
     public static void validateAdmin(
             String firstName,

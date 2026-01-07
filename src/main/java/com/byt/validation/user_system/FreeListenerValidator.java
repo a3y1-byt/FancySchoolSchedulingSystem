@@ -17,6 +17,26 @@ public class FreeListenerValidator {
     public FreeListenerValidator() {
     }
 
+    public static void validateFreeListener(FreeListener freeListener) {
+        if (freeListener == null) {
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "FreeListener must not be null"
+            );
+        }
+
+        validateFreeListener(
+                freeListener.getFirstName(),
+                freeListener.getLastName(),
+                freeListener.getFamilyName(),
+                freeListener.getDateOfBirth(),
+                freeListener.getPhoneNumber(),
+                freeListener.getEmail(),
+                freeListener.getLanguagesOfStudies(),
+                freeListener.getNotes()
+        );
+    }
+
     // VALIDATION METHODS
     public static void validateFreeListener(
             String firstName,
