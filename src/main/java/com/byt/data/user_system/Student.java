@@ -1,19 +1,21 @@
 package com.byt.data.user_system;
 
+import com.byt.data.scheduling.Group;
+import com.byt.data.scheduling.Specialization;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.byt.validation.scheduling.Validator;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class Student extends Attendee {
 
     private StudyStatus studiesStatus;
@@ -29,4 +31,66 @@ public class Student extends Attendee {
 
         this.studiesStatus = studiesStatus;
     }
+
+    // STUDENT -------- SPECIALIZATION
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Set<Specialization> specializations = new HashSet<>();
+
+    public Set<Specialization> getSpecialization() {
+        return new HashSet<>(specializations);
+    }
+
+    public void addSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+
+        if (specializations.contains(specialization))
+            return;
+
+        specializations.add(specialization);
+        specialization.addStudent(this);
+    }
+
+    public void removeSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+
+        if (!specializations.contains(specialization)) {
+            return;
+        }
+
+        specializations.remove(specialization);
+        specialization.removeStudent(this);
+    }
+
+
+    // STUDENT -------- GROUP
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Set<Group> groups = new HashSet<>();
+
+    public Set<Group> getGroup() {
+        return new HashSet<>(groups);
+    }
+
+    public void addGroup(Group group) {
+        Validator.validateGroup(group);
+
+        if (groups.contains(group))
+            return;
+
+        groups.add(group);
+        group.addStudent(this);
+    }
+
+    public void removeGroup(Group group) {
+        Validator.validateGroup(group);
+
+        if (!groups.contains(group)) {
+            return;
+        }
+
+        groups.remove(group);
+        group.removeStudent(this);
+    }
+
 }
