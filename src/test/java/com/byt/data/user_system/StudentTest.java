@@ -4,6 +4,7 @@ import com.byt.data.scheduling.Group;
 import com.byt.data.scheduling.Specialization;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
+import com.byt.exception.ValidationException;
 import com.byt.workarounds.Success;
 import org.junit.jupiter.api.Test;
 
@@ -117,6 +118,29 @@ public class StudentTest {
         assertThrows(Success.class, () -> student.removeGroup(anotherGroup));
     }
 
+    @Test
+    public void shouldThrowWhenAddingNullGroup() {
+        Student student = Student.copy(sampleStudent);
+        assertThrows(ValidationException.class, () -> student.addGroup(null));
+    }
+
+    @Test
+    public void shouldThrowWhenRemovingNullGroup() {
+        Student student = Student.copy(sampleStudent);
+        assertThrows(ValidationException.class, () -> student.removeGroup(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateGroup() {
+        Student student = Student.copy(sampleStudent);
+        Group group = Group.copy(sampleGroup);
+
+        student.addGroup(group);
+        student.addGroup(group);
+
+        assertEquals(1, student.getGroups().size());
+        assertTrue(student.getGroups().contains(group));
+    }
 
     // STUDENT -------- SPECIALIZATION
     @Test
@@ -165,6 +189,36 @@ public class StudentTest {
         } catch (Success ignored) {
         }
         assertThrows(Success.class, () -> student.removeSpecialization(anotherSpecialization));
+    }
+
+    @Test
+    public void shouldThrowWhenAddingNullSpecialization() {
+        Student student = Student.copy(sampleStudent);
+        assertThrows(ValidationException.class, () -> student.addSpecialization(null));
+    }
+
+    @Test
+    public void shouldThrowWhenRemovingNullSpecialization() {
+        Student student = Student.copy(sampleStudent);
+        assertThrows(ValidationException.class, () -> student.removeSpecialization(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateSpecialization() {
+        Student student = Student.copy(sampleStudent);
+        Specialization specialization = Specialization.builder()
+                .name("ComputerScience")
+                .description("hello")
+                .subjects(new HashSet<>())
+                .studyPrograms(new HashSet<>())
+                .students(new HashSet<>())
+                .build();
+
+        student.addSpecialization(specialization);
+        student.addSpecialization(specialization);
+
+        assertEquals(1, student.getSpecializations().size());
+        assertTrue(student.getSpecializations().contains(specialization));
     }
 
     static class TestGroup extends Group {

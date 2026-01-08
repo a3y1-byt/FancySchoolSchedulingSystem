@@ -2,6 +2,7 @@ package com.byt.data.user_system;
 
 import com.byt.data.scheduling.Group;
 import com.byt.enums.user_system.StudyLanguage;
+import com.byt.exception.ValidationException;
 import com.byt.workarounds.Success;
 import org.junit.jupiter.api.Test;
 
@@ -10,8 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 // FREELISTENER -------- GROUP
 public class FreeListenerTest {
@@ -97,6 +97,30 @@ public class FreeListenerTest {
         } catch (Success ignored) {
         }
         assertThrows(Success.class, () -> freeListener.removeGroup(anotherGroup));
+    }
+
+    @Test
+    public void shouldThrowWhenAddingNullGroup() {
+        FreeListener freeListener = FreeListener.copy(sampleFreeListener);
+        assertThrows(ValidationException.class, () -> freeListener.addGroup(null));
+    }
+
+    @Test
+    public void shouldThrowWhenRemovingNullGroup() {
+        FreeListener freeListener = FreeListener.copy(sampleFreeListener);
+        assertThrows(ValidationException.class, () -> freeListener.removeGroup(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateGroup() {
+        FreeListener freeListener = FreeListener.copy(sampleFreeListener);
+        Group group = Group.copy(sampleGroup);
+
+        freeListener.addGroup(group);
+        freeListener.addGroup(group);
+
+        assertEquals(1, freeListener.getGroups().size());
+        assertTrue(freeListener.getGroups().contains(group));
     }
 
     static class TestGroup extends Group {

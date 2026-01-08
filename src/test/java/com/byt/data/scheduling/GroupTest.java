@@ -8,6 +8,7 @@ import com.byt.enums.scheduling.LessonType;
 import com.byt.enums.scheduling.WeekPattern;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
+import com.byt.exception.ValidationException;
 import com.byt.workarounds.Success;
 import org.junit.jupiter.api.Test;
 
@@ -17,8 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GroupTest {
 
@@ -164,6 +164,29 @@ public class GroupTest {
         assertThrows(Success.class, () -> group.removeStudent(anotherStudent));
     }
 
+    @Test
+    public void shouldThrowWhenAddingNullStudent() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.addStudent(null));
+    }
+
+    @Test
+    public void shouldThrowWhenRemovingNullStudent() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.removeStudent(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateStudent() {
+        Group group = Group.copy(sampleGroup);
+        Student student = Student.copy(sampleStudent);
+
+        group.addStudent(student);
+        group.addStudent(student);
+
+        assertEquals(1, group.getStudents().size());
+        assertTrue(group.getStudents().contains(student));
+    }
 
     // GROUP -------- FREELISTENER
     @Test
@@ -219,7 +242,29 @@ public class GroupTest {
         assertThrows(Success.class, () -> group.removeFreeListener(anotherFreeListener));
     }
 
+    @Test
+    public void shouldThrowWhenAddingNullFreeListener() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.addFreeListener(null));
+    }
 
+    @Test
+    public void shouldThrowWhenRemovingNullFreeListener() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.removeFreeListener(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateFreeListener() {
+        Group group = Group.copy(sampleGroup);
+        FreeListener fl = FreeListener.copy(sampleFreeListener);
+
+        group.addFreeListener(fl);
+        group.addFreeListener(fl);
+
+        assertEquals(1, group.getFreeListeners().size());
+        assertTrue(group.getFreeListeners().contains(fl));
+    }
 
     // GROUP -------- LESSON
     @Test
@@ -274,6 +319,29 @@ public class GroupTest {
         assertThrows(Success.class, () -> group.removeLesson(lesson));
     }
 
+    @Test
+    public void shouldThrowWhenAddingNullLesson() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.addLesson(null));
+    }
+
+    @Test
+    public void shouldThrowWhenRemovingNullLesson() {
+        Group group = Group.copy(sampleGroup);
+        assertThrows(ValidationException.class, () -> group.removeLesson(null));
+    }
+
+    @Test
+    public void shouldReturnEarlyWhenAddingDuplicateLesson() {
+        Group group = Group.copy(sampleGroup);
+        Lesson lesson = Lesson.copy(sampleLesson);
+
+        group.addLesson(lesson);
+        group.addLesson(lesson);
+
+        assertEquals(1, group.getLessons().size());
+        assertTrue(group.getLessons().contains(lesson));
+    }
 
     static class TestStudent extends Student {
         public TestStudent(Student sample) {
