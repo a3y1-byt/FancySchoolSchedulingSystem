@@ -320,14 +320,14 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> before = service.get(subA.getEmail());
         assertTrue(before.isPresent());
-        assertEquals(superA.getEmail(), before.get().getSuperadminId());
+        assertEquals(superA.getEmail(), before.get().getSuperAdmin());
 
         // робимо його супер-адміном
         service.makeSuperAdmin(subA.getEmail());
 
         Optional<Admin> after = service.get(subA.getEmail());
         assertTrue(after.isPresent());
-        assertNull(after.get().getSuperadminId());
+        assertNull(after.get().getSuperAdmin());
     }
 
     // delete superadmin via simple delete
@@ -424,11 +424,11 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> newSuperAfter = service.get(newSuperA.getEmail());
         assertTrue(newSuperAfter.isPresent());
-        assertNull(newSuperAfter.get().getSuperadminId());
+        assertNull(newSuperAfter.get().getSuperAdmin());
 
         Optional<Admin> subAfter = service.get(subA.getEmail());
         assertTrue(subAfter.isPresent());
-        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperadminId());
+        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperAdmin());
     }
 
     // valid data

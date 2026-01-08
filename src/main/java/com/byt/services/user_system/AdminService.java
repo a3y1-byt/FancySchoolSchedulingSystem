@@ -61,7 +61,7 @@ public class AdminService implements CRUDService<Admin> {
 
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime, superadminId
+                hireDate, lastLoginTime, superAdmin
         );
 
         admins.add(Admin.copy(admin));
@@ -79,7 +79,7 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin with email = " + email + " already exists");
         }
 
-        String superadminId = prototype.getSuperadminId();
+        String superadminId = prototype.getSuperAdmin();
         if (superadminId != null) {
             if (Objects.equals(superadminId, email)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
@@ -136,7 +136,7 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin with email = " + newEmail + " already exists");
         }
 
-        String superadminId = prototype.getSuperadminId();
+        String superadminId = prototype.getSuperAdmin();
         if (superadminId != null) {
             if (Objects.equals(superadminId, newEmail)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
@@ -149,7 +149,7 @@ public class AdminService implements CRUDService<Admin> {
         // если поменяли email — обновляем superadminId у подчинённых
         if (newEmail != null && !Objects.equals(newEmail, email)) {
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperadminId(), email)) {
+                if (Objects.equals(a.getSuperAdmin(), email)) {
                     a.setSuperadminId(newEmail);
                 }
             }
@@ -200,7 +200,7 @@ public class AdminService implements CRUDService<Admin> {
 
         boolean hasSubordinates = false;
         for (Admin a : admins) {
-            if (Objects.equals(a.getSuperadminId(), email)) {
+            if (Objects.equals(a.getSuperAdmin(), email)) {
                 hasSubordinates = true;
                 break;
             }
@@ -220,7 +220,7 @@ public class AdminService implements CRUDService<Admin> {
             makeSuperAdmin(newSuperadminEmail);
 
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperadminId(), email)) {
+                if (Objects.equals(a.getSuperAdmin(), email)) {
                     a.setSuperadminId(newSuperadminEmail);
                 }
             }
@@ -259,7 +259,7 @@ public class AdminService implements CRUDService<Admin> {
     private List<Admin> getSubordinates(String superadminEmail) {
         List<Admin> raw = new ArrayList<>();
         for (Admin admin : admins) {
-            if (Objects.equals(admin.getSuperadminId(), superadminEmail)) {
+            if (Objects.equals(admin.getSuperAdmin(), superadminEmail)) {
                 raw.add(admin);
             }
         }

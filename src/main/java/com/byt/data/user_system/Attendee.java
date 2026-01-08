@@ -14,7 +14,7 @@ import java.util.Set;
 
 
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true)
 public abstract class Attendee extends User {
 
     @Getter(AccessLevel.NONE)

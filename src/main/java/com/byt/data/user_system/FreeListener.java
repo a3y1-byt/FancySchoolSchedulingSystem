@@ -21,7 +21,7 @@ public class FreeListener extends Attendee {
 
     public FreeListener(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
-                        List<StudyLanguage> languagesOfStudies,
+                        Set<StudyLanguage> languagesOfStudies,
                         String notes) {
 
         super(firstName, lastName, familyName,
@@ -34,9 +34,9 @@ public class FreeListener extends Attendee {
     public static FreeListener copy(FreeListener fl) {
         if (fl == null) return null;
 
-        List<StudyLanguage> langsCopy = (fl.getLanguagesOfStudies() != null)
-                ? new ArrayList<>(fl.getLanguagesOfStudies())
-                : new ArrayList<>();
+        Set<StudyLanguage> langsCopy = (fl.getLanguagesOfStudies() != null)
+                ? new HashSet<>(fl.getLanguagesOfStudies())
+                : new HashSet<>();
 
         FreeListener copy = new FreeListener(
                 fl.getFirstName(),
@@ -45,7 +45,7 @@ public class FreeListener extends Attendee {
                 fl.getDateOfBirth(),
                 fl.getPhoneNumber(),
                 fl.getEmail(),
-                langsCopy,
+                 langsCopy,
                 fl.getNotes()
         );
 
