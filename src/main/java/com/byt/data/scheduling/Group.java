@@ -15,8 +15,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Builder
+
 @Data
+@Builder
 public class Group {
     public static final int MAX_CAPACITY = 20;
     String name;
@@ -38,6 +39,7 @@ public class Group {
     // GROUP -------- STUDENT
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Student> students = new HashSet<>();
 
     public Set<Student> getStudents() {
@@ -68,6 +70,7 @@ public class Group {
     // GROUP -------- LESSON
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Lesson> lessons = new HashSet<>();
 
     public Set<Lesson> getLessons() {
@@ -107,6 +110,7 @@ public class Group {
     // GROUP -------- LESSON
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<FreeListener> freeListeners = new HashSet<>();
 
     public Set<FreeListener> getFreeListeners() {
