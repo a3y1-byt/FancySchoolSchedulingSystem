@@ -2,6 +2,7 @@ package com.byt.data.user_system;
 
 import com.byt.data.scheduling.Group;
 import com.byt.data.scheduling.Specialization;
+import com.byt.data.scheduling.StudyProgram;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
 import com.byt.workarounds.Success;
@@ -168,6 +169,7 @@ public class StudentTest {
     static class TestGroup extends Group {
 
         public TestGroup(Group sample) {
+            super(); // тепер доступний
             this.setName(sample.getName());
             this.setLanguage(sample.getLanguage());
             this.setMaxCapacity(sample.getMaxCapacity());
@@ -188,14 +190,11 @@ public class StudentTest {
 
     // TODO: watahell2
     static class TestSpecialization extends Specialization {
+
         public TestSpecialization(Specialization sample) {
-            super(
-                    sample.getName(),
-                    sample.getDescription(),
-                    sample.getSubjects(),
-                    sample.getStudyPrograms(),
-                    sample.getStudents()
-            );
+            super(); // потрібен @NoArgsConstructor(PROTECTED) у Specialization
+            this.setName(sample.getName());
+            this.setDescription(sample.getDescription());
         }
 
         @Override
@@ -210,5 +209,4 @@ public class StudentTest {
     }
 
 }
-
 
