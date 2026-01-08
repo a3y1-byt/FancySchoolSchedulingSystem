@@ -323,7 +323,6 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertTrue(before.isPresent());
         assertEquals(superA.getEmail(), before.get().getSuperadminId());
 
-        // робимо його супер-адміном
         service.makeSuperAdmin(subA.getEmail());
 
         Optional<Admin> after = service.get(subA.getEmail());

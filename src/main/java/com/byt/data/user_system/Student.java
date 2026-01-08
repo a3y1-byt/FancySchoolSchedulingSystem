@@ -8,6 +8,7 @@ import com.byt.validation.scheduling.Validator;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true)
 public class Student extends Attendee {
 
     private StudyStatus studiesStatus;
@@ -32,20 +33,25 @@ public class Student extends Attendee {
         this.studiesStatus = studiesStatus;
     }
 
-    public static Student copy(Student student) {
-        if (student == null) return null;
+    public static Student copy(Student s) {
+        if (s == null) return null;
+
+        List<StudyLanguage> langsCopy = (s.getLanguagesOfStudies() != null)
+                ? new ArrayList<>(s.getLanguagesOfStudies())
+                : new ArrayList<>();
 
         return new Student(
-                student.getFirstName(),
-                student.getLastName(),
-                student.getFamilyName(),
-                student.getDateOfBirth(),
-                student.getPhoneNumber(),
-                student.getEmail(),
-                student.getLanguagesOfStudies(),
-                student.getStudiesStatus()
+                s.getFirstName(),
+                s.getLastName(),
+                s.getFamilyName(),
+                s.getDateOfBirth(),
+                s.getPhoneNumber(),
+                s.getEmail(),
+                langsCopy,
+                s.getStudiesStatus()
         );
     }
+
 
     // STUDENT -------- SPECIALIZATION
     @Getter(AccessLevel.NONE)
