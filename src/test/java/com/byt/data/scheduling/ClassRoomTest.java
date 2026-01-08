@@ -4,7 +4,6 @@ import com.byt.enums.scheduling.*;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.exception.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalTime;
@@ -73,7 +72,6 @@ class ClassRoomTest {
     }
 
     @Test
-    @Disabled
     void shouldCreateBidirectionalConnectionWhenAddingBuilding() {
         classRoom.addBuilding(building1);
 
@@ -87,7 +85,6 @@ class ClassRoomTest {
     }
 
     @Test
-    @Disabled
     void shouldSwitchBuildingsWhenAddingNewBuilding() {
         classRoom.addBuilding(building1);
         classRoom.addBuilding(building2);
@@ -115,7 +112,6 @@ class ClassRoomTest {
     }
 
     @Test
-    @Disabled
     void shouldReturnEarlyWhenRemovingNonMatchingBuilding() {
         classRoom.addBuilding(building1);
 

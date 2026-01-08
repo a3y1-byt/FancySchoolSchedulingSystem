@@ -26,9 +26,11 @@ public class ClassRoom {
 
     public void addBuilding(Building building) {
         Validator.validateBuilding(building);
+        if(this.building == building) return;
 
         if(this.building != null) {
             Building oldBuilding = this.building;
+            this.building = null;
             oldBuilding.removeClassRoom(this);
         }
 
@@ -37,10 +39,12 @@ public class ClassRoom {
     }
 
     public void removeBuilding(Building building) {
-        if(!this.building.equals(building)) return;
+        if(this.building == null || !this.building.equals(building)) return;
 
-        building.removeClassRoom(this);
+        Building oldBuilding = this.building;
         this.building = null;
+
+        oldBuilding.removeClassRoom(this);
     }
 
     public void addLesson(Lesson lesson) {

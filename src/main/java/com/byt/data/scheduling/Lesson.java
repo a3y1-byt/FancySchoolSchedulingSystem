@@ -54,27 +54,41 @@ public class Lesson {
     HashSet<Semester> semesters = new HashSet<>();
 
     public void addSubject(Subject subject) {
+        if(this.subject == subject) return;
         Validator.validateSubject(subject);
+
+        if(this.subject != null){
+            Subject oldSubject = this.subject;
+            this.subject = null;
+            oldSubject.removeLesson(this);
+        }
 
         this.subject = subject;
         subject.addLesson(this);
     }
 
     public void removeSubject(Subject subject) {
-        if(!this.subject.equals(subject)) return;
+        if(this.subject == null || !this.subject.equals(subject)) return;
 
         this.subject = null;
         subject.removeLesson(this);
     }
 
     public void addGroup(Group group) {
+        if(this.group == group) return;
         Validator.validateGroup(group);
+
+        if(this.group != null){
+            Group oldGroup = this.group;
+            this.group = null;
+            oldGroup.removeLesson(this);
+        }
 
         this.group = group;
          group.addLesson(this);
     }
     public void removeGroup(Group group) {
-        if(!this.group.equals(group)) return;
+        if(this.group == null || !this.group.equals(group)) return;
 
         this.group = null;
         group.removeLesson(this);
@@ -84,7 +98,7 @@ public class Lesson {
         TeacherValidator.validateTeacher(teacher);
         this.teacher = teacher;
         //TODO
-        // teacher.addLesson(this);
+//         teacher.addLesson(this);
     }
     public void removeTeacher(Teacher teacher) {
         if(!this.teacher.equals(teacher)) return;

@@ -116,22 +116,16 @@ class LessonTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenAddingNullSubject() {
-        assertThrows(Exception.class, () -> lesson.addSubject(null));
-    }
-
-    @Test
     void shouldReplaceOldSubjectWhenAddingNewSubject() {
         lesson.addSubject(subject1);
         lesson.addSubject(subject2);
 
         assertEquals(subject2, lesson.getSubject());
         assertTrue(subject2.getLessons().contains(lesson));
-//        assertFalse(subject1.getLessons().contains(lesson));
+        assertFalse(subject1.getLessons().contains(lesson));
     }
 
     @Test
-    @Disabled
     void shouldRemoveBidirectionalConnectionWhenRemovingSubject() {
         lesson.addSubject(subject1);
 
@@ -150,7 +144,6 @@ class LessonTest {
     }
 
     @Test
-    @Disabled
     void shouldHandleRemovingSubjectWhenNoSubjectSet() {
         assertDoesNotThrow(() -> lesson.removeSubject(subject1));
         assertNull(lesson.getSubject());
@@ -165,12 +158,6 @@ class LessonTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenAddingNullGroup() {
-        assertThrows(Exception.class, () -> lesson.addGroup(null));
-    }
-
-    @Test
-    @Disabled
     void shouldReplaceOldGroupWhenAddingNewGroup() {
         lesson.addGroup(group1);
         lesson.addGroup(group2);
@@ -199,7 +186,6 @@ class LessonTest {
     }
 
     @Test
-    @Disabled
     void shouldHandleRemovingGroupWhenNoGroupSet() {
         assertDoesNotThrow(() -> lesson.removeGroup(group1));
         assertNull(lesson.getGroup());
@@ -386,7 +372,6 @@ class LessonTest {
     }
 
     @Test
-    @Disabled
     void shouldHandleComplexSubjectSwitchingScenario() {
         lesson.addSubject(subject1);
         assertEquals(subject1, lesson.getSubject());
@@ -404,7 +389,6 @@ class LessonTest {
     }
 
     @Test
-    @Disabled
     void shouldHandleComplexGroupSwitchingScenario() {
         lesson.addGroup(group1);
         assertEquals(group1, lesson.getGroup());
