@@ -11,6 +11,7 @@ import com.byt.validation.user_system.StudentValidator;
 import com.byt.validation.user_system.UserValidator;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,8 @@ import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Group {
     public static final int MAX_CAPACITY = 20;
     String name;
@@ -47,20 +50,23 @@ public class Group {
     private Set<FreeListener> freeListeners = new HashSet<>();
 
     public static Group copy(Group group) {
+        if (group == null) return null;
+
         var copy = Group.builder()
                 .name(group.getName())
                 .language(group.getLanguage())
                 .maxCapacity(group.getMaxCapacity())
                 .yearOfStudy(group.getYearOfStudy())
-                .notes(group.getNotes())
+                .notes(group.getNotes() == null ? null : new java.util.ArrayList<>(group.getNotes()))
                 .build();
 
-        copy.students = group.students;
-        copy.lessons = group.lessons;
-        copy.freeListeners = group.freeListeners;
+        copy.students = (group.students == null) ? new HashSet<>() : new HashSet<>(group.students);
+        copy.lessons = (group.lessons == null) ? new HashSet<>() : new HashSet<>(group.lessons);
+        copy.freeListeners = (group.freeListeners == null) ? new HashSet<>() : new HashSet<>(group.freeListeners);
 
         return copy;
     }
+
 
     public Set<Student> getStudents() {
         return Set.copyOf(students);
