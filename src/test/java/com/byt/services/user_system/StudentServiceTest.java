@@ -432,7 +432,6 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
 
         service.create(prototype);
 
-        // міняємо прототип після create()
         prototype.setFirstName("CHANGED");
         prototype.getLanguagesOfStudies().add(StudyLanguage.POLISH);
 
@@ -440,11 +439,9 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         assertEquals(1, all.size());
         Student stored = all.getFirst();
 
-        // ім’я не змінилось
         assertNotEquals("CHANGED", stored.getFirstName());
         assertEquals("Yumi", stored.getFirstName());
 
-        // список мов також не повинен підтягнути нову мову з прототипу
         assertEquals(1, stored.getLanguagesOfStudies().size());
         assertFalse(stored.getLanguagesOfStudies().contains(StudyLanguage.POLISH));
     }
