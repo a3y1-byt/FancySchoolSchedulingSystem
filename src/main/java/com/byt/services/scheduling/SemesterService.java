@@ -1,10 +1,11 @@
 package com.byt.services.scheduling;
 
-import com.byt.data.scheduling.Lesson;
 import com.byt.data.scheduling.Semester;
+import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -14,83 +15,72 @@ import java.util.stream.Collectors;
 
 public class SemesterService implements CRUDService<Semester> {
     private final SaveLoadService saveLoadService;
-    private final LessonService lessonService;
     private List<Semester> semesters;
 
     public SemesterService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.lessonService = new  LessonService(saveLoadService);
         this.semesters = null;
     }
 
     @Override
     public void initialize() throws IOException {
-        String cannotLoadMessage = "Error loading semesters";
-        if (!saveLoadService.canLoad(DataSaveKeys.SEMESTERS)) {
-            throw new RuntimeException(cannotLoadMessage);
-        }
-
-        Type type = new TypeToken<List<Semester>>(){}.getType();
-        try {
-            List<Semester> loadedSemesters = (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
-            this.semesters = new ArrayList<>(loadedSemesters);
-        } catch (IOException e) {
-            throw new RuntimeException(cannotLoadMessage, e);
-        }
-    }
-
-    @Override
-    public void create(Semester prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
-
-        if (exists(prototype.getId())) throw new IllegalArgumentException("Semester already exists");
-
-        semesters.add(Semester.copy(prototype));
-        saveAllSemesters(semesters);
         loadSemesters();
     }
 
     @Override
-    public Optional<Semester> get(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
+    public void create(Semester prototype)
+            throws IllegalArgumentException, IOException, ValidationException
+    {
+        Validator.validateSemester(prototype);
 
-        Semester semester = findById(id);
+        if (exists(prototype.getName())) throw new IllegalArgumentException("Semester already exists");
+
+        semesters.add(Semester.copy(prototype));
+        saveAllSemesters(semesters);
+    }
+
+    @Override
+    public Optional<Semester> get(String name) {
+        Semester semester = findOne(name);
         if (semester == null) return Optional.empty();
 
-        List<Lesson> lessons = lessonService.listLessonsBySemesterId(id);
-        Semester semesterCopy =  Semester.copy(semester, lessons);
+        Semester semesterCopy =  Semester.copy(semester);
         return Optional.of(semesterCopy);
     }
 
     @Override
-    public List<Semester> getAll() throws IOException {
+    public List<Semester> getAll() {
+        if (semesters == null) return null;
         return semesters.stream()
                 .map(Semester::copy)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void update(String id, Semester prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
-        if (!exists(id)) throw new IllegalArgumentException("Semester with id " + id + " does not exist");
+    public void update(String name, Semester prototype)
+            throws IllegalArgumentException, IOException, ValidationException
+    {
+        Validator.validateSemester(prototype);
+
+        if (!exists(name)) throw new IllegalArgumentException("Semester not found");
 
         List<Semester> updatedList = semesters.stream()
-                .map(s -> s.getId().equals(id) ? Semester.copy(prototype) : s)
+                .map(s -> s.getName().equals(name) ? Semester.copy(prototype) : s)
                 .collect(Collectors.toList());
 
         saveAllSemesters(updatedList);
-        loadSemesters();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Semester id is null or empty");
-        if (!exists(id)) throw new IllegalArgumentException("Semester with id " + id + " does not exist");
+    public void delete(String name) throws IllegalArgumentException, IOException, IllegalArgumentException {
+        Validator.notEmptyArgument(name);
+
+        if (!exists(name)) throw new IllegalArgumentException("Semester not found");
 
         int originalSize = semesters.size();
 
         List<Semester> updatedSemesters = semesters.stream()
-                .filter(s -> !s.getId().equals(id))
+                .filter(s -> !s.getName().equals(name))
                 .collect(Collectors.toList());
 
         if (updatedSemesters.size() < originalSize) {
@@ -100,68 +90,42 @@ public class SemesterService implements CRUDService<Semester> {
     }
 
     @Override
-    public boolean exists(String id) throws IOException {
-        loadSemesters();
-        return semesters.stream().anyMatch(s -> s.getId().equals(id));
+    public boolean exists(String name) throws IOException {
+        if(this.semesters == null || name == null || name.isEmpty()) return false;
+
+        return semesters.stream()
+                .anyMatch(s -> s.getName()
+                .equals(name));
     }
 
-    private Semester findById(String id) {
-        if(this.semesters == null) return null;
+    private Semester findOne(String name) {
+        if(this.semesters == null || name == null || name.isEmpty()) return null;
 
         return this.semesters.stream()
-                .filter(s -> s.getId().equals(id))
+                .filter(s -> s.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
-    private void saveAllSemesters(List<Semester> semesters) {
-        try {
-            saveLoadService.save(DataSaveKeys.SEMESTERS, semesters);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save semesters", e);
-        }
+    private void saveAllSemesters(List<Semester> semesters) throws IOException {
+        saveLoadService.save(DataSaveKeys.SEMESTERS, semesters);
+        loadSemesters();
     }
 
-    private void loadSemesters() {
+    private void loadSemesters() throws IOException {
         String cannotLoadMessage = "Error loading semesters";
         if (!saveLoadService.canLoad(DataSaveKeys.SEMESTERS)) {
             throw new RuntimeException(cannotLoadMessage);
         }
 
         Type type = new TypeToken<List<Semester>>(){}.getType();
-        try {
-            List<Semester> loadedSemesters = (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
-            this.semesters = new ArrayList<>(loadedSemesters);
-        } catch (IOException e) {
-            throw new RuntimeException(cannotLoadMessage, e);
-        }
+
+        List<Semester> loadedSemesters =
+                (List<Semester>) saveLoadService.load(DataSaveKeys.SEMESTERS, type);
+
+        this.semesters = new ArrayList<>(loadedSemesters);
+
     }
 
-    private void validate(Semester semester) {
-        List<String> errors = new ArrayList<>();
 
-        if (semester == null) {
-            throw new IllegalArgumentException("Semester cannot be null");
-        }
-
-        if (semester.getId() == null || semester.getId().trim().isEmpty()) {
-            errors.add("Semester ID is required");
-        }
-
-        if (semester.getName() == null || semester.getName().trim().isEmpty()) {
-            errors.add("Semester name is required");
-        }
-
-        if (semester.getStartDate() == null) {
-            errors.add("Semester start date is required");
-        }
-
-        if (semester.getEndDate() == null) {
-            errors.add("Semester end date is required");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
-        }
-    }
 }

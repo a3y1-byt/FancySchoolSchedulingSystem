@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class FancySchedulingApplication {
     public static void main(String[] args) {
@@ -74,17 +75,16 @@ public class FancySchedulingApplication {
                 LocalDate.now().minusYears(20),
                 "4808857322",
                 "jake.doe@ilovebyt.pl",
-                List.of(StudyLanguage.ENGLISH),
+                Set.of(StudyLanguage.ENGLISH),
                 StudyStatus.ACTIVE);
 
         // ...or with builders!
         Group bytGroupPrototype = Group.builder()
-                .id("BYT-1")
                 .name("BYT-2025")
                 .language(StudyLanguage.ENGLISH)
                 .yearOfStudy(2025)
                 .maxCapacity(15)
-                .students(studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
+                .students((Set<Student>) studentService.getAll()) // BYT is too good, so we'll make ALL the students study it
                 .build();
 
         // Student will be used as a prototype. Under the hood, a separate instance is constructed.
@@ -95,10 +95,11 @@ public class FancySchedulingApplication {
         groupService.create(bytGroupPrototype);
 
         // Now, let's try to update the group we just created, because its name doesn't fully represent how cool this subject is
+        String oldGroupName = bytGroupPrototype.getName();
         bytGroupPrototype.setName("SUPER-BYT-2025");
-        groupService.update(bytGroupPrototype.getId(), bytGroupPrototype); // Still, no escaping references
+        groupService.update(oldGroupName, bytGroupPrototype); // Still, no escaping references
 
-        System.out.println("Group name: " + groupService.get(bytGroupPrototype.getId()).orElseThrow().getName()); // SUPER-BYT-2025
+        System.out.println("Group name: " + groupService.get(bytGroupPrototype.getName()).orElseThrow().getName()); // SUPER-BYT-2025
 
         // OMG, this project is so amazing that it might be illegal!
         // Let's report this issue to the developers (us) so that they make the application worse.
@@ -111,16 +112,9 @@ public class FancySchedulingApplication {
                         "admin@school.com",                 // email instead of "1"
                         "THIS PROJECT IS TOO GOOD!",              // title
                         "Plz fix that",                           // description
-                        LocalDateTime.now(),                      // createdAt
-                        null                                      // deprecated id not used anymore
+                        LocalDateTime.now()                      // createdAt
                 );
 
-
-        System.out.println("Issue title: " + reportService.get("1").orElseThrow().getTitle()); // THIS PROJECT IS TOO GOOD!
-
-        // Just joking. We'll not take this report seriously!
-        reportService.delete(superRealReport.getId());
-
-
+        reportService.create(superRealReport);
     }
 }

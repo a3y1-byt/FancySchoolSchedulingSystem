@@ -1,31 +1,29 @@
 package com.byt.services.user_system;
 
+import com.byt.data.user_system.FreeListener;
+import com.byt.enums.user_system.StudyLanguage;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.data.user_system.FreeListener;
-import com.byt.enums.user_system.StudyLanguage;
+import com.byt.validation.user_system.FreeListenerValidator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import java.util.Set;
 
 public class FreeListenerService implements CRUDService<FreeListener> {
 
-    // comments explaining how everything works are in FreeListener Service
     private final SaveLoadService service;
     private List<FreeListener> freeListeners;
 
-    private static final Type FREELISTENER_LIST_TYPE = new TypeToken<List<FreeListener>>() {
-    }.getType();
+    private static final Type FREELISTENER_LIST_TYPE = new TypeToken<List<FreeListener>>() {}.getType();
 
     public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners) {
         this.service = service;
@@ -38,148 +36,130 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public void initialize() throws IOException {
-        List<FreeListener> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.freeListeners = copyList(loaded); // safe deep copies
+        List<FreeListener> loaded = loadFromDb();
+        this.freeListeners = copyList(loaded);
     }
-
-    // _________________________________________________________
 
     public FreeListener create(String firstName, String lastName, String familyName,
                                LocalDate dateOfBirth, String phoneNumber, String email,
-                               List<StudyLanguage> languagesOfStudies,
+                               Set<StudyLanguage> languagesOfStudies,
                                String notes) throws IOException {
 
-        validateClassData(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                languagesOfStudies, notes);
-
-        FreeListener freeListener = new FreeListener(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                new ArrayList<>(languagesOfStudies), notes
+        FreeListenerValidator.validateFreeListener(
+                firstName, lastName, familyName, dateOfBirth, phoneNumber, email, languagesOfStudies, notes
         );
-        if (freeListener.getId() != null && exists(freeListener.getId())) {
-            throw new IllegalStateException("freeListener exists with this id already");
+
+        if (email != null && exists(email)) {
+            throw new IllegalStateException("FreeListener exists with this email already");
         }
 
-        freeListeners.add(freeListener);
+        FreeListener freeListener = new FreeListener(
+                firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                new HashSet<>(languagesOfStudies),
+                notes
+        );
+
+        freeListeners.add(FreeListener.copy(freeListener));
         saveToDb();
 
-        return copy(freeListener);
+        return FreeListener.copy(freeListener);
     }
 
     @Override
     public void create(FreeListener prototype) throws IllegalArgumentException, IOException {
+        FreeListenerValidator.validateClass(prototype);
 
-        validateClass(prototype);
-
-        if (prototype.getId() != null && exists(prototype.getId())) {
-            throw new IllegalArgumentException("freeListener with id = " + prototype.getId() + " already exists");
+        String email = prototype.getEmail();
+        if (email != null && exists(email)) {
+            throw new IllegalArgumentException("FreeListener with email = " + email + " already exists");
         }
 
-        FreeListener toStore = copy(prototype);
-        freeListeners.add(toStore);
+        freeListeners.add(FreeListener.copy(prototype));
         saveToDb();
     }
 
     @Override
-    public Optional<FreeListener> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public Optional<FreeListener> get(String email) throws IllegalArgumentException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
-        for (FreeListener freeListener : freeListeners) {
-            if (Objects.equals(freeListener.getId(), id)) {
-                return Optional.of(copy(freeListener));
+        for (FreeListener fl : freeListeners) {
+            if (Objects.equals(fl.getEmail(), email)) {
+                return Optional.of(FreeListener.copy(fl));
             }
         }
-
         return Optional.empty();
     }
 
     @Override
-    public List<FreeListener> getAll() throws IOException{
+    public List<FreeListener> getAll() throws IOException {
         return copyList(freeListeners);
     }
 
     @Override
-    public void update(String id, FreeListener prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void update(String email, FreeListener prototype) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
-        validateClass(prototype);
+        FreeListenerValidator.validateClass(prototype);
 
+        int index = -1;
         for (int i = 0; i < freeListeners.size(); i++) {
-            FreeListener current = freeListeners.get(i);
-            if (Objects.equals(current.getId(), id)) {
-                FreeListener updatedCopy = copy(prototype);
-                updatedCopy.setId(id);
-                freeListeners.set(i, updatedCopy);
-                saveToDb();
-                return;
+            if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
+                index = i;
+                break;
             }
         }
-        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
+        if (index == -1) {
+            throw new IllegalArgumentException("FreeListener with email = " + email + " not found");
+        }
+
+        String newEmail = prototype.getEmail();
+        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("FreeListener with email = " + newEmail + " already exists");
+        }
+
+        freeListeners.set(index, FreeListener.copy(prototype));
+        saveToDb();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void delete(String email) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (int i = 0; i < freeListeners.size(); i++) {
-            if (Objects.equals(freeListeners.get(i).getId(), id)) {
+            if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
                 freeListeners.remove(i);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("FreeListener with id=" + id + " not found");
+        throw new IllegalArgumentException("FreeListener with email = " + email + " not found");
     }
 
     @Override
-    public boolean exists(String id) throws IOException{
-        if (id == null || id.isBlank()) {
-            return false;
-        }
-        for (FreeListener freeListener : freeListeners) {
-            if (Objects.equals(freeListener.getId(), id)) {
+    public boolean exists(String email) throws IOException {
+        if (email == null || email.isBlank()) return false;
+
+        for (FreeListener fl : freeListeners) {
+            if (Objects.equals(fl.getEmail(), email)) {
                 return true;
             }
         }
         return false;
     }
 
-    // _________________________________________________________
-
-    private FreeListener copy(FreeListener adm) {
-        if (adm == null) return null;
-
-        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
-        List<StudyLanguage> langsCopy = langs != null
-                ? new ArrayList<>(langs)
-                : new ArrayList<>();
-
-        FreeListener copy = new FreeListener(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                langsCopy,
-                adm.getNotes()
-        );
-        copy.setId(adm.getId());
-        return copy;
-    }
-
     private List<FreeListener> copyList(List<FreeListener> source) {
         List<FreeListener> result = new ArrayList<>();
         if (source == null) return result;
-        for (FreeListener a : source) {
-            result.add(copy(a));
+
+        for (FreeListener fl : source) {
+            result.add(FreeListener.copy(fl));
         }
         return result;
     }
@@ -194,8 +174,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         if (loaded instanceof List<?> raw) {
             List<FreeListener> result = new ArrayList<>();
             for (Object o : raw) {
-                if (o instanceof FreeListener freeListener) {
-                    result.add(freeListener);
+                if (o instanceof FreeListener fl) {
+                    result.add(fl);
                 }
             }
             return result;
@@ -207,56 +187,4 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.FREE_LISTENERS, freeListeners);
     }
-
-
-    // VALIDATION METHODS
-    private void validateClassData(
-            String firstName,
-            String lastName,
-            String familyName,
-            LocalDate dateOfBirth,
-            String phoneNumber,
-            String email,
-            List<StudyLanguage> languagesOfStudies,
-            String notes
-    ) {
-        // general USER class validation
-        UserValidator.validateUserFields(
-                firstName,
-                lastName,
-                familyName,
-                dateOfBirth,
-                phoneNumber,
-                email
-        );
-
-        //  only FreeListener validation
-        if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
-            throw new ValidationException("FreeListener must have at least one study language");
-        }
-
-        // notes are nullable but I think it is ok to set them at max  = 1000
-        int max_notes = 1000;
-        if (notes != null && notes.length() > max_notes) {
-            throw new ValidationException("Notes are too long");
-        }
-    }
-
-    private void validateClass(FreeListener prototype) {
-        if (prototype == null) {
-            throw new ValidationException("FreeListener prototype must not be null");
-        }
-
-        validateClassData(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getLanguagesOfStudies(),
-                prototype.getNotes()
-        );
-    }
-
 }

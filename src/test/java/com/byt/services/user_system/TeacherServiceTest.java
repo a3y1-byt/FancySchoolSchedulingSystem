@@ -3,7 +3,7 @@ package com.byt.services.user_system;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Teacher;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
                 "DogTeacher",
                 "Dean"
         );
-        teacher.setId(TEST_OBJECT_ID);
+        teacher.setEmail(TEST_OBJECT_ID);
         return teacher;
     }
 
@@ -93,7 +93,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
         assertEquals("DogTeacher", updated.getTitle());
         assertEquals("Dean", updated.getPosition());
 
-        assertEquals(id, updated.getId());
+        assertEquals(id, updated.getEmail());
     }
 
                 // firstName contains ukrainian letters
@@ -297,7 +297,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<Teacher> after = service.getAll();
         assertEquals(before + 1, after.size());

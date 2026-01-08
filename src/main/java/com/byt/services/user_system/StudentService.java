@@ -1,31 +1,30 @@
 package com.byt.services.user_system;
 
-import com.byt.persistence.SaveLoadService;
-import com.byt.persistence.util.DataSaveKeys;
-import com.byt.services.CRUDService;
 import com.byt.data.user_system.Student;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
+import com.byt.persistence.SaveLoadService;
+import com.byt.persistence.util.DataSaveKeys;
+import com.byt.services.CRUDService;
+import com.byt.validation.user_system.StudentValidator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.byt.validation.user_system.UserValidator;
-import com.byt.validation.user_system.ValidationException;
+import java.util.Set;
 
 public class StudentService implements CRUDService<Student> {
-    // comments explaining how everything works are in Student Service
+
     private final SaveLoadService service;
     private List<Student> students;
 
-    private static final Type STUDENT_LIST_TYPE = new TypeToken<List<Student>>() {
-    }.getType();
+    private static final Type STUDENT_LIST_TYPE = new TypeToken<List<Student>>() {}.getType();
 
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
@@ -38,60 +37,60 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public void initialize() throws IOException {
-        List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.students = copyList(loaded); // safe deep copies
+        List<Student> loaded = loadFromDb();
+        this.students = copyList(loaded);
     }
-
-    // _________________________________________________________
 
     public Student create(String firstName, String lastName, String familyName,
                           LocalDate dateOfBirth, String phoneNumber, String email,
-                          List<StudyLanguage> languagesOfStudies,
+                          Set<StudyLanguage> languagesOfStudies,
                           StudyStatus studiesStatus) throws IOException {
 
-        validateClassData(firstName, lastName, familyName,
+        StudentValidator.validateStudent(
+                firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                languagesOfStudies, studiesStatus);
-
-
-        Student student = new Student(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                new ArrayList<>(languagesOfStudies), studiesStatus
+                    languagesOfStudies, studiesStatus
         );
 
-        if (student.getId() != null && exists(student.getId())) {
-            throw new IllegalStateException("student exists with this id already");
+        if (email != null && exists(email)) {
+            throw new IllegalStateException("Student exists with this email already");
         }
 
-        students.add(student);
+        Student student = new Student(
+                firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                new HashSet<>(languagesOfStudies),
+                studiesStatus
+        );
+
+        students.add(Student.copy(student));
         saveToDb();
 
-        return copy(student);
+        return Student.copy(student);
     }
 
     @Override
     public void create(Student prototype) throws IllegalArgumentException, IOException {
+        StudentValidator.validateClass(prototype);
 
-        validateClass(prototype);
-
-        if (prototype.getId() != null && exists(prototype.getId())) {
-            throw new IllegalArgumentException("student with id = " + prototype.getId() + " already exists");
+        String email = prototype.getEmail();
+        if (email != null && exists(email)) {
+            throw new IllegalArgumentException("Student with email = " + email + " already exists");
         }
 
-        Student toStore = copy(prototype);
-        students.add(toStore);
+        students.add(Student.copy(prototype));
         saveToDb();
     }
 
     @Override
-    public Optional<Student> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public Optional<Student> get(String email) throws IllegalArgumentException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (Student student : students) {
-            if (Objects.equals(student.getId(), id)) {
-                return Optional.of(copy(student));
+            if (Objects.equals(student.getEmail(), email)) {
+                return Optional.of(Student.copy(student));
             }
         }
 
@@ -99,89 +98,73 @@ public class StudentService implements CRUDService<Student> {
     }
 
     @Override
-    public List<Student> getAll() throws IOException{
+    public List<Student> getAll() throws IOException {
         return copyList(students);
     }
 
     @Override
-    public void update(String id, Student prototype) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void update(String email, Student prototype) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
-        validateClass(prototype);
+        StudentValidator.validateClass(prototype);
 
+        int index = -1;
         for (int i = 0; i < students.size(); i++) {
-            Student current = students.get(i);
-            if (Objects.equals(current.getId(), id)) {
-                Student updatedCopy = copy(prototype);
-                updatedCopy.setId(id);
-                students.set(i, updatedCopy);
-                saveToDb();
-                return;
+            if (Objects.equals(students.get(i).getEmail(), email)) {
+                index = i;
+                break;
             }
         }
-        throw new IllegalArgumentException("Student with id=" + id + " not found");
+        if (index == -1) {
+            throw new IllegalArgumentException("Student with email=" + email + " not found");
+        }
+
+        String newEmail = prototype.getEmail();
+        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
+        }
+
+        students.set(index, Student.copy(prototype));
+        saveToDb();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
+    public void delete(String email) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
         }
 
         for (int i = 0; i < students.size(); i++) {
-            if (Objects.equals(students.get(i).getId(), id)) {
+            if (Objects.equals(students.get(i).getEmail(), email)) {
                 students.remove(i);
                 saveToDb();
                 return;
             }
         }
-        throw new IllegalArgumentException("Student with id=" + id + " not found");
+
+        throw new IllegalArgumentException("Student with email=" + email + " not found");
     }
 
     @Override
-    public boolean exists(String id) throws IOException{
-        if (id == null || id.isBlank()) {
-            return false;
-        }
+    public boolean exists(String email) throws IOException {
+        if (email == null || email.isBlank()) return false;
+
         for (Student student : students) {
-            if (Objects.equals(student.getId(), id)) {
+            if (Objects.equals(student.getEmail(), email)) {
                 return true;
             }
         }
         return false;
     }
 
-    // _________________________________________________________
-
-    private Student copy(Student adm) {
-        if (adm == null) return null;
-
-        List<StudyLanguage> langs = adm.getLanguagesOfStudies();
-        List<StudyLanguage> langsCopy = langs != null
-                ? new ArrayList<>(langs)
-                : new ArrayList<>();
-
-        Student copy = new Student(
-                adm.getFirstName(),
-                adm.getLastName(),
-                adm.getFamilyName(),
-                adm.getDateOfBirth(),
-                adm.getPhoneNumber(),
-                adm.getEmail(),
-                langsCopy,
-                adm.getStudiesStatus()
-        );
-        copy.setId(adm.getId());
-        return copy;
-    }
-
     private List<Student> copyList(List<Student> source) {
         List<Student> result = new ArrayList<>();
         if (source == null) return result;
-        for (Student a : source) {
-            result.add(copy(a));
+
+        for (Student s : source) {
+            result.add(Student.copy(s));
         }
         return result;
     }
@@ -209,55 +192,4 @@ public class StudentService implements CRUDService<Student> {
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.STUDENTS, students);
     }
-
-
-    // VALIDATION METHODS
-    private void validateClassData(
-            String firstName,
-            String lastName,
-            String familyName,
-            LocalDate dateOfBirth,
-            String phoneNumber,
-            String email,
-            List<StudyLanguage> languagesOfStudies,
-            StudyStatus studiesStatus
-    ) {
-        // general USER class validation
-        UserValidator.validateUserFields(
-                firstName,
-                lastName,
-                familyName,
-                dateOfBirth,
-                phoneNumber,
-                email
-        );
-
-        //  only Student validation
-        if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
-            throw new ValidationException("Student must have at least one study language");
-        }
-
-        if (studiesStatus == null) {
-            throw new ValidationException("Study status must not be null");
-        }
-    }
-
-    private void validateClass(Student prototype) {
-        if (prototype == null) {
-            throw new ValidationException("Student prototype must not be null");
-        }
-
-        validateClassData(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getLanguagesOfStudies(),
-                prototype.getStudiesStatus()
-        );
-    }
-
 }
-

@@ -3,7 +3,7 @@ package com.byt.services.user_system;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Admin;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -22,8 +22,9 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
     @Override
     protected String getSampleObjectId() {
-        return TEST_OBJECT_ID;
+        return "yumi@gmail.com";
     }
+
 
     @Override
     protected Admin getSampleObject() {
@@ -42,7 +43,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 lastLogin,
                 null
         );
-        admin.setId(TEST_OBJECT_ID);
+        admin.getEmail();
         return admin;
     }
 
@@ -95,7 +96,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals(hireDate, updated.getHireDate());
         assertEquals(lastLogin, updated.getLastLoginTime());
 
-        assertEquals(id, updated.getId());
+        assertEquals(id, updated.getEmail());
     }
 
     // firstName contains ukrainian letters
@@ -314,17 +315,17 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "yumi@gmail.com",
                 hireDate,
                 lastLogin,
-                superA.getId()
+                superA.getEmail()
         );
 
-        Optional<Admin> before = service.get(subA.getId());
+        Optional<Admin> before = service.get(subA.getEmail());
         assertTrue(before.isPresent());
-        assertEquals(superA.getId(), before.get().getSuperadminId());
+        assertEquals(superA.getEmail(), before.get().getSuperadminId());
 
         // робимо його супер-адміном
-        service.makeSuperAdmin(subA.getId());
+        service.makeSuperAdmin(subA.getEmail());
 
-        Optional<Admin> after = service.get(subA.getId());
+        Optional<Admin> after = service.get(subA.getEmail());
         assertTrue(after.isPresent());
         assertNull(after.get().getSuperadminId());
     }
@@ -361,12 +362,12 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "yumi@gmail.com",
                 hireDate,
                 lastLogin,
-                superA.getId()
+                superA.getEmail()
         );
 
         assertThrows(
                 IllegalStateException.class,
-                () -> service.delete(superA.getId())
+                () -> service.delete(superA.getEmail())
         );
     }
 
@@ -402,7 +403,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "yumi@gmail.com",
                 hireDate,
                 lastLogin,
-                superA.getId()
+                superA.getEmail()
         );
 
         Admin newSuperA = service.create(
@@ -417,17 +418,17 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 null
         );
 
-        service.deleteSuperAdmin(superA.getId(), newSuperA.getId());
+        service.deleteSuperAdmin(superA.getEmail(), newSuperA.getEmail());
 
-        assertTrue(service.get(superA.getId()).isEmpty());
+        assertTrue(service.get(superA.getEmail()).isEmpty());
 
-        Optional<Admin> newSuperAfter = service.get(newSuperA.getId());
+        Optional<Admin> newSuperAfter = service.get(newSuperA.getEmail());
         assertTrue(newSuperAfter.isPresent());
         assertNull(newSuperAfter.get().getSuperadminId());
 
-        Optional<Admin> subAfter = service.get(subA.getId());
+        Optional<Admin> subAfter = service.get(subA.getEmail());
         assertTrue(subAfter.isPresent());
-        assertEquals(newSuperA.getId(), subAfter.get().getSuperadminId());
+        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperadminId());
     }
 
     // valid data
@@ -455,7 +456,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<Admin> after = service.getAll();
         assertEquals(before + 1, after.size());

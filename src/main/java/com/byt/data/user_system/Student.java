@@ -1,32 +1,107 @@
 package com.byt.data.user_system;
 
+import com.byt.data.scheduling.Group;
+import com.byt.data.scheduling.Specialization;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
+import com.byt.validation.scheduling.Validator;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-@Getter
-@Setter
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"specializations", "groups"})
+@Getter(AccessLevel.NONE)
+@Setter(AccessLevel.NONE)
 public class Student extends Attendee {
 
     private StudyStatus studiesStatus;
 
     public Student(String firstName, String lastName, String familyName,
                    LocalDate dateOfBirth, String phoneNumber, String email,
-                   List<StudyLanguage> languagesOfStudies,
+                   Set<StudyLanguage> languagesOfStudies,
                    StudyStatus studiesStatus) {
 
-        super(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                languagesOfStudies);
-
+        super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email, languagesOfStudies);
         this.studiesStatus = studiesStatus;
+    }
+
+    public StudyStatus getStudiesStatus() { return studiesStatus; }
+    public void setStudiesStatus(StudyStatus studiesStatus) { this.studiesStatus = studiesStatus; }
+
+    // STUDENT -------- SPECIALIZATION
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Set<Specialization> specializations = new HashSet<>();
+
+    public Set<Specialization> getSpecializations() {
+        return new HashSet<>(specializations);
+    }
+
+    public void addSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+        if (specializations.contains(specialization)) return;
+
+        specializations.add(specialization);
+        specialization.addStudent(this);
+    }
+
+    public void removeSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+        if (!specializations.contains(specialization)) return;
+
+        specializations.remove(specialization);
+        specialization.removeStudent(this);
+    }
+
+    // STUDENT -------- GROUP
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Set<Group> groups = new HashSet<>();
+
+    public Set<Group> getGroups() {
+        return new HashSet<>(groups);
+    }
+
+    public void addGroup(Group group) {
+        Validator.validateGroup(group);
+        if (groups.contains(group)) return;
+
+        groups.add(group);
+        group.addStudent(this);
+    }
+
+    public void removeGroup(Group group) {
+        Validator.validateGroup(group);
+        if (!groups.contains(group)) return;
+
+        groups.remove(group);
+        group.removeStudent(this);
+    }
+
+    public static Student copy(Student s) {
+        if (s == null) return null;
+
+        Student copy = new Student(
+                s.getFirstName(),
+                s.getLastName(),
+                s.getFamilyName(),
+                s.getDateOfBirth(),
+                s.getPhoneNumber(),
+                s.getEmail(),
+                new HashSet<>(s.getLanguagesOfStudies()),
+                s.getStudiesStatus()
+        );
+
+        copy.specializations = new HashSet<>(s.specializations);
+        copy.groups = new HashSet<>(s.groups);
+
+        return copy;
     }
 }

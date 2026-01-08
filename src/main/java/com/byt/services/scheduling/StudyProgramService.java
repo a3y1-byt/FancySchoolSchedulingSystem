@@ -1,10 +1,11 @@
 package com.byt.services.scheduling;
 
-import com.byt.data.scheduling.Specialization;
 import com.byt.data.scheduling.StudyProgram;
+import com.byt.exception.ValidationException;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
+import com.byt.validation.scheduling.Validator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -14,140 +15,116 @@ import java.util.stream.Collectors;
 
 public class StudyProgramService implements CRUDService<StudyProgram> {
     private final SaveLoadService saveLoadService;
-    private final SpecializationService specializationService;
     private List<StudyProgram> studyPrograms;
 
     public StudyProgramService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
-        this.specializationService = new SpecializationService(saveLoadService);
         this.studyPrograms = null;
-        loadStudyPrograms();
     }
 
     @Override
     public void initialize() throws IOException {
-        CRUDService.super.initialize();
-    }
-
-    @Override
-    public void create(StudyProgram prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
-
-        if (exists(prototype.getId())) throw new IllegalArgumentException("StudyProgram already exists");
-
-        studyPrograms.add(StudyProgram.copy(prototype));
-        saveAllStudyPrograms(studyPrograms);
         loadStudyPrograms();
     }
 
+
     @Override
-    public Optional<StudyProgram> get(String id) throws IllegalArgumentException, IOException {
-        StudyProgram program = findById(id);
+    public void create(StudyProgram prototype)
+            throws IllegalArgumentException, IOException, ValidationException
+    {
+        Validator.validateStudyProgram(prototype);
+
+        if (exists(prototype.getName())) throw new IllegalArgumentException("StudyProgram already exists");
+
+        studyPrograms.add(StudyProgram.copy(prototype));
+        saveAllStudyPrograms(studyPrograms);
+    }
+
+    @Override
+    public Optional<StudyProgram> get(String id) {
+        StudyProgram program = findOne(id);
         if (program == null) return Optional.empty();
 
-        List<Specialization> specializations = specializationService.listSpecializationsByStudyProgramId(id);
-        StudyProgram studyProgramCopy = StudyProgram.copy(program,  specializations);
-
+        StudyProgram studyProgramCopy = StudyProgram.copy(program);
         return Optional.of(studyProgramCopy);
     }
 
     @Override
-    public List<StudyProgram> getAll() throws IOException {
+    public List<StudyProgram> getAll(){
+        if(studyPrograms == null) return null;
+
         return studyPrograms.stream()
                 .map(StudyProgram::copy)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void update(String id, StudyProgram prototype) throws IllegalArgumentException, IOException {
-        validate(prototype);
+    public void update(String name, StudyProgram prototype)
+            throws IllegalArgumentException, IOException, ValidationException
+    {
+        Validator.validateStudyProgram(prototype);
 
-        if (!exists(id)) throw new IllegalArgumentException("StudyProgram with id " + id + " does not exist");
+        if (!exists(name)) throw new IllegalArgumentException("StudyProgram not found");
 
         List<StudyProgram> updatedList = studyPrograms.stream()
-                .map(p -> p.getId().equals(id) ? StudyProgram.copy(prototype) : p)
+                .map(p -> p.getName().equals(name) ? StudyProgram.copy(prototype) : p)
                 .collect(Collectors.toList());
 
         saveAllStudyPrograms(updatedList);
-        loadStudyPrograms();
     }
 
     @Override
-    public void delete(String id) throws IllegalArgumentException, IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
-        if (!exists(id)) throw new IllegalArgumentException("StudyProgram with id " + id + " does not exist");
+    public void delete(String name) throws IllegalArgumentException, IOException {
+        Validator.notEmptyArgument(name);
+
+        if (!exists(name)) throw new IllegalArgumentException("StudyProgram not found");
 
         int originalSize = studyPrograms.size();
 
         List<StudyProgram> updatedPrograms = studyPrograms.stream()
-                .filter(p -> !p.getId().equals(id))
+                .filter(p -> !p.getName().equals(name))
                 .collect(Collectors.toList());
 
         if (updatedPrograms.size() < originalSize) {
             saveAllStudyPrograms(updatedPrograms);
         }
-        loadStudyPrograms();
     }
 
     @Override
-    public boolean exists(String id) throws IOException {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
-        loadStudyPrograms();
-        return studyPrograms.stream().anyMatch(p -> p.getId().equals(id));
+    public boolean exists(String name) throws IOException {
+        if(studyPrograms == null|| name == null || name.isEmpty()) return false;
+
+        return studyPrograms.stream()
+                .anyMatch(p -> p.getName()
+                .equals(name));
     }
 
-    private StudyProgram findById(String id) {
-        if (id == null || id.isEmpty()) throw new IllegalArgumentException("StudyProgram id is null or empty");
+    private StudyProgram findOne(String name) {
+        if(studyPrograms == null|| name == null || name.isEmpty()) return null;
+
         return this.studyPrograms.stream()
-                .filter(p -> p.getId().equals(id))
+                .filter(p -> p.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
-    private void saveAllStudyPrograms(List<StudyProgram> programs) {
-        try {
-            saveLoadService.save(DataSaveKeys.STUDY_PROGRAMS, programs);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save study programs", e);
-        }
+    private void saveAllStudyPrograms(List<StudyProgram> programs) throws IOException {
+        saveLoadService.save(DataSaveKeys.STUDY_PROGRAMS, programs);
+        loadStudyPrograms();
     }
 
-    private void loadStudyPrograms() {
+    private void loadStudyPrograms() throws IOException{
         String cannotLoadMessage = "Error loading study programs";
         if (!saveLoadService.canLoad(DataSaveKeys.STUDY_PROGRAMS)) {
             throw new RuntimeException(cannotLoadMessage);
         }
 
         Type type = new TypeToken<List<StudyProgram>>(){}.getType();
-        try {
-            List<StudyProgram> loadedPrograms = (List<StudyProgram>) saveLoadService.load(DataSaveKeys.STUDY_PROGRAMS, type);
-            this.studyPrograms = new ArrayList<>(loadedPrograms);
-        } catch (IOException e) {
-            throw new RuntimeException(cannotLoadMessage, e);
-        }
+        List<StudyProgram> loadedPrograms =
+                (List<StudyProgram>) saveLoadService.load(DataSaveKeys.STUDY_PROGRAMS, type);
+
+        this.studyPrograms = new ArrayList<>(loadedPrograms);
     }
 
-    private void validate(StudyProgram program) {
-        List<String> errors = new ArrayList<>();
 
-        if (program == null) {
-            throw new IllegalArgumentException("StudyProgram cannot be null");
-        }
-
-        if (program.getId() == null || program.getId().trim().isEmpty()) {
-            errors.add("StudyProgram ID is required");
-        }
-
-        if (program.getName() == null || program.getName().trim().isEmpty()) {
-            errors.add("StudyProgram name is required");
-        }
-
-        if (program.getLevel() == null) {
-            errors.add("StudyProgram level is required");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new IllegalArgumentException("Validation failed: " + String.join(", ", errors));
-        }
-    }
 }

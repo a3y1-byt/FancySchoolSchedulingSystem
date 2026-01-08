@@ -1,47 +1,172 @@
 package com.byt.services.scheduling;
-
 import com.byt.data.scheduling.Building;
-import com.byt.data.scheduling.ClassRoom;
+import com.byt.exception.ExceptionCode;
+import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
+
 import com.byt.services.CRUDServiceTest;
-import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
+import java.util.Optional;
 
-@Nested
+import static org.junit.jupiter.api.Assertions.*;
+
 class BuildingServiceTest extends CRUDServiceTest<Building> {
 
-    public BuildingServiceTest() {
+    protected BuildingServiceTest() {
         super(DataSaveKeys.BUILDINGS, BuildingService::new);
     }
 
     @Override
     protected String getSampleObjectId() {
-        return "B-001";
+        return "Main Academic Hall";
     }
 
     @Override
     protected Building getSampleObject() {
-        ClassRoom roomA = ClassRoom.builder()
-                .id("CR-101").name("Lecture Hall").floor(1).capacity(100).buildingId("B-001")
-                .build();
-        ClassRoom roomB = ClassRoom.builder()
-                .id("CR-102").name("Lecture Hall").floor(1).capacity(100).buildingId("B-001")
-                .build();
-
-        return  Building.builder()
-                .id("B-001")
+        return Building.builder()
                 .name("Main Academic Hall")
                 .address("123 Warsaw")
                 .description("Primary building for lectures.")
-                .classRooms(new ArrayList<>())
-                .classRoomIds(Arrays.asList(roomA.getId(), roomB.getId()))
                 .build();
     }
 
     @Override
     protected void alterEntity(Building building) {
-        building.setId(building.getId() + "sth");
+        building.setName(building.getName() + "X");
+    }
+
+    @Test
+    void testCreateStoresNewEntity() throws IOException {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Created Building")
+                .address("Created Address")
+                .description("Created description")
+                .build();
+        service.create(building);
+        Optional<Building> loaded = service.get(building.getName());
+        assertTrue(loaded.isPresent());
+    }
+
+    @Test
+    void testCreateThrowsOnNull() {
+        BuildingService service = (BuildingService) emptyService;
+        assertThrows(ValidationException.class, () -> service.create(null));
+    }
+
+    @Test
+    void testUpdateChangesExistingEntity() throws IOException, ValidationException {
+        BuildingService service = (BuildingService) serviceWithData;
+        Building updated = getSampleObject();
+        updated.setName("Updated Name");
+        service.update(getSampleObjectId(), updated);
+        Optional<Building> loaded = service.get("Updated Name");
+        assertTrue(loaded.isPresent());
+        assertEquals("Updated Name", loaded.get().getName());
+    }
+
+
+    @Test
+    void testUpdateThrowsOnNonExistentId() throws IOException {
+        BuildingService service = (BuildingService) emptyService;
+        service.initialize();
+        Building updated = getSampleObject();
+        assertThrows(IllegalArgumentException.class, () -> service.update("NON-EXISTENT", updated));
+    }
+
+    @Test
+    void testUpdateThrowsOnNullPrototype() {
+        BuildingService service = (BuildingService) serviceWithData;
+        assertThrows(ValidationException.class, () -> service.update(getSampleObjectId(), null));
+    }
+
+
+    @Test
+    void testDeleteRemovesExistingEntity() throws IOException {
+        BuildingService service = (BuildingService) serviceWithData;
+        service.delete(getSampleObjectId());
+        Optional<Building> loaded = service.get(getSampleObjectId());
+        assertTrue(loaded.isEmpty());
+    }
+
+    @Test
+    void testDeleteThrowsOnNonExistentId() throws IOException {
+        BuildingService service = (BuildingService) emptyService;
+        service.initialize();
+        assertThrows(IllegalArgumentException.class, () -> service.delete("NON-EXISTENT"));
+    }
+
+    @Test
+    void testCreateThrowsOnNullName() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name(null)
+                .address("Address")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyName() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("   ")
+                .address("Address")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnNullAddress() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address(null)
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyAddress() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address("")
+                .description("Description")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
+    }
+
+    @Test
+    void testCreateAcceptsNullDescription() throws IOException {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Without Description")
+                .address("Address")
+                .description(null)
+                .build();
+        assertDoesNotThrow(() -> service.create(building));
+        assertTrue(service.exists("Building Without Description"));
+    }
+
+    @Test
+    void testCreateThrowsOnEmptyDescription() {
+        BuildingService service = (BuildingService) emptyService;
+        Building building = Building.builder()
+                .name("Building Name")
+                .address("Address")
+                .description("  ")
+                .build();
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.create(building));
+        assertEquals(ExceptionCode.NOT_EMPTY_VIOLATION, ex.getExceptionCode());
     }
 }

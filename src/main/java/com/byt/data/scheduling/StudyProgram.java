@@ -1,33 +1,53 @@
 package com.byt.data.scheduling;
 
 import com.byt.enums.scheduling.StudyProgramLevel;
-import lombok.Builder;
-import lombok.Data;
+import com.byt.validation.scheduling.Validator;
+import com.byt.validation.user_system.UserValidator;
+import lombok.*;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
 public class StudyProgram {
-    String id;
-    String name;
-    StudyProgramLevel level;
-    List<Specialization> specializations;
+    private String name;
+    private StudyProgramLevel level;
 
-    public static StudyProgram copy(StudyProgram program, List<Specialization> specializations) {
-        return StudyProgram.builder()
-                .id(program.getId())
-                .name(program.getName())
-                .level(program.getLevel())
-                .specializations(specializations)
-                .build();
-    }
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    private Set<Specialization> specializations = new HashSet<>();
 
     public static StudyProgram copy(StudyProgram program) {
         return StudyProgram.builder()
-                .id(program.getId())
                 .name(program.getName())
                 .level(program.getLevel())
-                .specializations(null)
                 .build();
+    }
+
+    public Set<Specialization> getSpecializations() {
+        return new HashSet<>(specializations);
+    }
+
+    public void addSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+
+        if (specializations.contains(specialization))
+            return;
+
+        specializations.add(specialization);
+        specialization.addStudyProgram(this);
+    }
+
+    public void removeSpecialization(Specialization specialization) {
+        Validator.validateSpecialization(specialization);
+
+        if (!specializations.contains(specialization))
+            return;
+
+        specializations.remove(specialization);
+        specialization.removeStudyProgram(this);
     }
 }

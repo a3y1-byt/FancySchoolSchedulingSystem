@@ -5,18 +5,21 @@ import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Student;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
-import com.byt.validation.user_system.ValidationException;
+import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Nested
 public class StudentServiceTest extends CRUDServiceTest<Student> {
+
+    private static final String SAMPLE_EMAIL = "yumi@gmail.com";
 
     public StudentServiceTest() {
         super(DataSaveKeys.STUDENTS, saveLoadService -> new StudentService(saveLoadService));
@@ -24,7 +27,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
 
     @Override
     protected String getSampleObjectId() {
-        return TEST_OBJECT_ID;
+        return SAMPLE_EMAIL;
     }
 
     @Override
@@ -37,11 +40,10 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
-                List.of(StudyLanguage.ENGLISH),
+                SAMPLE_EMAIL,
+                Set.of(StudyLanguage.ENGLISH),
                 StudyStatus.ACTIVE
         );
-        student.setId(TEST_OBJECT_ID);
         return student;
     }
 
@@ -61,24 +63,25 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(25);
 
-        String id = getSampleObjectId();
-        Optional<Student> beforeOpt = service.get(id);
+        String oldEmail = getSampleObjectId();
+        Optional<Student> beforeOpt = service.get(oldEmail);
         assertTrue(beforeOpt.isPresent());
 
+        String newEmail = "yumiii@gmail.com";
         Student prototype = new Student(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                "yumiii@gmail.com",
-                List.of(StudyLanguage.POLISH),
+                newEmail,
+                Set.of(StudyLanguage.POLISH),
                 StudyStatus.SUSPENDED
         );
 
-        service.update(id, prototype);
+        service.update(oldEmail, prototype);
 
-        Optional<Student> afterOpt = service.get(id);
+        Optional<Student> afterOpt = service.get(newEmail);
         assertTrue(afterOpt.isPresent());
         Student updated = afterOpt.get();
 
@@ -86,11 +89,9 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
         assertEquals("Hnatiukk", updated.getLastName());
         assertEquals("Piess", updated.getFamilyName());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals("yumiii@gmail.com", updated.getEmail());
-        assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
+        assertEquals(newEmail, updated.getEmail());
+        assertEquals(Set.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
         assertEquals(StudyStatus.SUSPENDED, updated.getStudiesStatus());
-
-        assertEquals(id, updated.getId());
     }
 
     // firstName contains ukrainian letters
@@ -110,7 +111,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -133,7 +134,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         null,
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -156,7 +157,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi_at_gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -179,7 +180,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "48505ab505",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -202,7 +203,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "4850",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -225,7 +226,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -248,7 +249,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         StudyStatus.ACTIVE
                 )
         );
@@ -273,12 +274,12 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                 dob,
                 "10203040",
                 "yumi@gmail.com",
-                List.of(StudyLanguage.ENGLISH, StudyLanguage.POLISH),
+                Set.of(StudyLanguage.ENGLISH, StudyLanguage.POLISH),
                 StudyStatus.ACTIVE
         );
 
         assertNotNull(created);
-        assertNotNull(created.getId());
+        assertNotNull(created.getEmail());
 
         List<Student> after = service.getAll();
         assertEquals(before + 1, after.size());
@@ -322,11 +323,63 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        List.of(),
+                        Set.of(),
                         StudyStatus.ACTIVE
                 )
         );
     }
+
+    // list contains only null element
+    @Test
+    public void createFreeListenerWithNullLanguageElement() {
+        StudentService service = (StudentService) emptyService;
+
+        LocalDate dob = LocalDate.now().minusYears(21);
+
+        Set<StudyLanguage> langs = new HashSet<>();
+        langs.add(StudyLanguage.ENGLISH);
+        langs.add(null);
+
+
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        langs,
+                        StudyStatus.ACTIVE
+                )
+        );
+    }
+
+    // list contains duplicate
+    @Test
+    public void languagesGetterReturnsCopy() throws IOException {
+        StudentService service = (StudentService) emptyService;
+        LocalDate dob = LocalDate.now().minusYears(21);
+
+        Student created = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                Set.of(StudyLanguage.ENGLISH),
+                StudyStatus.ACTIVE
+        );
+
+        Set<StudyLanguage> langs = created.getLanguagesOfStudies();
+        langs.add(StudyLanguage.POLISH);
+
+        assertEquals(1, created.getLanguagesOfStudies().size());
+        assertFalse(created.getLanguagesOfStudies().contains(StudyLanguage.POLISH));
+    }
+
 
     // study status = null
     @Test
@@ -345,7 +398,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        List.of(StudyLanguage.ENGLISH),
+                        Set.of(StudyLanguage.ENGLISH),
                         null
                 )
         );
@@ -366,7 +419,7 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
 
         LocalDate dob = LocalDate.now().minusYears(30);
 
-        List<StudyLanguage> langs = new ArrayList<>();
+        Set<StudyLanguage> langs = new HashSet<>();
         langs.add(StudyLanguage.ENGLISH);
 
         Student prototype = new Student(
@@ -382,20 +435,18 @@ public class StudentServiceTest extends CRUDServiceTest<Student> {
 
         service.create(prototype);
 
-        // міняємо прототип після create()
         prototype.setFirstName("CHANGED");
-        prototype.getLanguagesOfStudies().add(StudyLanguage.POLISH);
+        prototype.addLanguageOfStudy(StudyLanguage.POLISH); // <- important change
 
         List<Student> all = service.getAll();
         assertEquals(1, all.size());
         Student stored = all.getFirst();
 
-        // ім’я не змінилось
         assertNotEquals("CHANGED", stored.getFirstName());
         assertEquals("Yumi", stored.getFirstName());
 
-        // список мов також не повинен підтягнути нову мову з прототипу
         assertEquals(1, stored.getLanguagesOfStudies().size());
         assertFalse(stored.getLanguagesOfStudies().contains(StudyLanguage.POLISH));
     }
+
 }

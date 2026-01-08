@@ -1,44 +1,47 @@
 package com.byt.data.scheduling;
 
-import lombok.Builder;
-import lombok.Data;
+import com.byt.validation.scheduling.Validator;
+import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 
 @Data
 @Builder
 public class Building {
-    String id;
     String name;
     String address;
     String description;
-    List<ClassRoom> classRooms;
-    List<String> classRoomIds;
 
-    public static Building copy(Building building, List<ClassRoom> classRooms) {
-        return Building.builder()
-                .id(building.getId())
-                .name(building.getName())
-                .address(building.getAddress())
-                .description(building.getDescription())
-                .classRoomIds(building.getClassRoomIds() != null
-                        ? new ArrayList<>(building.getClassRoomIds())
-                        : null)
-                .classRooms(classRooms)
-                .build();
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    HashSet<ClassRoom> classRooms;
+
+    public void addClassRoom(ClassRoom classRoom) {
+        Validator.validateClassRoom(classRoom);
+
+        if (classRooms.contains(classRoom)) return;
+
+        classRooms.add(classRoom);
+        classRoom.addBuilding(this);
+    }
+
+    public void removeClassRoom(ClassRoom classRoom) {
+        if(!classRooms.contains(classRoom)) return;
+
+        classRooms.remove(classRoom);
+        classRoom.removeBuilding(this);
+    }
+
+    public HashSet<ClassRoom> getClassRooms() {
+        return new HashSet<>(classRooms);
     }
 
     public static Building copy(Building building) {
         return Building.builder()
-                .id(building.getId())
                 .name(building.getName())
                 .address(building.getAddress())
                 .description(building.getDescription())
-                .classRoomIds(building.getClassRoomIds() != null
-                        ? new ArrayList<>(building.getClassRoomIds())
-                        : null)
-                .classRooms(null)
                 .build();
     }
 }

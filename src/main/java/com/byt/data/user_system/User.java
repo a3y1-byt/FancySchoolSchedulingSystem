@@ -6,12 +6,10 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
 public abstract class User {
 
-    private String id;
     private String firstName;
     private String lastName;
     private String familyName;
@@ -23,7 +21,7 @@ public abstract class User {
                 String familyName, LocalDate  dateOfBirth,
                 String phoneNumber, String email) {
 
-        this.id = java.util.UUID.randomUUID().toString();
+
         this.firstName = firstName;
         this.lastName = lastName;
         this.familyName = familyName;

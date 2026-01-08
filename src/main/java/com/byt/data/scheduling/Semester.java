@@ -1,39 +1,56 @@
 package com.byt.data.scheduling;
 
-import lombok.Builder;
-import lombok.Data;
+import com.byt.validation.scheduling.Validator;
+import lombok.*;
+
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
 public class Semester {
-    String id;
-    String name;
-    LocalDate startDate;
-    LocalDate endDate;
-    int academicYear;
-    List<Lesson> lessons;
+    private String name;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private int academicYear;
 
-    public static Semester copy(Semester semester, List<Lesson> lessons) {
-        return Semester.builder()
-                .id(semester.getId())
-                .name(semester.getName())
-                .startDate(semester.getStartDate())
-                .endDate(semester.getEndDate())
-                .academicYear(semester.getAcademicYear())
-                .lessons(lessons)
-                .build();
-    }
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    private Set<Lesson> lessons = new HashSet<>();
 
     public static Semester copy(Semester semester) {
         return Semester.builder()
-                .id(semester.getId())
                 .name(semester.getName())
                 .startDate(semester.getStartDate())
                 .endDate(semester.getEndDate())
                 .academicYear(semester.getAcademicYear())
-                .lessons(null)
                 .build();
+    }
+
+    public Set<Lesson> getLessons() {
+        return new HashSet<>(lessons);
+    }
+
+    public void addLesson(Lesson lesson) {
+        Validator.validateLesson(lesson);
+
+        if (lessons.contains(lesson))
+            return;
+
+        lessons.add(lesson);
+        lesson.addSemester(this);
+    }
+
+    public void removeLesson(Lesson lesson) {
+        Validator.validateLesson(lesson);
+
+        if (!lessons.contains(lesson))
+            return;
+
+        lessons.remove(lesson);
+        lesson.removeSemester(this);
     }
 }
