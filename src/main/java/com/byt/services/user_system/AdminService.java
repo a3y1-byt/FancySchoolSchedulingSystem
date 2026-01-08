@@ -30,7 +30,7 @@ public class AdminService implements CRUDService<Admin> {
     // Constructor, we just copy inputed List to not share references with external code
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
-        this.admins = admins != null ? admins.stream().map(Admin::copy).toList() : new ArrayList<>();
+        this.admins = admins != null ? new ArrayList<>(admins.stream().map(Admin::copy).toList()) : new ArrayList<>();
     }
 
     public AdminService(SaveLoadService service) {
@@ -40,7 +40,7 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.admins = loaded.stream().map(Admin::copy).toList(); // safe deep copies
+        this.admins = new ArrayList<>(loaded.stream().map(Admin::copy).toList()); // safe deep copies
     }
 
     // _________________________________________________________
@@ -118,7 +118,7 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public List<Admin> getAll() throws IOException {
-        return admins.stream().map(Admin::copy).toList();
+        return new ArrayList<>(admins.stream().map(Admin::copy).toList());
     }
 
     @Override
@@ -312,7 +312,7 @@ public class AdminService implements CRUDService<Admin> {
                 raw.add(admin);
             }
         }
-        return raw.stream().map(Admin::copy).toList();
+        return new ArrayList<>(raw.stream().map(Admin::copy).toList());
     }
 
     private Optional<Admin> getSupervisor(String adminId) {

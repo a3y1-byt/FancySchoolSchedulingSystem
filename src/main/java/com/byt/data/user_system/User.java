@@ -7,7 +7,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public abstract class User {
 
     private String firstName;
@@ -15,8 +15,6 @@ public abstract class User {
     private String familyName;
     private LocalDate dateOfBirth;
     private String phoneNumber;
-
-    @EqualsAndHashCode.Include
     private String email;
 
     public User(String firstName, String lastName,

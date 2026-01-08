@@ -1,5 +1,6 @@
 package com.byt.services.user_system;
 
+import com.byt.data.user_system.FreeListener;
 import com.byt.validation.user_system.TeacherValidator;
 
 import com.byt.persistence.SaveLoadService;
@@ -27,7 +28,7 @@ public class TeacherService implements CRUDService<Teacher> {
     public TeacherService(SaveLoadService service, List<Teacher> teachers) {
         this.service = service;
         this.teachers = teachers != null
-                ? teachers.stream().map(Teacher::copy).toList()
+                ? new ArrayList<>(teachers.stream().map(Teacher::copy).toList())
                 : new ArrayList<>();
     }
 
@@ -38,7 +39,11 @@ public class TeacherService implements CRUDService<Teacher> {
     @Override
     public void initialize() throws IOException {
         List<Teacher> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.teachers = loaded.stream().map(Teacher::copy).toList(); // safe deep copies
+
+        System.out.println("DEBUG TeacherService.initialize(): loaded size = " + loaded.size());
+        System.out.println("DEBUG loaded class = " + loaded.getClass());
+
+        this.teachers = new ArrayList<>(loaded.stream().map(Teacher::copy).toList()); // safe deep copies
     }
 
     // _________________________________________________________
@@ -60,10 +65,10 @@ public class TeacherService implements CRUDService<Teacher> {
         if (teacher.getEmail() != null && exists(teacher.getEmail())) {
             throw new IllegalStateException("teacher exists with this email already");
         }
-        teachers.add(Teacher.copy(teacher));
+        Teacher toStore = Teacher.copy(teacher);
+        teachers.add(toStore);
         saveToDb();
-
-        return Teacher.copy(teacher);
+        return Teacher.copy(toStore);
     }
 
     @Override

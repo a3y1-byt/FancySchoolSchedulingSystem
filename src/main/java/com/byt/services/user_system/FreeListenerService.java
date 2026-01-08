@@ -24,7 +24,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners) {
         this.service = service;
-        this.freeListeners = freeListeners != null ? freeListeners.stream().map(FreeListener::copy).toList() : new ArrayList<>();
+        this.freeListeners = freeListeners != null ? new ArrayList<>(freeListeners.stream().map(FreeListener::copy).toList()) : new ArrayList<>();
     }
 
     public FreeListenerService(SaveLoadService service) {
@@ -34,7 +34,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     @Override
     public void initialize() throws IOException {
         List<FreeListener> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.freeListeners = loaded.stream().map(FreeListener::copy).toList(); // safe deep copies
+        this.freeListeners = new ArrayList<>(loaded.stream().map(FreeListener::copy).toList()); // safe deep copies
     }
 
     // _________________________________________________________
@@ -92,7 +92,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     @Override
     public List<FreeListener> getAll() throws IOException {
-        return freeListeners.stream().map(FreeListener::copy).toList();
+        return new ArrayList<>(freeListeners.stream().map(FreeListener::copy).toList());
     }
 
     @Override

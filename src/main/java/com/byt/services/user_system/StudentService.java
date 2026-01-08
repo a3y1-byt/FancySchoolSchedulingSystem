@@ -1,6 +1,7 @@
 package com.byt.services.user_system;
 
 import com.byt.data.scheduling.Specialization;
+import com.byt.data.user_system.Teacher;
 import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.validation.scheduling.Validator;
@@ -30,7 +31,7 @@ public class StudentService implements CRUDService<Student> {
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
         this.students = students != null
-                ? students.stream().map(Student::copy).toList()
+                ? new ArrayList<>(students.stream().map(Student::copy).toList())
                 : new ArrayList<>();
     }
 
@@ -41,7 +42,7 @@ public class StudentService implements CRUDService<Student> {
     @Override
     public void initialize() throws IOException {
         List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.students = loaded.stream().map(Student::copy).toList();
+        this.students = new ArrayList<>(loaded.stream().map(Student::copy).toList());
     }
 
     // _________________________________________________________
@@ -101,7 +102,7 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public List<Student> getAll() throws IOException {
-        return students.stream().map(Student::copy).toList();
+        return new ArrayList<>(students.stream().map(Student::copy).toList());
     }
 
     @Override

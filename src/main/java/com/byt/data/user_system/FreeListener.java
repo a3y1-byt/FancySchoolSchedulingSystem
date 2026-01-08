@@ -6,6 +6,7 @@ import com.byt.validation.scheduling.Validator;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +14,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true)
 public class FreeListener extends Attendee {
     public static final int MAX_NOTES_LENGTH = 1000;
     private String notes;
@@ -30,23 +31,27 @@ public class FreeListener extends Attendee {
         this.notes = notes;
     }
 
-    public void _setGroupsRaw(Set<Group> groups) {
-        this.groups = (groups != null) ? new HashSet<>(groups) : new HashSet<>();
-    }
-
     public static FreeListener copy(FreeListener fl) {
         if (fl == null) return null;
 
-        return new FreeListener(
+        List<StudyLanguage> langsCopy = (fl.getLanguagesOfStudies() != null)
+                ? new ArrayList<>(fl.getLanguagesOfStudies())
+                : new ArrayList<>();
+
+        FreeListener copy = new FreeListener(
                 fl.getFirstName(),
                 fl.getLastName(),
                 fl.getFamilyName(),
                 fl.getDateOfBirth(),
                 fl.getPhoneNumber(),
                 fl.getEmail(),
-                fl.getLanguagesOfStudies(),
+                langsCopy,
                 fl.getNotes()
         );
+
+        copy.groups = (fl.groups != null) ? new HashSet<>(fl.groups) : new HashSet<>();
+
+        return copy;
     }
 
     // FREELISTENER -------- GROUP
