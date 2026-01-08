@@ -15,6 +15,8 @@ import java.util.HashSet;
 
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Lesson {
     String name;
     LessonType type;
