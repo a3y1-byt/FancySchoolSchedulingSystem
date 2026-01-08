@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +32,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
                 .name("Introduction to Programming")
                 .hours(60)
                 .types(Arrays.asList(SubjectType.NORMAL_SUBJECT, SubjectType.EXAM_SUBJECT))
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
     }
 
@@ -47,7 +48,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
                 .name("Placeholder Subject")
                 .hours(30)
                 .types(Arrays.asList(SubjectType.NORMAL_SUBJECT))
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
         service.create(subject);
         Optional<Subject> loaded = service.get("Placeholder Subject");
@@ -96,7 +97,7 @@ class SubjectServiceTest extends CRUDServiceTest<Subject> {
                 .name(getSampleObjectId())
                 .hours(90)
                 .types(Arrays.asList(SubjectType.NORMAL_SUBJECT))
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
         service.update(getSampleObjectId(), updated);
         Optional<Subject> loaded = service.get(getSampleObjectId());

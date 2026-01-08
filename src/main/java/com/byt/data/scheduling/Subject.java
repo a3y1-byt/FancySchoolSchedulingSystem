@@ -42,6 +42,8 @@ public class Subject {
                         ? new ArrayList<>(subject.getTypes())
                         : new ArrayList<>())
                 .hours(subject.getHours())
+                .lessons(new HashSet<>(subject.getLessons()))
+                .specializations(new HashSet<>(subject.getSpecializations()))
                 .build();
     }
 

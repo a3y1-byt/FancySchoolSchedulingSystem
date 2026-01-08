@@ -26,21 +26,41 @@ public class Group {
     int yearOfStudy;
     List<String> notes;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Student> students = new HashSet<>();
+
+    // GROUP -------- LESSON
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Lesson> lessons = new HashSet<>();
+
+    // GROUP -------- LESSON
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<FreeListener> freeListeners = new HashSet<>();
+
     public static Group copy(Group group) {
-        return Group.builder()
+        var copy = Group.builder()
                 .name(group.getName())
                 .language(group.getLanguage())
                 .maxCapacity(group.getMaxCapacity())
                 .yearOfStudy(group.getYearOfStudy())
                 .notes(group.getNotes())
                 .build();
-    }
 
-    // GROUP -------- STUDENT
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<Student> students = new HashSet<>();
+        copy.students = group.students;
+        copy.lessons = group.lessons;
+        copy.freeListeners = group.freeListeners;
+
+        return copy;
+    }
 
     public Set<Student> getStudents() {
         return Set.copyOf(students);
@@ -66,12 +86,6 @@ public class Group {
         students.remove(student);
         student.removeGroup(this);
     }
-
-    // GROUP -------- LESSON
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<Lesson> lessons = new HashSet<>();
 
     public Set<Lesson> getLessons() {
         return new HashSet<>(lessons);
@@ -107,16 +121,9 @@ public class Group {
         }
     }
 
-    // GROUP -------- LESSON
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<FreeListener> freeListeners = new HashSet<>();
-
     public Set<FreeListener> getFreeListeners() {
         return new HashSet<>(freeListeners);
     }
-
 
     public void addFreeListener(FreeListener freeListener) {
         FreeListenerValidator.validateFreeListener(freeListener);

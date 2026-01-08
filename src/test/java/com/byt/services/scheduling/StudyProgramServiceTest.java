@@ -9,6 +9,7 @@ import com.byt.services.CRUDServiceTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,7 @@ class StudyProgramServiceTest extends CRUDServiceTest<StudyProgram> {
         return StudyProgram.builder()
                 .name("Computer Science")
                 .level(StudyProgramLevel.BACHELOR)
-                .specializations(null)
+                .specializations(new HashSet<>())
                 .build();
     }
 
@@ -44,7 +45,7 @@ class StudyProgramServiceTest extends CRUDServiceTest<StudyProgram> {
         StudyProgram program = StudyProgram.builder()
                 .name("Placeholder Program")
                 .level(StudyProgramLevel.BACHELOR)
-                .specializations(null)
+                .specializations(new HashSet<>())
                 .build();
         service.create(program);
         Optional<StudyProgram> loaded = service.get("Placeholder Program");
@@ -92,7 +93,7 @@ class StudyProgramServiceTest extends CRUDServiceTest<StudyProgram> {
         StudyProgram updated = StudyProgram.builder()
                 .name(getSampleObjectId())
                 .level(StudyProgramLevel.MASTER)
-                .specializations(null)
+                .specializations(new HashSet<>())
                 .build();
         service.update(getSampleObjectId(), updated);
         Optional<StudyProgram> loaded = service.get(getSampleObjectId());

@@ -18,12 +18,14 @@ public class StudyProgram {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Specialization> specializations = new HashSet<>();
 
     public static StudyProgram copy(StudyProgram program) {
         return StudyProgram.builder()
                 .name(program.getName())
                 .level(program.getLevel())
+                .specializations(new HashSet<>(program.getSpecializations()))
                 .build();
     }
 

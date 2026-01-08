@@ -17,23 +17,31 @@ public class Specialization {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Subject> subjects = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<StudyProgram> studyPrograms = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Student> students = new HashSet<>();
 
     public static Specialization copy(Specialization specialization) {
-        return Specialization.builder()
+        var copy = Specialization.builder()
                 .name(specialization.getName())
                 .description(specialization.getDescription())
                 .build();
+
+        copy.subjects = new HashSet<>(specialization.getSubjects());
+        copy.studyPrograms = new HashSet<>(specialization.getStudyPrograms());
+        copy.students = new HashSet<>(specialization.getStudents());
+        return copy;
     }
 
     public Set<Subject> getSubjects() {
