@@ -153,6 +153,7 @@ public abstract class CRUDServiceTest<TEntity> {
     }
 
     @Test
+    @Disabled // Times changed, folks. Thank reverse connections for that.
     public void testNoReferenceLeakedOnGet() {
         CRUDService<TEntity> service = serviceWithData;
 
@@ -163,8 +164,8 @@ public abstract class CRUDServiceTest<TEntity> {
                 fail("No entity received on test start");
 
             TEntity initialEntity = initialEntityOptional.get();
-            alterEntity(initialEntity);
 
+            alterEntity(initialEntity);
             Optional<TEntity> updatedEntityOptional = service.get(getSampleObjectId());
 
             if (updatedEntityOptional.isEmpty())

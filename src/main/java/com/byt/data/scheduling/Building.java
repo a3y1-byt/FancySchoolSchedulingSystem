@@ -15,7 +15,8 @@ public class Building {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
-    HashSet<ClassRoom> classRooms;
+    @Builder.Default
+    private HashSet<ClassRoom> classRooms = new HashSet<>();
 
     public void addClassRoom(ClassRoom classRoom) {
         Validator.validateClassRoom(classRoom);

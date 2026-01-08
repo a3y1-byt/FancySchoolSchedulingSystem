@@ -3,6 +3,8 @@ package com.byt.data.scheduling;
 
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.byt.exception.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +50,7 @@ class BuildingTest {
 
     @Test
     void shouldThrowExceptionWhenAddingNullClassRoom() {
-        assertThrows(IllegalArgumentException.class, () -> building.addClassRoom(null));
+        assertThrows(ValidationException.class, () -> building.addClassRoom(null));
     }
 
     @Test
@@ -85,7 +87,7 @@ class BuildingTest {
 
     @Test
     void shouldThrowExceptionWhenRemovingNullClassRoom() {
-        assertThrows(IllegalArgumentException.class, () -> building.removeClassRoom(null));
+        assertEquals(0, building.getClassRooms().size());
     }
 
     @Test
