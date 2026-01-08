@@ -97,16 +97,20 @@ public class Lesson {
     }
 
     public void addTeacher(Teacher teacher) {
+        if(this.teacher == null) return;
         TeacherValidator.validateTeacher(teacher);
+        if(this.teacher != null){
+            Teacher oldTeacher = this.teacher;
+            this.teacher = null;
+            oldTeacher.removeLesson(this);
+        }
         this.teacher = teacher;
-        //TODO
-//         teacher.addLesson(this);
+         teacher.addLesson(this);
     }
     public void removeTeacher(Teacher teacher) {
-        if(!this.teacher.equals(teacher)) return;
+        if(this.teacher == null || !this.teacher.equals(teacher)) return;
         this.teacher = null;
-        //TODO
-        // teacher.removeLesson(this);
+         teacher.removeLesson(this);
     }
 
     public void addSemester(Semester semester) {

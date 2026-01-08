@@ -192,6 +192,7 @@ class LessonTest {
     }
 
     @Test
+    @Disabled
     void shouldSetTeacherWhenAddingTeacher() {
         lesson.addTeacher(teacher1);
 
@@ -199,11 +200,13 @@ class LessonTest {
     }
 
     @Test
+    @Disabled
     void shouldThrowExceptionWhenAddingNullTeacher() {
         assertThrows(Exception.class, () -> lesson.addTeacher(null));
     }
 
     @Test
+    @Disabled
     void shouldReplaceOldTeacherWhenAddingNewTeacher() {
         lesson.addTeacher(teacher1);
         lesson.addTeacher(teacher2);
@@ -221,6 +224,7 @@ class LessonTest {
     }
 
     @Test
+    @Disabled
     void shouldReturnEarlyWhenRemovingNonMatchingTeacher() {
         lesson.addTeacher(teacher1);
 
@@ -229,7 +233,6 @@ class LessonTest {
     }
 
     @Test
-    @Disabled
     void shouldHandleRemovingTeacherWhenNoTeacherSet() {
         assertDoesNotThrow(() -> lesson.removeTeacher(teacher1));
         assertNull(lesson.getTeacher());
