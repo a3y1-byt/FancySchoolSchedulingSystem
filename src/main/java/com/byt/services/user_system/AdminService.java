@@ -7,6 +7,7 @@ import com.byt.services.CRUDService;
 import com.byt.validation.user_system.AdminValidator;
 import com.google.gson.reflect.TypeToken;
 
+import javax.imageio.IIOException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -40,7 +41,7 @@ public class AdminService implements CRUDService<Admin> {
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
-                        LocalDate hireDate, LocalDateTime lastLoginTime, String superadminId) throws IOException {
+                        LocalDate hireDate, LocalDateTime lastLoginTime, Admin superAdmin) throws IOException {
 
         AdminValidator.validateAdmin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
@@ -50,12 +51,12 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalStateException("Admin exists with this email already");
         }
 
-        if (superadminId != null) {
-            if (Objects.equals(superadminId, email)) {
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), email)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
             }
-            if (!exists(superadminId)) {
-                throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
+            if (!exists(superAdmin)) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
             }
         }
 
@@ -79,13 +80,14 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin with email = " + email + " already exists");
         }
 
-        String superadminId = prototype.getSuperAdmin();
-        if (superadminId != null) {
-            if (Objects.equals(superadminId, email)) {
+        Admin superAdmin = prototype.getSuperAdmin();
+
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), email)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
             }
-            if (!exists(superadminId)) {
-                throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
+            if (!exists(superAdmin)) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
             }
         }
 
@@ -136,24 +138,24 @@ public class AdminService implements CRUDService<Admin> {
             throw new IllegalArgumentException("Admin with email = " + newEmail + " already exists");
         }
 
-        String superadminId = prototype.getSuperAdmin();
-        if (superadminId != null) {
-            if (Objects.equals(superadminId, newEmail)) {
+        Admin superAdmin = prototype.getSuperAdmin();
+
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), newEmail)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
             }
-            if (!exists(superadminId)) {
-                throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
+            if (!exists(superAdmin.getEmail())) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
             }
         }
 
-        // если поменяли email — обновляем superadminId у подчинённых
-        if (newEmail != null && !Objects.equals(newEmail, email)) {
-            for (Admin a : admins) {
-                if (Objects.equals(a.getSuperAdmin(), email)) {
-                    a.setSuperadminId(newEmail);
-                }
-            }
-        }
+//        if (newEmail != null && !Objects.equals(newEmail, email)) {
+//            for (Admin a : admins) {
+//                if (Objects.equals(a.getSuperAdmin(), email)) {
+//                    a.setS(newEmail);
+//                }
+//            }
+//        }
 
         admins.set(index, Admin.copy(prototype));
         saveToDb();
@@ -219,9 +221,11 @@ public class AdminService implements CRUDService<Admin> {
 
             makeSuperAdmin(newSuperadminEmail);
 
+            Admin superAdmin = get(newSuperadminEmail).orElseThrow();
+
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperAdmin(), email)) {
-                    a.setSuperadminId(newSuperadminEmail);
+                if (Objects.equals(a.getSuperAdmin(), superAdmin)) {
+                    a.addSuperAdmin(superAdmin);
                 }
             }
         }
@@ -237,7 +241,9 @@ public class AdminService implements CRUDService<Admin> {
 
         for (Admin admin : admins) {
             if (Objects.equals(admin.getEmail(), email)) {
-                admin.setSuperadminId(null);
+                Admin superAdmin = get(email).orElseThrow();
+
+                admin.addSuperAdmin(superAdmin);
                 saveToDb();
                 return;
             }
@@ -254,6 +260,10 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
         return false;
+    }
+
+    public boolean exists(Admin admin) throws IOException {
+        return exists(admin.getEmail());
     }
 
     private List<Admin> getSubordinates(String superadminEmail) {

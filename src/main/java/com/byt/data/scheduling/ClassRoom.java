@@ -1,6 +1,7 @@
 package com.byt.data.scheduling;
 
 import com.byt.validation.scheduling.Validator;
+import com.byt.validation.user_system.AdminValidator;
 import lombok.*;
 
 import java.util.HashSet;
@@ -23,12 +24,11 @@ public class ClassRoom {
     @Builder.Default
     HashSet<Lesson> lessons = new HashSet<>();
 
-
     public void addBuilding(Building building) {
         Validator.validateBuilding(building);
         if(this.building == building) return;
 
-        if(this.building != null) {
+        if (this.building != null) {
             Building oldBuilding = this.building;
             this.building = null;
             oldBuilding.removeClassRoom(this);

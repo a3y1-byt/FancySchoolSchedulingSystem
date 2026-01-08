@@ -2,15 +2,13 @@ package com.byt.data.user_system;
 
 import com.byt.validation.scheduling.Validator;
 import com.byt.validation.user_system.AdminValidator;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -19,7 +17,16 @@ import java.time.LocalDateTime;
 public class Admin extends Staff {
 
     private LocalDateTime lastLoginTime;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Admin superAdmin;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    private Set<Admin> supervisedAdmins = new HashSet<>();
 
     public Admin(String firstName, String lastName, String familyName,
                  LocalDate dateOfBirth, String phoneNumber, String email,
@@ -31,9 +38,11 @@ public class Admin extends Staff {
     }
 
     public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+
     public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
 
     public Admin getSuperAdmin() { return superAdmin; }
+
     public void addSuperAdmin(Admin superAdmin) {
         AdminValidator.validateClass(superAdmin);
         if (this.superAdmin != null) {
@@ -42,14 +51,40 @@ public class Admin extends Staff {
             oldsuperAdmin.removeSuperAdmin(this);
         }
         this.superAdmin = superAdmin;
-        superAdmin.addSuperAdmin(this);
+        superAdmin.addSupervisedAdmin(this);
     }
+
     public void removeSuperAdmin(Admin superAdmin) {
         if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return ;
         Admin  oldsuperAdmin = this.superAdmin;
         this.superAdmin = null;
         oldsuperAdmin.removeSuperAdmin(this);
     }
+
+    public Set<Admin> getSupervisedAdmins() {
+        return new HashSet<>(supervisedAdmins);
+    }
+
+    public void addSupervisedAdmin(Admin admin) {
+        AdminValidator.validateClass(admin);
+
+        if (supervisedAdmins.contains(admin))
+            return;
+
+        supervisedAdmins.add(admin);
+        admin.addSuperAdmin(this);
+    }
+
+    public void removeSupervisedAdmin(Admin admin) {
+        AdminValidator.validateClass(admin);
+
+        if (!supervisedAdmins.contains(admin))
+            return;
+
+        supervisedAdmins.remove(admin);
+        admin.removeSuperAdmin(this);
+    }
+
 
     public static Admin copy(Admin admin) {
         if (admin == null) return null;

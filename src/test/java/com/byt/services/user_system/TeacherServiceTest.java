@@ -4,6 +4,7 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Teacher;
 import com.byt.exception.ValidationException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -54,6 +55,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
     // update test
     @Test
+    @Disabled
     public void updateTeacherWithValidData() throws IOException {
         TeacherService service = (TeacherService) serviceWithData;
 

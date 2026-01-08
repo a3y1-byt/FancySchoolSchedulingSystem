@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SpecializationTest {
     private Subject sampleSubject = Subject.builder()
@@ -27,7 +28,7 @@ public class SpecializationTest {
             .specializations(new HashSet<>())
             .build();
 
-    private Student sampleStudent = new Student("Name", "Surname", null, LocalDate.now(), "+380000999999", "a@a.a", new ArrayList<StudyLanguage>() {{ add(StudyLanguage.ENGLISH); }}, StudyStatus.ACTIVE);
+    private Student sampleStudent = new Student("Name", "Surname", null, LocalDate.now(), "+380000999999", "a@a.a", new HashSet<StudyLanguage>() {{ add(StudyLanguage.ENGLISH); }}, StudyStatus.ACTIVE);
 }
 
 class TestSubject extends Subject  {

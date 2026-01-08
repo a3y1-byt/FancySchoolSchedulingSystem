@@ -43,7 +43,7 @@ public class StudentTest {
             dob,
             "10203040",
             SAMPLE_EMAIL,
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             StudyStatus.ACTIVE
     );
 
