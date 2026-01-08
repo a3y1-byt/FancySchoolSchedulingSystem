@@ -4,6 +4,7 @@ import com.byt.data.reporting.IssueReport;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
+import com.byt.validation.reporting.IssueReportValidator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -42,18 +43,17 @@ public class IssueReportService implements CRUDService<IssueReport> {
     }
 
     /**
-     * Public helper to build composite id that callers can use
-     * id will look like "email|title"
+     * id format "email|title"
      */
     public static String compositeId(String email, String title) {
-        validateEmail(email);
-        validateTitle(title);
+        IssueReportValidator.validateEmail(email);
+        IssueReportValidator.validateTitle(title);
         return normalizeEmail(email) + "|" + normalizeTitle(title);
     }
 
     @Override
     public void create(IssueReport prototype) throws IllegalArgumentException, IOException {
-        validatePrototype(prototype);
+        IssueReportValidator.validatePrototype(prototype);
 
         IssueReport toStore = copy(prototype);
 
@@ -75,18 +75,14 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     @Override
     public Optional<IssueReport> get(String id) throws IllegalArgumentException {
-        // keep old behavior: null or blank id is an error
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id must not be null or blank");
         }
 
         CompositeKey key;
         try {
-            // parse email|title
             key = parseCompositeId(id);
         } catch (IllegalArgumentException e) {
-            // if format is wrong (no '|', etc) we treat it as "not found"
-            // this is needed so CRUDServiceTest.testReturnsNullOnGetByNonExistentId passes
             return Optional.empty();
         }
 
@@ -99,7 +95,6 @@ public class IssueReportService implements CRUDService<IssueReport> {
         return Optional.empty();
     }
 
-
     @Override
     public List<IssueReport> getAll() {
         return copyList(reports);
@@ -108,14 +103,14 @@ public class IssueReportService implements CRUDService<IssueReport> {
     @Override
     public void update(String id, IssueReport prototype) throws IllegalArgumentException, IOException {
         CompositeKey key = parseCompositeId(id);
-        validatePrototype(prototype);
+        IssueReportValidator.validatePrototype(prototype);
 
         for (int i = 0; i < reports.size(); i++) {
             IssueReport current = reports.get(i);
             if (sameKey(current, key)) {
                 IssueReport updatedCopy = copy(prototype);
 
-                // if you do not want to allow changing email or title
+                // do not allow changing email/title
                 updatedCopy.setEmail(current.getEmail());
                 updatedCopy.setTitle(current.getTitle());
 
@@ -184,7 +179,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
             if (!(o instanceof IssueReport report)) {
                 throw new IOException("Loaded issue reports contain non IssueReport element");
             }
-            validatePrototype(report);
+            IssueReportValidator.validatePrototype(report);
             result.add(report);
         }
 
@@ -202,20 +197,15 @@ public class IssueReportService implements CRUDService<IssueReport> {
                 r.getTitle(),
                 r.getDescription(),
                 r.getCreatedAt()
-//                r.getId()    // deprecated field kept as is
         );
     }
 
     private static List<IssueReport> copyList(List<IssueReport> list) {
         List<IssueReport> out = new ArrayList<>();
         if (list == null) return out;
-        for (IssueReport r : list) {
-            out.add(copy(r));
-        }
+        for (IssueReport r : list) out.add(copy(r));
         return out;
     }
-
-    // composite key support
 
     private static class CompositeKey {
         final String email;
@@ -228,7 +218,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
     }
 
     private static CompositeKey parseCompositeId(String id) {
-        validateId(id);
+        IssueReportValidator.validateId(id);
 
         int idx = id.indexOf('|');
         if (idx <= 0 || idx >= id.length() - 1) {
@@ -238,8 +228,8 @@ public class IssueReportService implements CRUDService<IssueReport> {
         String emailPart = id.substring(0, idx);
         String titlePart = id.substring(idx + 1);
 
-        validateEmail(emailPart);
-        validateTitle(titlePart);
+        IssueReportValidator.validateEmail(emailPart);
+        IssueReportValidator.validateTitle(titlePart);
 
         return new CompositeKey(
                 normalizeEmail(emailPart),
@@ -248,34 +238,13 @@ public class IssueReportService implements CRUDService<IssueReport> {
     }
 
     private static boolean sameKey(IssueReport r, CompositeKey key) {
-        if (r.getEmail() == null || r.getTitle() == null) {
-            return false;
-        }
+        if (r == null || key == null) return false;
+        if (r.getEmail() == null || r.getTitle() == null) return false;
 
         String reportEmail = normalizeEmail(r.getEmail());
         String reportTitle = normalizeTitle(r.getTitle());
 
         return reportEmail.equals(key.email) && reportTitle.equals(key.title);
-    }
-
-    // validation and normalization
-
-    private static void validateId(String id) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
-        }
-    }
-
-    private static void validateEmail(String email) {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
-        }
-    }
-
-    private static void validateTitle(String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("title must not be null or blank");
-        }
     }
 
     private static String normalizeEmail(String email) {
@@ -284,20 +253,5 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     private static String normalizeTitle(String title) {
         return title.trim();
-    }
-
-    private static void validatePrototype(IssueReport prototype) {
-        if (prototype == null) {
-            throw new IllegalArgumentException("IssueReport must not be null");
-        }
-
-        validateEmail(prototype.getEmail());
-        validateTitle(prototype.getTitle());
-
-        if (prototype.getDescription() == null || prototype.getDescription().isBlank()) {
-            throw new IllegalArgumentException("description must not be blank");
-        }
-        // createdAt can be null in prototype
-        // create method will fill it with current time
     }
 }

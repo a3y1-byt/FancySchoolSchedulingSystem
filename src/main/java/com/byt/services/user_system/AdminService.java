@@ -1,10 +1,10 @@
 package com.byt.services.user_system;
-import com.byt.validation.user_system.AdminValidator;
 
+import com.byt.data.user_system.Admin;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.data.user_system.Admin;
+import com.byt.validation.user_system.AdminValidator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -21,16 +21,11 @@ public class AdminService implements CRUDService<Admin> {
     private final SaveLoadService service;
     private List<Admin> admins;
 
-    // cause Java will erase generics in runtime, gson won't be able to get what exactly
-    // is inside List Admin. Via TypeToken we save FULL info about List type,
-    // so thst later we could correctly deserialize json into list<Admin>
-    private static final Type ADMIN_LIST_TYPE = new TypeToken<List<Admin>>() {
-    }.getType();
+    private static final Type ADMIN_LIST_TYPE = new TypeToken<List<Admin>>() {}.getType();
 
-    // Constructor, we just copy inputed List to not share references with external code
     public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
-        this.admins = admins != null ? new ArrayList<>(admins.stream().map(Admin::copy).toList()) : new ArrayList<>();
+        this.admins = admins != null ? copyList(admins) : new ArrayList<>();
     }
 
     public AdminService(SaveLoadService service) {
@@ -39,65 +34,62 @@ public class AdminService implements CRUDService<Admin> {
 
     @Override
     public void initialize() throws IOException {
-        List<Admin> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.admins = new ArrayList<>(loaded.stream().map(Admin::copy).toList()); // safe deep copies
+        List<Admin> loaded = loadFromDb();
+        this.admins = copyList(loaded);
     }
-
-    // _________________________________________________________
-    // Next it's just our basic CRUD operations, nothing hard
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
                         LocalDate hireDate, LocalDateTime lastLoginTime, String superadminId) throws IOException {
 
-
         AdminValidator.validateAdmin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, lastLoginTime);
 
-        // if superadminId == null - admin is superAdmin,
-        // so we are checking if ordinary admin has his superAdmin's email
-        if (superadminId != null && !exists(superadminId)) {
-            throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
-        }
-
-
-        Admin admin = new Admin(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime, superadminId
-        );
-
-        if (admin.getEmail() != null && exists(admin.getEmail())) {
+        if (email != null && exists(email)) {
             throw new IllegalStateException("Admin exists with this email already");
         }
 
+        if (superadminId != null) {
+            if (Objects.equals(superadminId, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+            if (!exists(superadminId)) {
+                throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
+            }
+        }
+
+        Admin admin = new Admin(firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                hireDate, lastLoginTime, superAdmin
+        );
+
         admins.add(Admin.copy(admin));
         saveToDb();
+
         return Admin.copy(admin);
     }
 
     @Override
     public void create(Admin prototype) throws IllegalArgumentException, IOException {
-
         AdminValidator.validateClass(prototype);
 
-        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
-            throw new IllegalArgumentException("Admin with email = " + prototype.getEmail() + " already exists");
+        String email = prototype.getEmail();
+        if (email != null && exists(email)) {
+            throw new IllegalArgumentException("Admin with email = " + email + " already exists");
         }
 
-
-        String superadminId = prototype.getSuperadminId();
+        String superadminId = prototype.getSuperAdmin();
         if (superadminId != null) {
+            if (Objects.equals(superadminId, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
             if (!exists(superadminId)) {
                 throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
             }
-            if (superadminId.equals(prototype.getEmail())) {
-                throw new IllegalArgumentException("Admin cannot supervise himself");
-            }
         }
 
-        Admin toStore = Admin.copy(prototype);
-        admins.add(toStore);
+        admins.add(Admin.copy(prototype));
         saveToDb();
     }
 
@@ -112,17 +104,16 @@ public class AdminService implements CRUDService<Admin> {
                 return Optional.of(Admin.copy(admin));
             }
         }
-
         return Optional.empty();
     }
 
     @Override
     public List<Admin> getAll() throws IOException {
-        return new ArrayList<>(admins.stream().map(Admin::copy).toList());
+        return copyList(admins);
     }
 
     @Override
-    public void update(String email, Admin prototype) throws IOException {
+    public void update(String email, Admin prototype) throws IllegalArgumentException, IOException {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Admin email must not be null or blank");
         }
@@ -139,38 +130,35 @@ public class AdminService implements CRUDService<Admin> {
         if (index == -1) {
             throw new IllegalArgumentException("Admin with email = " + email + " not found");
         }
-        String newEmail = prototype.getEmail();
 
-        String superadminId = prototype.getSuperadminId();
+        String newEmail = prototype.getEmail();
+        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("Admin with email = " + newEmail + " already exists");
+        }
+
+        String superadminId = prototype.getSuperAdmin();
         if (superadminId != null) {
+            if (Objects.equals(superadminId, newEmail)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
             if (!exists(superadminId)) {
                 throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
             }
-            if (superadminId.equals(newEmail)) {
-                throw new IllegalArgumentException("Admin cannot supervise himself");
-            }
         }
 
-        if (!Objects.equals(newEmail, email)) {
-            if (newEmail != null && exists(newEmail)) {
-                throw new IllegalArgumentException("Admin with email= " + newEmail + " already exists");
-            }
-
+        // если поменяли email — обновляем superadminId у подчинённых
+        if (newEmail != null && !Objects.equals(newEmail, email)) {
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperadminId(), email)) {
+                if (Objects.equals(a.getSuperAdmin(), email)) {
                     a.setSuperadminId(newEmail);
                 }
             }
         }
-        Admin updatedCopy = Admin.copy(prototype);
-        admins.set(index, updatedCopy);
+
+        admins.set(index, Admin.copy(prototype));
         saveToDb();
     }
 
-    // so rn if Admin does not have SuperAdminId in his class (it is null)
-    // - it means that HE IS superAdmin. So when deleting -
-    // you must provide new superAdminId that will be supervising admins
-    // that are "under" Admin that we are deleting
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {
         if (email == null || email.isBlank()) {
@@ -180,7 +168,8 @@ public class AdminService implements CRUDService<Admin> {
         List<Admin> subordinates = getSubordinates(email);
         if (!subordinates.isEmpty()) {
             throw new IllegalStateException(
-                    "You are trying to delete SuperAdmin. Use deleteSuperAdmin(id, newSuperAdminId)");
+                    "You are trying to delete SuperAdmin. Use deleteSuperAdmin(email, newSuperadminEmail)"
+            );
         }
 
         for (int i = 0; i < admins.size(); i++) {
@@ -193,7 +182,7 @@ public class AdminService implements CRUDService<Admin> {
         throw new IllegalArgumentException("Admin with email = " + email + " not found");
     }
 
-    public void deleteSuperAdmin(String email, String newSuperadminId) throws IllegalArgumentException, IOException {
+    public void deleteSuperAdmin(String email, String newSuperadminEmail) throws IllegalArgumentException, IOException {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Admin email must not be null or blank");
         }
@@ -211,32 +200,32 @@ public class AdminService implements CRUDService<Admin> {
 
         boolean hasSubordinates = false;
         for (Admin a : admins) {
-            if (Objects.equals(a.getSuperadminId(), email)) {
+            if (Objects.equals(a.getSuperAdmin(), email)) {
                 hasSubordinates = true;
                 break;
             }
         }
 
         if (hasSubordinates) {
-            if (newSuperadminId == null || newSuperadminId.isBlank()) {
-                throw new IllegalArgumentException("You must provide new SuperAdmin Id");
+            if (newSuperadminEmail == null || newSuperadminEmail.isBlank()) {
+                throw new IllegalArgumentException("You must provide new SuperAdmin email");
             }
-            if (!exists(newSuperadminId)) {
-                throw new IllegalArgumentException(
-                        "Admin with email = " + newSuperadminId + " not found. Assign valid new SuperAdmin");
+            if (!exists(newSuperadminEmail)) {
+                throw new IllegalArgumentException("Admin with email = " + newSuperadminEmail + " not found");
             }
-            if (Objects.equals(newSuperadminId, email)) {
+            if (Objects.equals(newSuperadminEmail, email)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
             }
 
-            makeSuperAdmin(newSuperadminId);
+            makeSuperAdmin(newSuperadminEmail);
 
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperadminId(), email)) {
-                    a.setSuperadminId(newSuperadminId);
+                if (Objects.equals(a.getSuperAdmin(), email)) {
+                    a.setSuperadminId(newSuperadminEmail);
                 }
             }
         }
+
         admins.remove(adminToDelete);
         saveToDb();
     }
@@ -256,42 +245,9 @@ public class AdminService implements CRUDService<Admin> {
         throw new IllegalArgumentException("Admin with email = " + email + " not found");
     }
 
-    public void assignSupervisor(String email, String superadminId) throws IOException {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Admin email must not be null or blank");
-        }
-        if (superadminId == null || superadminId.isBlank()) {
-            throw new IllegalArgumentException("Superadmin email must not be null or blank");
-        }
-        if (email.equals(superadminId)) {
-            throw new IllegalArgumentException("Admin cannot supervise himself");
-        }
-
-        if (!exists(superadminId)) {
-            throw new IllegalArgumentException("Superadmin with email = " + superadminId + " does not exist");
-        }
-
-        Admin adm = null;
-        for (Admin a : admins) {
-            if (Objects.equals(a.getEmail(), email)) {
-                adm = a;
-                break;
-            }
-        }
-        if (adm == null) {
-            throw new IllegalArgumentException("Admin with email = " + email + " not found");
-        }
-
-        adm.setSuperadminId(superadminId);
-        saveToDb();
-    }
-
-
     @Override
     public boolean exists(String email) throws IOException {
-        if (email == null || email.isBlank()) {
-            return false;
-        }
+        if (email == null || email.isBlank()) return false;
         for (Admin admin : admins) {
             if (Objects.equals(admin.getEmail(), email)) {
                 return true;
@@ -300,31 +256,14 @@ public class AdminService implements CRUDService<Admin> {
         return false;
     }
 
-    // _________________________________________________________
-
-    // creating fully independent copy of Admin,
-    // so that code from outside could not change internal objects of service
-
-    private List<Admin> getSubordinates(String superadminId) {
+    private List<Admin> getSubordinates(String superadminEmail) {
         List<Admin> raw = new ArrayList<>();
         for (Admin admin : admins) {
-            if (Objects.equals(admin.getSuperadminId(), superadminId)) {
+            if (Objects.equals(admin.getSuperAdmin(), superadminEmail)) {
                 raw.add(admin);
             }
         }
-        return new ArrayList<>(raw.stream().map(Admin::copy).toList());
-    }
-
-    private Optional<Admin> getSupervisor(String adminId) {
-        Optional<Admin> superadmin = get(adminId);
-        if (superadmin.isEmpty()) {
-            return Optional.empty();
-        }
-        String superId = superadmin.get().getSuperadminId();
-        if (superId == null) {
-            return Optional.empty();
-        }
-        return get(superId);
+        return copyList(raw);
     }
 
     private List<Admin> loadFromDb() throws IOException {
@@ -332,17 +271,13 @@ public class AdminService implements CRUDService<Admin> {
             return new ArrayList<>();
         }
 
-        // SaveLoadService via Gson is reading JSON from file and returns object
         Object loaded = service.load(DataSaveKeys.ADMINS, ADMIN_LIST_TYPE);
 
-        // checking if loaded is indeed a List,
-        // taking from him only Admin elements,
-        // returning raw list of objects, just as they came from persistence
         if (loaded instanceof List<?> raw) {
             List<Admin> result = new ArrayList<>();
             for (Object o : raw) {
                 if (o instanceof Admin admin) {
-                    result.add(admin); // RAW from DB
+                    result.add(admin);
                 }
             }
             return result;
@@ -351,10 +286,16 @@ public class AdminService implements CRUDService<Admin> {
         return new ArrayList<>();
     }
 
-    // just for seperating internal work with persistence from our CRUD methods.
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.ADMINS, admins);
     }
 
-
+    private static List<Admin> copyList(List<Admin> list) {
+        List<Admin> out = new ArrayList<>();
+        if (list == null) return out;
+        for (Admin a : list) {
+            out.add(Admin.copy(a));
+        }
+        return out;
+    }
 }

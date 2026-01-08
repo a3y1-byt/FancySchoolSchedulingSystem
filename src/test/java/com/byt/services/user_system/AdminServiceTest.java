@@ -4,7 +4,6 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
 import com.byt.data.user_system.Admin;
 import com.byt.exception.ValidationException;
-import com.byt.exception.ExceptionCode;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,16 +16,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
-    private static final String SAMPLE_EMAIL = "yumi@gmail.com";
-
     public AdminServiceTest() {
         super(DataSaveKeys.ADMINS, saveLoadService -> new AdminService(saveLoadService));
     }
 
     @Override
     protected String getSampleObjectId() {
-        return SAMPLE_EMAIL;
+        return "yumi@gmail.com";
     }
+
 
     @Override
     protected Admin getSampleObject() {
@@ -40,11 +38,12 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                SAMPLE_EMAIL,
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
         );
+        admin.getEmail();
         return admin;
     }
 
@@ -61,8 +60,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
     public void updateAdminWithValidData() throws IOException {
         AdminService service = (AdminService) serviceWithData;
 
-        String oldEmail = getSampleObjectId();
-        Optional<Admin> beforeOpt = service.get(oldEmail);
+        String id = getSampleObjectId();
+        Optional<Admin> beforeOpt = service.get(id);
         assertTrue(beforeOpt.isPresent());
 
         LocalDate today = LocalDate.now();
@@ -70,23 +69,21 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         LocalDate hireDate = today.minusYears(2);
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
-        String newEmail = "yumiii@gmail.com";
         Admin prototype = new Admin(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                newEmail,
+                "yumiii@gmail.com",
                 hireDate,
                 lastLogin,
                 null
         );
 
-        service.update(oldEmail, prototype);
+        service.update(id, prototype);
 
-        assertTrue(service.get(oldEmail).isEmpty());
-        Optional<Admin> afterOpt = service.get(newEmail);
+        Optional<Admin> afterOpt = service.get(id);
         assertTrue(afterOpt.isPresent());
         Admin updated = afterOpt.get();
 
@@ -95,9 +92,11 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals("Piess", updated.getFamilyName());
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals(newEmail, updated.getEmail());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
         assertEquals(hireDate, updated.getHireDate());
         assertEquals(lastLogin, updated.getLastLoginTime());
+
+        assertEquals(id, updated.getEmail());
     }
 
     // firstName contains ukrainian letters
@@ -301,7 +300,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi1@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -313,7 +312,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "APies",
                 dob,
                 "10203040",
-                "yumi2@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 superA.getEmail()
@@ -321,13 +320,14 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> before = service.get(subA.getEmail());
         assertTrue(before.isPresent());
-        assertEquals(superA.getEmail(), before.get().getSuperadminId());
+        assertEquals(superA.getEmail(), before.get().getSuperAdmin());
 
+        // робимо його супер-адміном
         service.makeSuperAdmin(subA.getEmail());
 
         Optional<Admin> after = service.get(subA.getEmail());
         assertTrue(after.isPresent());
-        assertNull(after.get().getSuperadminId());
+        assertNull(after.get().getSuperAdmin());
     }
 
     // delete superadmin via simple delete
@@ -347,7 +347,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi3@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -359,7 +359,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "APies",
                 dob,
                 "10203040",
-                "yumi4@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 superA.getEmail()
@@ -388,7 +388,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi5@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -400,7 +400,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "APies",
                 dob,
                 "10203040",
-                "yumi6@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 superA.getEmail()
@@ -412,7 +412,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "AAPies",
                 dob,
                 "10203040",
-                "yumi7@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -424,11 +424,11 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> newSuperAfter = service.get(newSuperA.getEmail());
         assertTrue(newSuperAfter.isPresent());
-        assertNull(newSuperAfter.get().getSuperadminId());
+        assertNull(newSuperAfter.get().getSuperAdmin());
 
         Optional<Admin> subAfter = service.get(subA.getEmail());
         assertTrue(subAfter.isPresent());
-        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperadminId());
+        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperAdmin());
     }
 
     // valid data

@@ -49,17 +49,18 @@ public class StudentService implements CRUDService<Student> {
 
     public Student create(String firstName, String lastName, String familyName,
                           LocalDate dateOfBirth, String phoneNumber, String email,
-                          List<StudyLanguage> languagesOfStudies,
+                          Set<StudyLanguage> languagesOfStudies,
                           StudyStatus studiesStatus) throws IOException {
 
         StudentValidator.validateStudent(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 languagesOfStudies, studiesStatus);
 
-
-        Student student = new Student(firstName, lastName, familyName,
+        Student student = new Student(
+                firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                new ArrayList<>(languagesOfStudies), studiesStatus
+                new HashSet<>(languagesOfStudies),
+                studiesStatus
         );
 
         if (student.getEmail() != null && exists(student.getEmail())) {

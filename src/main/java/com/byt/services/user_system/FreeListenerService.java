@@ -41,17 +41,20 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     public FreeListener create(String firstName, String lastName, String familyName,
                                LocalDate dateOfBirth, String phoneNumber, String email,
-                               List<StudyLanguage> languagesOfStudies,
+                               Set<StudyLanguage> languagesOfStudies,
                                String notes) throws IOException {
 
         FreeListenerValidator.validateFreeListener(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 languagesOfStudies, notes);
 
-        FreeListener freeListener = new FreeListener(firstName, lastName, familyName,
+        FreeListener freeListener = new FreeListener(
+                firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                new ArrayList<>(languagesOfStudies), notes
+                new HashSet<>(languagesOfStudies),
+                notes
         );
+
         if (freeListener.getEmail() != null && exists(freeListener.getEmail())) {
             throw new IllegalStateException("freeListener exists with this email already");
         }

@@ -1,12 +1,10 @@
 package com.byt.services.user_system;
 
-import com.byt.data.user_system.FreeListener;
-import com.byt.validation.user_system.TeacherValidator;
-
+import com.byt.data.user_system.Teacher;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.data.user_system.Teacher;
+import com.byt.validation.user_system.TeacherValidator;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -18,18 +16,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class TeacherService implements CRUDService<Teacher> {
-    // comments explaining how everything works are in Admin Service
+
     private final SaveLoadService service;
     private List<Teacher> teachers;
 
-    private static final Type TEACHER_LIST_TYPE = new TypeToken<List<Teacher>>() {
-    }.getType();
+    private static final Type TEACHER_LIST_TYPE = new TypeToken<List<Teacher>>() {}.getType();
 
     public TeacherService(SaveLoadService service, List<Teacher> teachers) {
         this.service = service;
-        this.teachers = teachers != null
-                ? new ArrayList<>(teachers.stream().map(Teacher::copy).toList())
-                : new ArrayList<>();
+        this.teachers = teachers != null ? copyList(teachers) : new ArrayList<>();
     }
 
     public TeacherService(SaveLoadService service) {
@@ -38,79 +33,70 @@ public class TeacherService implements CRUDService<Teacher> {
 
     @Override
     public void initialize() throws IOException {
-        List<Teacher> loaded = loadFromDb(); // raw objects from our 'DB'
-
-        System.out.println("DEBUG TeacherService.initialize(): loaded size = " + loaded.size());
-        System.out.println("DEBUG loaded class = " + loaded.getClass());
-
-        this.teachers = new ArrayList<>(loaded.stream().map(Teacher::copy).toList()); // safe deep copies
+        List<Teacher> loaded = loadFromDb();
+        this.teachers = copyList(loaded);
     }
-
-    // _________________________________________________________
 
     public Teacher create(String firstName, String lastName, String familyName,
                           LocalDate dateOfBirth, String phoneNumber, String email,
                           LocalDate hireDate, String title,
                           String position) throws IOException {
 
-        TeacherValidator.validateTeacher(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                hireDate, title, position);
-
-
-        Teacher teacher = new Teacher(firstName, lastName, familyName,
+        TeacherValidator.validateTeacher(
+                firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
                 hireDate, title, position
         );
-        if (teacher.getEmail() != null && exists(teacher.getEmail())) {
-            throw new IllegalStateException("teacher exists with this email already");
+
+        if (email != null && exists(email)) {
+            throw new IllegalStateException("Teacher exists with this email already");
         }
-        Teacher toStore = Teacher.copy(teacher);
-        teachers.add(toStore);
+
+        Teacher teacher = new Teacher(
+                firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                hireDate, title, position
+        );
+
+        teachers.add(Teacher.copy(teacher));
         saveToDb();
-        return Teacher.copy(toStore);
+
+        return Teacher.copy(teacher);
     }
 
     @Override
     public void create(Teacher prototype) throws IllegalArgumentException, IOException {
-
         TeacherValidator.validateClass(prototype);
 
-        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
-            throw new IllegalArgumentException("teacher with email = " + prototype.getEmail() + " already exists");
+        String email = prototype.getEmail();
+        if (email != null && exists(email)) {
+            throw new IllegalArgumentException("Teacher with email = " + email + " already exists");
         }
 
-        Teacher toStore = Teacher.copy(prototype);
-        teachers.add(toStore);
+        teachers.add(Teacher.copy(prototype));
         saveToDb();
     }
 
     @Override
     public Optional<Teacher> get(String email) throws IllegalArgumentException {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
-        }
+        TeacherValidator.validateEmailKey(email);
 
         for (Teacher teacher : teachers) {
             if (Objects.equals(teacher.getEmail(), email)) {
                 return Optional.of(Teacher.copy(teacher));
             }
         }
-
         return Optional.empty();
     }
 
     @Override
     public List<Teacher> getAll() throws IOException {
-        return teachers.stream().map(Teacher::copy).toList();
+        return copyList(teachers);
     }
 
     @Override
     public void update(String email, Teacher prototype) throws IllegalArgumentException, IOException {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
-        }
-
+        TeacherValidator.validateEmailKey(email);
         TeacherValidator.validateClass(prototype);
 
         int index = -1;
@@ -122,32 +108,21 @@ public class TeacherService implements CRUDService<Teacher> {
         }
 
         if (index == -1) {
-            throw new IllegalArgumentException("Teacher with email=" + email + " not found");
+            throw new IllegalArgumentException("Teacher with email = " + email + " not found");
         }
 
         String newEmail = prototype.getEmail();
-
-        if (!Objects.equals(newEmail, email)) {
-            if (newEmail != null && exists(newEmail)) {
-                throw new IllegalArgumentException("Teacher with email=" + newEmail + " already exists");
-            }
-            teachers.remove(index);
-
-            Teacher toStore = Teacher.copy(prototype);
-            teachers.add(toStore);
-        } else {
-            Teacher updatedCopy = Teacher.copy(prototype);
-            teachers.set(index, updatedCopy);
+        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("Teacher with email = " + newEmail + " already exists");
         }
 
+        teachers.set(index, Teacher.copy(prototype));
         saveToDb();
     }
 
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
-        }
+        TeacherValidator.validateEmailKey(email);
 
         for (int i = 0; i < teachers.size(); i++) {
             if (Objects.equals(teachers.get(i).getEmail(), email)) {
@@ -156,14 +131,14 @@ public class TeacherService implements CRUDService<Teacher> {
                 return;
             }
         }
-        throw new IllegalArgumentException("Teacher with email=" + email + " not found");
+
+        throw new IllegalArgumentException("Teacher with email = " + email + " not found");
     }
 
     @Override
     public boolean exists(String email) throws IOException {
-        if (email == null || email.isBlank()) {
-            return false;
-        }
+        if (email == null || email.isBlank()) return false;
+
         for (Teacher teacher : teachers) {
             if (Objects.equals(teacher.getEmail(), email)) {
                 return true;
@@ -171,7 +146,16 @@ public class TeacherService implements CRUDService<Teacher> {
         }
         return false;
     }
-    // _________________________________________________________
+
+    private List<Teacher> copyList(List<Teacher> source) {
+        List<Teacher> result = new ArrayList<>();
+        if (source == null) return result;
+
+        for (Teacher t : source) {
+            result.add(Teacher.copy(t));
+        }
+        return result;
+    }
 
     private List<Teacher> loadFromDb() throws IOException {
         if (!service.canLoad(DataSaveKeys.TEACHERS)) {
@@ -196,5 +180,4 @@ public class TeacherService implements CRUDService<Teacher> {
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.TEACHERS, teachers);
     }
-
 }
