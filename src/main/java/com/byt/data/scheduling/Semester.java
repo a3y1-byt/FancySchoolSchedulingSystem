@@ -19,15 +19,20 @@ public class Semester {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Lesson> lessons = new HashSet<>();
 
     public static Semester copy(Semester semester) {
-        return Semester.builder()
+        var copy = Semester.builder()
                 .name(semester.getName())
                 .startDate(semester.getStartDate())
                 .endDate(semester.getEndDate())
                 .academicYear(semester.getAcademicYear())
+//                .lessons(new HashSet<>(semester.lessons))
                 .build();
+
+        copy.lessons = new HashSet<>(semester.lessons);
+        return copy;
     }
 
     public Set<Lesson> getLessons() {

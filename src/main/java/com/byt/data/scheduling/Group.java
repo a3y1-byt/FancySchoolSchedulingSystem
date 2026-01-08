@@ -11,6 +11,7 @@ import com.byt.validation.user_system.StudentValidator;
 import com.byt.validation.user_system.UserValidator;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,8 @@ import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Group {
     public static final int MAX_CAPACITY = 20;
     String name;
@@ -26,21 +29,44 @@ public class Group {
     int yearOfStudy;
     List<String> notes;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Student> students = new HashSet<>();
+
+    // GROUP -------- LESSON
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Lesson> lessons = new HashSet<>();
+
+    // GROUP -------- LESSON
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<FreeListener> freeListeners = new HashSet<>();
+
     public static Group copy(Group group) {
-        return Group.builder()
+        if (group == null) return null;
+
+        var copy = Group.builder()
                 .name(group.getName())
                 .language(group.getLanguage())
                 .maxCapacity(group.getMaxCapacity())
                 .yearOfStudy(group.getYearOfStudy())
-                .notes(group.getNotes())
+                .notes(group.getNotes() == null ? null : new java.util.ArrayList<>(group.getNotes()))
                 .build();
+
+        copy.students = (group.students == null) ? new HashSet<>() : new HashSet<>(group.students);
+        copy.lessons = (group.lessons == null) ? new HashSet<>() : new HashSet<>(group.lessons);
+        copy.freeListeners = (group.freeListeners == null) ? new HashSet<>() : new HashSet<>(group.freeListeners);
+
+        return copy;
     }
 
-    // GROUP -------- STUDENT
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<Student> students = new HashSet<>();
 
     public Set<Student> getStudents() {
         return Set.copyOf(students);
@@ -66,12 +92,6 @@ public class Group {
         students.remove(student);
         student.removeGroup(this);
     }
-
-    // GROUP -------- LESSON
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<Lesson> lessons = new HashSet<>();
 
     public Set<Lesson> getLessons() {
         return new HashSet<>(lessons);
@@ -107,16 +127,9 @@ public class Group {
         }
     }
 
-    // GROUP -------- LESSON
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<FreeListener> freeListeners = new HashSet<>();
-
     public Set<FreeListener> getFreeListeners() {
         return new HashSet<>(freeListeners);
     }
-
 
     public void addFreeListener(FreeListener freeListener) {
         FreeListenerValidator.validateFreeListener(freeListener);

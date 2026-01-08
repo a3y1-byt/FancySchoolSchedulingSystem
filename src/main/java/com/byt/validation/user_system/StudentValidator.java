@@ -7,11 +7,11 @@ import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
 public class StudentValidator {
 
-    private StudentValidator() {}
+    public StudentValidator() {}
 
     public static void validateStudent(Student student) {
         if (student == null) {
@@ -33,6 +33,7 @@ public class StudentValidator {
         );
     }
 
+    // VALIDATION METHODS
     public static void validateStudent(
             String firstName,
             String lastName,
@@ -40,9 +41,10 @@ public class StudentValidator {
             LocalDate dateOfBirth,
             String phoneNumber,
             String email,
-            Set<StudyLanguage> languagesOfStudies,
+            List<StudyLanguage> languagesOfStudies,
             StudyStatus studiesStatus
     ) {
+        // general USER class validation
         UserValidator.validateUserFields(
                 firstName,
                 lastName,
@@ -52,19 +54,32 @@ public class StudentValidator {
                 email
         );
 
+        //  only Student validation
         if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
             throw new ValidationException(
-                    ExceptionCode.NOT_EMPTY_VIOLATION,
+                    ExceptionCode.NOT_NULL_VIOLATION,
                     "Student must have at least one study language"
             );
         }
 
-        for (StudyLanguage sl : languagesOfStudies) {
+        // null and duplicate check
+        for (int i = 0; i < languagesOfStudies.size(); i++) {
+            StudyLanguage sl = languagesOfStudies.get(i);
+
             if (sl == null) {
                 throw new ValidationException(
                         ExceptionCode.NOT_NULL_VIOLATION,
                         "Study language must not be null"
                 );
+            }
+
+            for (int j = i + 1; j < languagesOfStudies.size(); j++) {
+                if (sl == languagesOfStudies.get(j)) { // enum -> можна порівнювати через ==
+                    throw new ValidationException(
+                            ExceptionCode.INVALID_FORMAT,
+                            "Study languages must be unique"
+                    );
+                }
             }
         }
 
@@ -95,4 +110,5 @@ public class StudentValidator {
                 prototype.getStudiesStatus()
         );
     }
+
 }

@@ -11,6 +11,8 @@ import com.byt.services.CRUDServiceTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,9 +35,9 @@ class GroupServiceTest extends CRUDServiceTest<Group> {
                 .language(StudyLanguage.ENGLISH)
                 .maxCapacity(20)
                 .yearOfStudy(3)
-                .notes(null)
-                .lessons(null)
-                .students(null)
+                .notes(new ArrayList<>())
+                .lessons(new HashSet<>())
+                .students(new HashSet<>())
                 .build();
     }
 

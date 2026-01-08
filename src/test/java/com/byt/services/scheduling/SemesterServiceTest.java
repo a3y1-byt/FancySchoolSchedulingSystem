@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +32,7 @@ class SemesterServiceTest extends CRUDServiceTest<Semester> {
                 .startDate(LocalDate.of(2025, 9, 1))
                 .endDate(LocalDate.of(2025, 12, 20))
                 .academicYear(2025)
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
     }
 
@@ -48,7 +49,7 @@ class SemesterServiceTest extends CRUDServiceTest<Semester> {
                 .startDate(LocalDate.of(2026, 2, 1))
                 .endDate(LocalDate.of(2026, 6, 30))
                 .academicYear(2026)
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
         service.create(semester);
         Optional<Semester> loaded = service.get("Placeholder Semester");
@@ -98,7 +99,7 @@ class SemesterServiceTest extends CRUDServiceTest<Semester> {
                 .startDate(LocalDate.of(2025, 9, 15))
                 .endDate(LocalDate.of(2025, 12, 31))
                 .academicYear(2030)
-                .lessons(null)
+                .lessons(new HashSet<>())
                 .build();
         service.update(getSampleObjectId(), updated);
         Optional<Semester> loaded = service.get(getSampleObjectId());

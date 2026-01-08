@@ -17,16 +17,18 @@ public class Subject {
     private String name;
     private int hours;
 
-    private Set<SubjectType> types = new HashSet<>();
+    private List<SubjectType> types;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Lesson> lessons = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Specialization> specializations = new HashSet<>();
 
     public int getEcts() {
@@ -37,9 +39,11 @@ public class Subject {
         return Subject.builder()
                 .name(subject.getName())
                 .types(subject.getTypes() != null
-                        ? new HashSet<>(subject.getTypes())
-                        : new HashSet<>())
+                        ? new ArrayList<>(subject.getTypes())
+                        : new ArrayList<>())
                 .hours(subject.getHours())
+                .lessons(new HashSet<>(subject.getLessons()))
+                .specializations(new HashSet<>(subject.getSpecializations()))
                 .build();
     }
 

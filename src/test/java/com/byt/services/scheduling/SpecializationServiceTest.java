@@ -8,6 +8,7 @@ import com.byt.services.CRUDServiceTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,7 +28,7 @@ class SpecializationServiceTest extends CRUDServiceTest<Specialization> {
     protected Specialization getSampleObject() {
         return Specialization.builder()
                 .name("Software Engineering")
-                .subjects(null)
+                .subjects(new HashSet<>())
                 .build();
     }
 
@@ -41,7 +42,7 @@ class SpecializationServiceTest extends CRUDServiceTest<Specialization> {
         SpecializationService service = (SpecializationService) emptyService;
         Specialization specialization = Specialization.builder()
                 .name("Placeholder Specialization")
-                .subjects(null)
+                .subjects(new HashSet<>())
                 .build();
         service.create(specialization);
         Optional<Specialization> loaded = service.get("Placeholder Specialization");
@@ -88,7 +89,7 @@ class SpecializationServiceTest extends CRUDServiceTest<Specialization> {
         SpecializationService service = (SpecializationService) serviceWithData;
         Specialization updated = Specialization.builder()
                 .name(getSampleObjectId())
-                .subjects(null)
+                .subjects(new HashSet<>())
                 .build();
         service.update(getSampleObjectId(), updated);
         Optional<Specialization> loaded = service.get(getSampleObjectId());

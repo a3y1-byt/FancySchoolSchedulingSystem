@@ -1,34 +1,38 @@
 package com.byt.services.user_system;
 
-import com.byt.data.user_system.Student;
-import com.byt.enums.user_system.StudyLanguage;
-import com.byt.enums.user_system.StudyStatus;
+import com.byt.data.scheduling.Specialization;
+import com.byt.data.user_system.Teacher;
+import com.byt.exception.ExceptionCode;
+import com.byt.exception.ValidationException;
+import com.byt.validation.scheduling.Validator;
+import com.byt.validation.user_system.StudentValidator;
+
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.validation.user_system.StudentValidator;
+import com.byt.data.user_system.Student;
+import com.byt.enums.user_system.StudyLanguage;
+import com.byt.enums.user_system.StudyStatus;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class StudentService implements CRUDService<Student> {
-
+    // comments explaining how everything works are in Student Service
     private final SaveLoadService service;
     private List<Student> students;
 
-    private static final Type STUDENT_LIST_TYPE = new TypeToken<List<Student>>() {}.getType();
+    private static final Type STUDENT_LIST_TYPE = new TypeToken<List<Student>>() {
+    }.getType();
 
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
-        this.students = students != null ? copyList(students) : new ArrayList<>();
+        this.students = students != null
+                ? new ArrayList<>(students.stream().map(Student::copy).toList())
+                : new ArrayList<>();
     }
 
     public StudentService(SaveLoadService service) {
@@ -37,48 +41,47 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public void initialize() throws IOException {
-        List<Student> loaded = loadFromDb();
-        this.students = copyList(loaded);
+        List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
+        this.students = new ArrayList<>(loaded.stream().map(Student::copy).toList());
     }
+
+    // _________________________________________________________
 
     public Student create(String firstName, String lastName, String familyName,
                           LocalDate dateOfBirth, String phoneNumber, String email,
-                          Set<StudyLanguage> languagesOfStudies,
+                          List<StudyLanguage> languagesOfStudies,
                           StudyStatus studiesStatus) throws IOException {
 
-        StudentValidator.validateStudent(
-                firstName, lastName, familyName,
+        StudentValidator.validateStudent(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                    languagesOfStudies, studiesStatus
+                languagesOfStudies, studiesStatus);
+
+
+        Student student = new Student(firstName, lastName, familyName,
+                dateOfBirth, phoneNumber, email,
+                new ArrayList<>(languagesOfStudies), studiesStatus
         );
 
-        if (email != null && exists(email)) {
-            throw new IllegalStateException("Student exists with this email already");
+        if (student.getEmail() != null && exists(student.getEmail())) {
+            throw new IllegalStateException("student exists with this email already");
         }
-
-        Student student = new Student(
-                firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                new HashSet<>(languagesOfStudies),
-                studiesStatus
-        );
 
         students.add(Student.copy(student));
         saveToDb();
-
         return Student.copy(student);
     }
 
     @Override
     public void create(Student prototype) throws IllegalArgumentException, IOException {
+
         StudentValidator.validateClass(prototype);
 
-        String email = prototype.getEmail();
-        if (email != null && exists(email)) {
-            throw new IllegalArgumentException("Student with email = " + email + " already exists");
+        if (prototype.getEmail() != null && exists(prototype.getEmail())) {
+            throw new IllegalArgumentException("student with email = " + prototype.getEmail() + " already exists");
         }
 
-        students.add(Student.copy(prototype));
+        Student toStore = Student.copy(prototype);
+        students.add(toStore);
         saveToDb();
     }
 
@@ -99,7 +102,7 @@ public class StudentService implements CRUDService<Student> {
 
     @Override
     public List<Student> getAll() throws IOException {
-        return copyList(students);
+        return new ArrayList<>(students.stream().map(Student::copy).toList());
     }
 
     @Override
@@ -117,16 +120,26 @@ public class StudentService implements CRUDService<Student> {
                 break;
             }
         }
+
         if (index == -1) {
             throw new IllegalArgumentException("Student with email=" + email + " not found");
         }
 
         String newEmail = prototype.getEmail();
-        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
-            throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
+
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
+            }
+            students.remove(index);
+
+            Student toStore = Student.copy(prototype);
+            students.add(toStore);
+        } else {
+            Student updatedCopy = Student.copy(prototype);
+            students.set(index, updatedCopy);
         }
 
-        students.set(index, Student.copy(prototype));
         saveToDb();
     }
 
@@ -143,14 +156,14 @@ public class StudentService implements CRUDService<Student> {
                 return;
             }
         }
-
         throw new IllegalArgumentException("Student with email=" + email + " not found");
     }
 
     @Override
     public boolean exists(String email) throws IOException {
-        if (email == null || email.isBlank()) return false;
-
+        if (email == null || email.isBlank()) {
+            return false;
+        }
         for (Student student : students) {
             if (Objects.equals(student.getEmail(), email)) {
                 return true;
@@ -159,15 +172,7 @@ public class StudentService implements CRUDService<Student> {
         return false;
     }
 
-    private List<Student> copyList(List<Student> source) {
-        List<Student> result = new ArrayList<>();
-        if (source == null) return result;
-
-        for (Student s : source) {
-            result.add(Student.copy(s));
-        }
-        return result;
-    }
+    // _________________________________________________________
 
     private List<Student> loadFromDb() throws IOException {
         if (!service.canLoad(DataSaveKeys.STUDENTS)) {
@@ -193,3 +198,4 @@ public class StudentService implements CRUDService<Student> {
         service.save(DataSaveKeys.STUDENTS, students);
     }
 }
+

@@ -11,10 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,7 +40,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                 dob,
                 "10203040",
                 SAMPLE_EMAIL,
-                Set.of(StudyLanguage.ENGLISH),
+                List.of(StudyLanguage.ENGLISH),
                 "Some notes"
         );
         return freeListener;
@@ -76,7 +74,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                 dob,
                 "3809691046",
                 newEmail,
-                Set.of(StudyLanguage.POLISH),
+                List.of(StudyLanguage.POLISH),
                 "woof woof woof"
         );
 
@@ -92,7 +90,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
         assertEquals(newEmail, updated.getEmail());
-        assertEquals(Set.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
+        assertEquals(List.of(StudyLanguage.POLISH), updated.getLanguagesOfStudies());
         assertEquals("woof woof woof", updated.getNotes());
     }
 
@@ -113,7 +111,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -136,7 +134,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         null,
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -159,7 +157,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi_at_gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -182,7 +180,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "48505ab505",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -205,7 +203,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "4850",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -228,7 +226,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -251,7 +249,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         "notes"
                 )
         );
@@ -276,7 +274,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                 dob,
                 "10203040",
                 "yumi@gmail.com",
-                Set.of(StudyLanguage.ENGLISH, StudyLanguage.POLISH),
+                List.of(StudyLanguage.ENGLISH, StudyLanguage.POLISH),
                 "Woof"
         );
 
@@ -325,7 +323,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(),
+                        List.of(),
                         "notes"
                 )
         );
@@ -338,7 +336,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
 
         LocalDate dob = LocalDate.now().minusYears(21);
 
-        Set<StudyLanguage> langs = new HashSet<>();
+        List<StudyLanguage> langs = new ArrayList<>();
         langs.add(StudyLanguage.ENGLISH);
         langs.add(null);
 
@@ -359,29 +357,24 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
 
     // list contains duplicate
     @Test
-    public void languagesGetterReturnsCopy() throws IOException {
+    public void createFreeListenerWithDuplicateLanguages() {
         FreeListenerService service = (FreeListenerService) emptyService;
         LocalDate dob = LocalDate.now().minusYears(21);
 
-        FreeListener created = service.create(
-                "Yumi",
-                "Hnatiuk",
-                "Pies",
-                dob,
-                "10203040",
-                "yumi@gmail.com",
-                Set.of(StudyLanguage.ENGLISH),
-                "Woof"
+        assertThrows(
+                ValidationException.class,
+                () -> service.create(
+                        "Yumi",
+                        "Hnatiuk",
+                        "Pies",
+                        dob,
+                        "10203040",
+                        "yumi@gmail.com",
+                        List.of(StudyLanguage.ENGLISH, StudyLanguage.ENGLISH),
+                        "Woof"
+                )
         );
-
-        Set<StudyLanguage> langs = created.getLanguagesOfStudies();
-        langs.add(StudyLanguage.POLISH);
-
-        // must not affect internal state
-        assertEquals(1, created.getLanguagesOfStudies().size());
-        assertFalse(created.getLanguagesOfStudies().contains(StudyLanguage.POLISH));
     }
-
 
     // notes too long
     @Test
@@ -405,7 +398,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         longNotes
                 )
         );
@@ -425,7 +418,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                 dob,
                 "10203040",
                 "yumi@gmail.com",
-                Set.of(StudyLanguage.ENGLISH),
+                List.of(StudyLanguage.ENGLISH),
                 null
         );
 
@@ -448,7 +441,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         " "
                 )
         );
@@ -469,7 +462,7 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
                         dob,
                         "10203040",
                         "yumi@gmail.com",
-                        Set.of(StudyLanguage.ENGLISH),
+                        List.of(StudyLanguage.ENGLISH),
                         ""
                 )
         );
@@ -490,9 +483,8 @@ public class FreeListenerServiceTest extends CRUDServiceTest<FreeListener> {
 
         LocalDate dob = LocalDate.now().minusYears(30);
 
-        Set<StudyLanguage> langs = new HashSet<>();
+        List<StudyLanguage> langs = new ArrayList<>();
         langs.add(StudyLanguage.ENGLISH);
-
 
         FreeListener prototype = new FreeListener(
                 "Yumi",

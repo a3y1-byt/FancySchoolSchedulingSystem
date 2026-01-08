@@ -6,13 +6,16 @@ import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.byt.data.user_system.FreeListener.MAX_NOTES_LENGTH;
 
 public class FreeListenerValidator {
 
-    private FreeListenerValidator() {}
+    public FreeListenerValidator() {
+    }
 
     public static void validateFreeListener(FreeListener freeListener) {
         if (freeListener == null) {
@@ -34,6 +37,7 @@ public class FreeListenerValidator {
         );
     }
 
+    // VALIDATION METHODS
     public static void validateFreeListener(
             String firstName,
             String lastName,
@@ -41,9 +45,10 @@ public class FreeListenerValidator {
             LocalDate dateOfBirth,
             String phoneNumber,
             String email,
-            Set<StudyLanguage> languagesOfStudies,
+            List<StudyLanguage> languagesOfStudies,
             String notes
     ) {
+        // general USER class validation
         UserValidator.validateUserFields(
                 firstName,
                 lastName,
@@ -53,18 +58,27 @@ public class FreeListenerValidator {
                 email
         );
 
+        //  only FreeListener validation
         if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
             throw new ValidationException(
                     ExceptionCode.NOT_EMPTY_VIOLATION,
-                    "FreeListener must have at least one study language"
-            );
+                    "FreeListener must have at least one study language");
         }
 
+        // null and duplicate check
+        Set<StudyLanguage> unique = new HashSet<>();
         for (StudyLanguage sl : languagesOfStudies) {
             if (sl == null) {
                 throw new ValidationException(
                         ExceptionCode.NOT_NULL_VIOLATION,
                         "Study language must not be null"
+                );
+            }
+
+            if (!unique.add(sl)) {
+                throw new ValidationException(
+                        ExceptionCode.INVALID_FORMAT,
+                        "Study languages must be unique"
                 );
             }
         }
@@ -73,14 +87,16 @@ public class FreeListenerValidator {
             String trimmed = notes.trim();
 
             if (trimmed.isEmpty()) {
-                throw new ValidationException(
+                throw new
+                        ValidationException(
                         ExceptionCode.NOT_EMPTY_VIOLATION,
                         "Notes must not be empty"
                 );
             }
 
             if (trimmed.length() > MAX_NOTES_LENGTH) {
-                throw new ValidationException(
+                throw new
+                        ValidationException(
                         ExceptionCode.LENGTH_TOO_LONG,
                         "Notes are too long"
                 );
@@ -107,4 +123,5 @@ public class FreeListenerValidator {
                 prototype.getNotes()
         );
     }
+
 }

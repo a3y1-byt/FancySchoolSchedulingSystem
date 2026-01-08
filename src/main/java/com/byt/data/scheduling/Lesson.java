@@ -26,22 +26,32 @@ public class Lesson {
     StudyLanguage language;
     WeekPattern weekPattern;
 
+    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     Subject subject;
 
+    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     Group group;
 
+    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     Teacher teacher;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    HashSet<ClassRoom> classRooms;
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    HashSet<ClassRoom> classRooms = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    HashSet<Semester> semesters;
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    HashSet<Semester> semesters = new HashSet<>();
 
     public void addSubject(Subject subject) {
         Validator.validateSubject(subject);
@@ -119,6 +129,18 @@ public class Lesson {
 
     public HashSet<Semester> getSemesters() {
         return new HashSet<>(semesters);
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public Group getGroup() {
+        return group;
     }
 
     public static Lesson copy(Lesson lesson) {

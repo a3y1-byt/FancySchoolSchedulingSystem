@@ -2,6 +2,7 @@ package com.byt.validation.user_system;
 
 import com.byt.validation.user_system.UserValidator;
 import com.byt.exception.ValidationException;
+import com.byt.exception.ExceptionCode;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -72,6 +73,54 @@ public class UserValidatorTest {
                         "Yumi",
                         "Hnatiuk",
                         null,
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
+    // family name = " "
+    @Test
+    public void familyNameIsBlank() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        " ",
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
+    // family name = ""
+    @Test
+    public void familyNameIsEmpty() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        "",
+                        validDob(),
+                        "48505505505",
+                        "yumipies@gmail.com"
+                )
+        );
+    }
+
+    // family name contains gibberish
+    @Test
+    public void familyNameIsBad() {
+        assertThrows(
+                ValidationException.class,
+                () -> UserValidator.validateUserFields(
+                        "Yumi",
+                        "Hnatiuk",
+                        " 2!",
                         validDob(),
                         "48505505505",
                         "yumipies@gmail.com"

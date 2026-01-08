@@ -14,15 +14,23 @@ public class ClassRoom {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     Building building;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    HashSet<Lesson> lessons;
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    HashSet<Lesson> lessons = new HashSet<>();
 
 
     public void addBuilding(Building building) {
         Validator.validateBuilding(building);
+
+        if(this.building != null) {
+            Building oldBuilding = this.building;
+            oldBuilding.removeClassRoom(this);
+        }
 
         this.building = building;
         building.addClassRoom(this);
@@ -57,6 +65,7 @@ public class ClassRoom {
     public Building getBuilding() {
         return building;
     }
+
 
     public static ClassRoom copy(ClassRoom original) {
         return ClassRoom.builder()
