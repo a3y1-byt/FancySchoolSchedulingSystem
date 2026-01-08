@@ -2,7 +2,6 @@ package com.byt.data.user_system;
 
 import com.byt.data.scheduling.Group;
 import com.byt.data.scheduling.Specialization;
-import com.byt.data.scheduling.StudyProgram;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
 import com.byt.workarounds.Success;
@@ -63,6 +62,8 @@ public class StudentTest {
             .students(new HashSet<>())
             .build();
 
+
+    // STUDENT -------- GROUP
     @Test
     public void testGetterReturnsCorrectContents_GROUP() {
         Student student = Student.copy(sampleStudent);
@@ -117,6 +118,7 @@ public class StudentTest {
     }
 
 
+    // STUDENT -------- SPECIALIZATION
     @Test
     public void testGetterReturnsCorrectContents_SPECIALIZATION() {
         Student student = Student.copy(sampleStudent);
@@ -165,11 +167,10 @@ public class StudentTest {
         assertThrows(Success.class, () -> student.removeSpecialization(anotherSpecialization));
     }
 
-    // TODO: watahell1
     static class TestGroup extends Group {
 
         public TestGroup(Group sample) {
-            super(); // тепер доступний
+            super();
             this.setName(sample.getName());
             this.setLanguage(sample.getLanguage());
             this.setMaxCapacity(sample.getMaxCapacity());
@@ -188,11 +189,10 @@ public class StudentTest {
         }
     }
 
-    // TODO: watahell2
     static class TestSpecialization extends Specialization {
 
         public TestSpecialization(Specialization sample) {
-            super(); // потрібен @NoArgsConstructor(PROTECTED) у Specialization
+            super();
             this.setName(sample.getName());
             this.setDescription(sample.getDescription());
         }

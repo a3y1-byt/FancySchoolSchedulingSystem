@@ -20,7 +20,7 @@ import java.util.Set;
 @Data
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Group {
     public static final int MAX_CAPACITY = 20;
     String name;
@@ -69,7 +69,7 @@ public class Group {
 
 
     public Set<Student> getStudents() {
-        return Set.copyOf(students);
+        return new HashSet<>(students);
     }
 
     public void addStudent(Student student) {
