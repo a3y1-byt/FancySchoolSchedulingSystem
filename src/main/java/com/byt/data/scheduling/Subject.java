@@ -21,10 +21,12 @@ public class Subject {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Lesson> lessons = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Specialization> specializations = new HashSet<>();
 
     public int getEcts() {

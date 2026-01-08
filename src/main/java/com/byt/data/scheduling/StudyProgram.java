@@ -17,6 +17,7 @@ public class StudyProgram {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Specialization> specializations = new HashSet<>();
 
     public static StudyProgram copy(StudyProgram program) {

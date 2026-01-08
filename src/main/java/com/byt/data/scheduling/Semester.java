@@ -18,6 +18,7 @@ public class Semester {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Lesson> lessons = new HashSet<>();
 
     public static Semester copy(Semester semester) {

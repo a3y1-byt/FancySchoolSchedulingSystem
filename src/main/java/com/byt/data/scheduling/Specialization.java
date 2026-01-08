@@ -16,14 +16,17 @@ public class Specialization {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Subject> subjects = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<StudyProgram> studyPrograms = new HashSet<>();
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Student> students = new HashSet<>();
 
     public static Specialization copy(Specialization specialization) {
