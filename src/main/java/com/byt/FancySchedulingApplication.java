@@ -13,7 +13,10 @@ import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
 import com.byt.services.scheduling.GroupService;
 import com.byt.services.user_system.AdminService;
+import com.byt.services.user_system.FreeListenerService;
 import com.byt.services.user_system.StudentService;
+import com.byt.services.user_system.TeacherService;
+import com.byt.services.reporting.IssueReportService;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,33 +39,35 @@ public class FancySchedulingApplication {
     private static SaveLoadService generatePersistenceService() throws IOException {
         DataSerializer serializer = new JsonDataSerializer();
         DataRepository repository = new InMemoryDataRepository();
-
         SaveLoadService database = new SaveLoadService(serializer, repository);
 
-        // This is a small demo of all the entities we store in our "database" atm. Enjoy!
-        database.save(DataSaveKeys.STUDENTS, new Student[0]);
-        database.save(DataSaveKeys.FREE_LISTENERS, new FreeListener[0]);
-        database.save(DataSaveKeys.TEACHERS, new Teacher[0]);
-        database.save(DataSaveKeys.ADMINS, new Admin[0]);
+        database.save(DataSaveKeys.STUDENTS, new ArrayList<Student>());
+        database.save(DataSaveKeys.FREE_LISTENERS, new ArrayList<FreeListener>());
+        database.save(DataSaveKeys.TEACHERS, new ArrayList<Teacher>());
+        database.save(DataSaveKeys.ADMINS, new ArrayList<Admin>());
 
-        database.save(DataSaveKeys.BUILDINGS, new Building[0]);
-        database.save(DataSaveKeys.CLASSROOMS, new ClassRoom[0]);
-        database.save(DataSaveKeys.SPECIALIZATIONS, new Specialization[0]);
+        database.save(DataSaveKeys.BUILDINGS, new ArrayList<Building>());
+        database.save(DataSaveKeys.CLASSROOMS, new ArrayList<ClassRoom>());
+        database.save(DataSaveKeys.SPECIALIZATIONS, new ArrayList<Specialization>());
+        database.save(DataSaveKeys.STUDY_PROGRAMS, new ArrayList<StudyProgram>());
+        database.save(DataSaveKeys.SEMESTERS, new ArrayList<Semester>());
+        database.save(DataSaveKeys.SUBJECTS, new ArrayList<Subject>());
+        database.save(DataSaveKeys.LESSONS, new ArrayList<Lesson>());
+        database.save(DataSaveKeys.GROUPS, new ArrayList<Group>());
 
-        database.save(DataSaveKeys.STUDY_PROGRAMS, new StudyProgram[0]);
-        database.save(DataSaveKeys.SEMESTERS, new Semester[0]);
-        database.save(DataSaveKeys.SUBJECTS, new Subject[0]);
-        database.save(DataSaveKeys.LESSONS, new Lesson[0]);
-        database.save(DataSaveKeys.GROUPS, new Group[0]);
-
-        database.save(DataSaveKeys.ISSUE_REPORTS, new IssueReport[0]);
+        database.save(DataSaveKeys.ISSUE_REPORTS, new ArrayList<IssueReport>());
 
         return database;
     }
 
     private static void demonstrateServices(SaveLoadService database) throws IOException {
-        StudentService studentService = new StudentService(database, new ArrayList<>());
-        AdminService adminService = new AdminService(database, new ArrayList<>());
+        IssueReportService reportService = new IssueReportService(database);
+        reportService.initialize();
+
+        StudentService studentService = new StudentService(database, null, reportService);
+        TeacherService teacherService = new TeacherService(database, null, reportService);
+        FreeListenerService freeListenerService = new FreeListenerService(database, null, reportService);
+        AdminService adminService = new AdminService(database, null, reportService);
         GroupService groupService = new GroupService(database);
 
         studentService.initialize();
@@ -104,7 +109,7 @@ public class FancySchedulingApplication {
         // OMG, this project is so amazing that it might be illegal!
         // Let's report this issue to the developers (us) so that they make the application worse.
         // Thankfully, we have just the right service for that.
-        IssueReportService reportService = new IssueReportService(database);
+
         reportService.initialize();
 
         IssueReport superRealReport =

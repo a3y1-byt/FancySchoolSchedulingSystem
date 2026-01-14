@@ -17,116 +17,157 @@ import java.util.Optional;
 
 public class IssueReportService implements CRUDService<IssueReport> {
 
-    private static final Type ISSUE_REPORT_LIST_TYPE =
-            new TypeToken<List<IssueReport>>() {}.getType();
-
-    private final SaveLoadService saveLoadService;
+    private final SaveLoadService service;
     private List<IssueReport> reports;
 
-    public IssueReportService(SaveLoadService saveLoadService) {
-        this(saveLoadService, null);
+    private static final Type ISSUE_REPORT_LIST_TYPE = new TypeToken<List<IssueReport>>() {}.getType();
+
+    private record CompositeKey(String email, String title) {}
+
+    public IssueReportService(SaveLoadService service) {
+        this.service = service;
+        this.reports = new ArrayList<>();
     }
 
-    public IssueReportService(SaveLoadService saveLoadService, List<IssueReport> initial) {
-        this.saveLoadService = Objects.requireNonNull(saveLoadService, "saveLoadService must not be null");
-        this.reports = initial != null ? copyList(initial) : new ArrayList<>();
+    public IssueReportService(SaveLoadService service, List<IssueReport> reports) {
+        this.service = service;
+        this.reports = copyList(reports);
     }
 
     @Override
     public void initialize() throws IOException {
-        this.reports = copyList(loadFromDb());
+        List<IssueReport> loaded = loadFromDb();
+        this.reports = copyList(loaded);
     }
 
-    @Deprecated
-    public void init() throws IOException {
-        initialize();
-    }
-
-    /**
-     * id format "email|title"
-     */
-    public static String compositeId(String email, String title) {
+    // ----- Attribute association "reverse navigation"
+    public List<IssueReport> getAllByEmail(String email) {
         IssueReportValidator.validateEmail(email);
-        IssueReportValidator.validateTitle(title);
-        return normalizeEmail(email) + "|" + normalizeTitle(title);
+        String n = normalizeEmail(email);
+
+        List<IssueReport> result = new ArrayList<>();
+        for (IssueReport r : reports) {
+            if (r.getEmail() != null && normalizeEmail(r.getEmail()).equals(n)) {
+                result.add(IssueReport.copy(r));
+            }
+        }
+        return result;
     }
+
+    public void updateReporterEmail(String oldEmail, String newEmail) throws IOException {
+        IssueReportValidator.validateEmail(oldEmail);
+        IssueReportValidator.validateEmail(newEmail);
+
+        String oldN = normalizeEmail(oldEmail);
+        String newN = normalizeEmail(newEmail);
+
+        if (oldN.equals(newN)) return;
+
+        // conflict check: newEmail|title must not already exist
+        for (IssueReport r : reports) {
+            if (r.getEmail() == null || r.getTitle() == null) continue;
+
+            if (normalizeEmail(r.getEmail()).equals(oldN)) {
+                String conflictId = compositeId(newEmail, r.getTitle());
+                if (exists(conflictId)) {
+                    throw new IllegalStateException(
+                            "Email change causes IssueReport key conflict for title: " + r.getTitle()
+                    );
+                }
+            }
+        }
+
+        for (IssueReport r : reports) {
+            if (r.getEmail() != null && normalizeEmail(r.getEmail()).equals(oldN)) {
+                r.setEmail(newEmail);
+            }
+        }
+
+        saveToDb();
+    }
+
+    // ----- CRUDService
 
     @Override
     public void create(IssueReport prototype) throws IllegalArgumentException, IOException {
         IssueReportValidator.validatePrototype(prototype);
 
-        IssueReport toStore = copy(prototype);
-
-        if (toStore.getCreatedAt() == null) {
-            toStore.setCreatedAt(LocalDateTime.now());
+        if (prototype.getCreatedAt() == null) {
+            prototype.setCreatedAt(LocalDateTime.now());
         }
 
-        if (exists(compositeId(toStore.getEmail(), toStore.getTitle()))) {
-            throw new IllegalArgumentException(
-                    "IssueReport for email " + toStore.getEmail()
-                            + " and title " + toStore.getTitle()
-                            + " already exists"
-            );
+        String id = compositeId(prototype.getEmail(), prototype.getTitle());
+        if (exists(id)) {
+            throw new IllegalArgumentException("IssueReport already exists with key " + id);
         }
 
-        reports.add(toStore);
+        reports.add(IssueReport.copy(prototype));
         saveToDb();
     }
 
     @Override
     public Optional<IssueReport> get(String id) throws IllegalArgumentException {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
-        }
-
+        // IMPORTANT: for generic CRUD tests, get("TestObject") should return empty, not throw
         CompositeKey key;
         try {
             key = parseCompositeId(id);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ex) {
             return Optional.empty();
         }
 
         for (IssueReport r : reports) {
             if (sameKey(r, key)) {
-                return Optional.of(copy(r));
+                return Optional.of(IssueReport.copy(r));
             }
         }
-
         return Optional.empty();
     }
 
     @Override
-    public List<IssueReport> getAll() {
+    public List<IssueReport> getAll() throws IOException {
         return copyList(reports);
     }
 
     @Override
     public void update(String id, IssueReport prototype) throws IllegalArgumentException, IOException {
+        IssueReportValidator.validateId(id);
+        if (prototype == null) {
+            throw new IllegalArgumentException("IssueReport must not be null");
+        }
+        if (prototype.getDescription() == null || prototype.getDescription().isBlank()) {
+            throw new IllegalArgumentException("description must not be blank");
+        }
+
         CompositeKey key = parseCompositeId(id);
-        IssueReportValidator.validatePrototype(prototype);
 
         for (int i = 0; i < reports.size(); i++) {
             IssueReport current = reports.get(i);
-            if (sameKey(current, key)) {
-                IssueReport updatedCopy = copy(prototype);
+            if (!sameKey(current, key)) continue;
 
-                // do not allow changing email/title
-                updatedCopy.setEmail(current.getEmail());
-                updatedCopy.setTitle(current.getTitle());
+            // email + title must stay the same because they form the key
+            IssueReport updated = new IssueReport(
+                    current.getEmail(),
+                    current.getTitle(),
+                    prototype.getDescription(),
+                    current.getCreatedAt()
+            );
 
-                reports.set(i, updatedCopy);
-                saveToDb();
-                return;
+            // allow updating createdAt only if provided (optional)
+            if (prototype.getCreatedAt() != null) {
+                updated.setCreatedAt(prototype.getCreatedAt());
             }
+
+            reports.set(i, IssueReport.copy(updated));
+            saveToDb();
+            return;
         }
 
-        throw new IllegalArgumentException(
-                "IssueReport for email " + key.email + " and title " + key.title + " not found"
-        );
+        throw new IllegalArgumentException("IssueReport with id " + id + " not found");
     }
 
     @Override
     public void delete(String id) throws IllegalArgumentException, IOException {
+        IssueReportValidator.validateId(id);
         CompositeKey key = parseCompositeId(id);
 
         for (int i = 0; i < reports.size(); i++) {
@@ -137,109 +178,42 @@ public class IssueReportService implements CRUDService<IssueReport> {
             }
         }
 
-        throw new IllegalArgumentException(
-                "IssueReport for email " + key.email + " and title " + key.title + " not found"
-        );
+        throw new IllegalArgumentException("IssueReport with id " + id + " not found");
     }
 
     @Override
-    public boolean exists(String id) {
+    public boolean exists(String id) throws IOException {
         CompositeKey key;
         try {
             key = parseCompositeId(id);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ex) {
             return false;
         }
 
         for (IssueReport r : reports) {
-            if (sameKey(r, key)) {
-                return true;
-            }
+            if (sameKey(r, key)) return true;
         }
         return false;
     }
 
-    private List<IssueReport> loadFromDb() throws IOException {
-        if (!saveLoadService.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
-            return new ArrayList<>();
-        }
+    // ----- Key helpers
 
-        Object loaded = saveLoadService.load(DataSaveKeys.ISSUE_REPORTS, ISSUE_REPORT_LIST_TYPE);
-
-        if (loaded == null) {
-            throw new IOException("Loaded issue reports are null. Stored data might be corrupted");
-        }
-
-        if (!(loaded instanceof List<?> raw)) {
-            throw new IOException("Loaded issue reports have unexpected type " + loaded.getClass().getName());
-        }
-
-        List<IssueReport> result = new ArrayList<>();
-        for (Object o : raw) {
-            if (!(o instanceof IssueReport report)) {
-                throw new IOException("Loaded issue reports contain non IssueReport element");
-            }
-            IssueReportValidator.validatePrototype(report);
-            result.add(report);
-        }
-
-        return result;
-    }
-
-    private void saveToDb() throws IOException {
-        saveLoadService.save(DataSaveKeys.ISSUE_REPORTS, reports);
-    }
-
-    private static IssueReport copy(IssueReport r) {
-        if (r == null) return null;
-        return new IssueReport(
-                r.getEmail(),
-                r.getTitle(),
-                r.getDescription(),
-                r.getCreatedAt()
-        );
-    }
-
-    private static List<IssueReport> copyList(List<IssueReport> list) {
-        List<IssueReport> out = new ArrayList<>();
-        if (list == null) return out;
-        for (IssueReport r : list) out.add(copy(r));
-        return out;
-    }
-
-    private static class CompositeKey {
-        final String email;
-        final String title;
-
-        CompositeKey(String email, String title) {
-            this.email = email;
-            this.title = title;
-        }
+    public static String compositeId(String email, String title) {
+        return normalizeEmail(email) + "|" + normalizeTitle(title);
     }
 
     private static CompositeKey parseCompositeId(String id) {
         IssueReportValidator.validateId(id);
 
         int idx = id.indexOf('|');
-        if (idx <= 0 || idx >= id.length() - 1) {
-            throw new IllegalArgumentException("id must be in format email|title");
-        }
+        String email = id.substring(0, idx);
+        String title = id.substring(idx + 1);
 
-        String emailPart = id.substring(0, idx);
-        String titlePart = id.substring(idx + 1);
-
-        IssueReportValidator.validateEmail(emailPart);
-        IssueReportValidator.validateTitle(titlePart);
-
-        return new CompositeKey(
-                normalizeEmail(emailPart),
-                normalizeTitle(titlePart)
-        );
+        return new CompositeKey(normalizeEmail(email), normalizeTitle(title));
     }
 
     private static boolean sameKey(IssueReport r, CompositeKey key) {
-        if (r == null || key == null) return false;
-        if (r.getEmail() == null || r.getTitle() == null) return false;
+        if (r == null || r.getEmail() == null || r.getTitle() == null) return false;
 
         String reportEmail = normalizeEmail(r.getEmail());
         String reportTitle = normalizeTitle(r.getTitle());
@@ -253,5 +227,39 @@ public class IssueReportService implements CRUDService<IssueReport> {
 
     private static String normalizeTitle(String title) {
         return title.trim();
+    }
+
+    private List<IssueReport> loadFromDb() throws IOException {
+        if (!service.canLoad(DataSaveKeys.ISSUE_REPORTS)) {
+            return new ArrayList<>();
+        }
+
+        Object loaded = service.load(DataSaveKeys.ISSUE_REPORTS, ISSUE_REPORT_LIST_TYPE);
+
+        if (loaded instanceof List<?> raw) {
+            List<IssueReport> result = new ArrayList<>();
+            for (Object o : raw) {
+                if (o instanceof IssueReport r) {
+                    result.add(r);
+                }
+            }
+            return result;
+        }
+
+        return new ArrayList<>();
+    }
+
+    private void saveToDb() throws IOException {
+        service.save(DataSaveKeys.ISSUE_REPORTS, reports);
+    }
+
+    private static List<IssueReport> copyList(List<IssueReport> src) {
+        List<IssueReport> out = new ArrayList<>();
+        if (src == null) return out;
+
+        for (IssueReport r : src) {
+            out.add(IssueReport.copy(r));
+        }
+        return out;
     }
 }
