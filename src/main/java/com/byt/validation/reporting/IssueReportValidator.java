@@ -46,6 +46,8 @@ public class IssueReportValidator {
         }
 
         validateEmail(prototype.getEmail());
+        validateEmail(prototype.getAdminEmail());
+
         validateTitle(prototype.getTitle());
 
         if (prototype.getDescription() == null || prototype.getDescription().isBlank()) {

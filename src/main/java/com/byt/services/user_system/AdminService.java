@@ -174,6 +174,7 @@ public class AdminService implements CRUDService<Admin> {
 
         if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
             issueReportService.updateReporterEmail(oldEmail, newEmail);
+            issueReportService.updateAssignedAdminEmail(oldEmail, newEmail);
         }
     }
 

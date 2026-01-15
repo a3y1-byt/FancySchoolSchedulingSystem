@@ -54,6 +54,54 @@ public class IssueReportService implements CRUDService<IssueReport> {
         return result;
     }
 
+    public List<IssueReport> getAllByAdminEmail(String adminEmail) {
+        IssueReportValidator.validateEmail(adminEmail);
+        String n = normalizeEmail(adminEmail);
+
+        List<IssueReport> result = new ArrayList<>();
+        for (IssueReport r : reports) {
+            if (r.getAdminEmail() != null && normalizeEmail(r.getAdminEmail()).equals(n)) {
+                result.add(IssueReport.copy(r));
+            }
+        }
+        return result;
+    }
+
+    public void assignAdmin(String reportId, String newAdminEmail) throws IOException {
+        IssueReportValidator.validateId(reportId);
+        IssueReportValidator.validateEmail(newAdminEmail);
+
+        CompositeKey key = parseCompositeId(reportId);
+
+        for (IssueReport r : reports) {
+            if (sameKey(r, key)) {
+                r.setAdminEmail(newAdminEmail);
+                saveToDb();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("IssueReport with id " + reportId + " not found");
+    }
+
+    public void updateAssignedAdminEmail(String oldEmail, String newEmail) throws IOException {
+        IssueReportValidator.validateEmail(oldEmail);
+        IssueReportValidator.validateEmail(newEmail);
+
+        String oldN = normalizeEmail(oldEmail);
+        String newN = normalizeEmail(newEmail);
+
+        if (oldN.equals(newN)) return;
+
+        for (IssueReport r : reports) {
+            if (r.getAdminEmail() != null && normalizeEmail(r.getAdminEmail()).equals(oldN)) {
+                r.setAdminEmail(newEmail);
+            }
+        }
+        saveToDb();
+    }
+
+
+
     public void updateReporterEmail(String oldEmail, String newEmail) throws IOException {
         IssueReportValidator.validateEmail(oldEmail);
         IssueReportValidator.validateEmail(newEmail);
@@ -147,6 +195,7 @@ public class IssueReportService implements CRUDService<IssueReport> {
             // email + title must stay the same because they form the key
             IssueReport updated = new IssueReport(
                     current.getEmail(),
+                    current.getAdminEmail(),
                     current.getTitle(),
                     prototype.getDescription(),
                     current.getCreatedAt()

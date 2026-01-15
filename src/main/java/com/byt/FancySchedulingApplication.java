@@ -114,6 +114,7 @@ public class FancySchedulingApplication {
 
         IssueReport superRealReport =
                 new IssueReport(
+                        "user@school.com",
                         "admin@school.com",                 // email instead of "1"
                         "THIS PROJECT IS TOO GOOD!",              // title
                         "Plz fix that",                           // description

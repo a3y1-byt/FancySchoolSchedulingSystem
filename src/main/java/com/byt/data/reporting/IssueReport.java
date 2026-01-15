@@ -17,12 +17,16 @@ import java.time.LocalDateTime;
 public class IssueReport {
 
     private String email;
+    private String adminEmail;
     private String title;
     private String description;
     private LocalDateTime createdAt;
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getAdminEmail() { return adminEmail; }
+    public void setAdminEmail(String adminEmail) { this.adminEmail = adminEmail; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -37,6 +41,7 @@ public class IssueReport {
         if (r == null) return null;
         return new IssueReport(
                 r.getEmail(),
+                r.getAdminEmail(),
                 r.getTitle(),
                 r.getDescription(),
                 r.getCreatedAt()

@@ -21,6 +21,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
     protected IssueReport getSampleObject() {
         return new IssueReport(
                 "sample@mail.com",
+                "admin@mail.com",
                 "Sample title",
                 "Sample description",
                 LocalDateTime.of(2025, 1, 2, 10, 0)
@@ -52,6 +53,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         IssueReport r2 = new IssueReport(
                 r1.getEmail(),
+                r1.getAdminEmail(),
                 r1.getTitle(),
                 "Another description",
                 LocalDateTime.now()
@@ -66,6 +68,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         service.create(new IssueReport(
                 "sample@mail.com",
+                "admin@mail.com",
                 "Title A",
                 "Desc A",
                 LocalDateTime.now()
@@ -73,6 +76,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         service.create(new IssueReport(
                 "sample@mail.com",
+                "admin@mail.com",
                 "Title B",
                 "Desc B",
                 LocalDateTime.now()
@@ -80,6 +84,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         service.create(new IssueReport(
                 "other@mail.com",
+                "admin@mail.com",
                 "Title A",
                 "Desc C",
                 LocalDateTime.now()
@@ -100,6 +105,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         IssueReport report = new IssueReport(
                 "old@mail.com",
+                "oldAdmin@mail.com",
                 "Same title",
                 "Desc",
                 LocalDateTime.now()
@@ -129,6 +135,7 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
         service.create(new IssueReport(
                 "del@mail.com",
+                "deAdmin@mail.com",
                 "To delete",
                 "Desc",
                 LocalDateTime.now()
@@ -142,5 +149,82 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
         assertEquals(0, service.getAllByEmail("del@mail.com").size());
         assertFalse(service.exists(id));
     }
+    @Test
+    public void getAllByAdminEmailReturnsOnlyMatchingReports() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        service.create(new IssueReport(
+                "user1@mail.com",
+                "admin1@mail.com",
+                "T1",
+                "D1",
+                LocalDateTime.now()
+        ));
+        service.create(new IssueReport(
+                "user2@mail.com",
+                "admin1@mail.com",
+                "T2",
+                "D2",
+                LocalDateTime.now()
+        ));
+        service.create(new IssueReport(
+                "user3@mail.com",
+                "admin2@mail.com",
+                "T3",
+                "D3",
+                LocalDateTime.now()
+        ));
+
+        List<IssueReport> a1 = service.getAllByAdminEmail("admin1@mail.com");
+        assertEquals(2, a1.size());
+        assertTrue(a1.stream().allMatch(r -> "admin1@mail.com".equalsIgnoreCase(r.getAdminEmail())));
+
+        List<IssueReport> a2 = service.getAllByAdminEmail("admin2@mail.com");
+        assertEquals(1, a2.size());
+    }
+
+    @Test
+    public void assignAdminChangesReverseNavigation() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        service.create(new IssueReport(
+                "user@mail.com",
+                "admin1@mail.com",
+                "Same title",
+                "Desc",
+                LocalDateTime.now()
+        ));
+
+        String id = IssueReportService.compositeId("user@mail.com", "Same title");
+
+        assertEquals(1, service.getAllByAdminEmail("admin1@mail.com").size());
+        assertEquals(0, service.getAllByAdminEmail("admin2@mail.com").size());
+
+        service.assignAdmin(id, "admin2@mail.com");
+
+        assertEquals(0, service.getAllByAdminEmail("admin1@mail.com").size());
+        assertEquals(1, service.getAllByAdminEmail("admin2@mail.com").size());
+    }
+
+    @Test
+    public void updateAssignedAdminEmailMovesReportsToNewAdminEmail() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        service.create(new IssueReport(
+                "user@mail.com",
+                "oldAdmin@mail.com",
+                "T",
+                "D",
+                LocalDateTime.now()
+        ));
+
+        assertEquals(1, service.getAllByAdminEmail("oldAdmin@mail.com").size());
+
+        service.updateAssignedAdminEmail("oldAdmin@mail.com", "newAdmin@mail.com");
+
+        assertEquals(0, service.getAllByAdminEmail("oldAdmin@mail.com").size());
+        assertEquals(1, service.getAllByAdminEmail("newAdmin@mail.com").size());
+    }
+
 
 }
