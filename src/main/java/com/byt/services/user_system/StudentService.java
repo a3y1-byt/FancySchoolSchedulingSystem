@@ -1,5 +1,6 @@
 package com.byt.services.user_system;
 
+import com.byt.data.scheduling.Group;
 import com.byt.data.scheduling.Specialization;
 import com.byt.data.user_system.Teacher;
 import com.byt.exception.ExceptionCode;
@@ -31,7 +32,7 @@ public class StudentService implements CRUDService<Student> {
     public StudentService(SaveLoadService service, List<Student> students) {
         this.service = service;
         this.students = students != null
-                ? new ArrayList<>(students.stream().map(Student::copy).toList())
+                ? new ArrayList<>(students)
                 : new ArrayList<>();
     }
 
@@ -42,7 +43,7 @@ public class StudentService implements CRUDService<Student> {
     @Override
     public void initialize() throws IOException {
         List<Student> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.students = new ArrayList<>(loaded.stream().map(Student::copy).toList());
+        this.students = new ArrayList<>(loaded);
     }
 
     // _________________________________________________________
@@ -66,7 +67,7 @@ public class StudentService implements CRUDService<Student> {
             throw new IllegalStateException("student exists with this email already");
         }
 
-        students.add(Student.copy(student));
+        students.add(student);
         saveToDb();
         return Student.copy(student);
     }
@@ -113,10 +114,14 @@ public class StudentService implements CRUDService<Student> {
 
         StudentValidator.validateClass(prototype);
 
+        // firstly we find the old stored student
         int index = -1;
+        Student oldStored = null;
+
         for (int i = 0; i < students.size(); i++) {
             if (Objects.equals(students.get(i).getEmail(), email)) {
                 index = i;
+                oldStored = students.get(i);
                 break;
             }
         }
@@ -125,21 +130,39 @@ public class StudentService implements CRUDService<Student> {
             throw new IllegalArgumentException("Student with email=" + email + " not found");
         }
 
+        // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
-
         if (!Objects.equals(newEmail, email)) {
             if (newEmail != null && exists(newEmail)) {
                 throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
             }
-            students.remove(index);
-
-            Student toStore = Student.copy(prototype);
-            students.add(toStore);
-        } else {
-            Student updatedCopy = Student.copy(prototype);
-            students.set(index, updatedCopy);
         }
 
+        // then, we collect references (STUDENT - GROUP; STUDENT - SPECIALIZATION)
+        Set<Group> oldGroups = oldStored.getGroups();
+        Set<Specialization> oldSpecs = oldStored.getSpecializations();
+
+
+        // theen, we remove connection with old instances from references
+        for (Group g : oldGroups) {
+            g.removeStudent(oldStored);
+        }
+        for (Specialization sp : oldSpecs) {
+            sp.removeStudent(oldStored);
+        }
+
+        // finally, we are creating a new student instance (just a copy)
+        Student newStored = Student.copy(prototype);
+
+        // AND ----- attaching new instance to the same reference the old one was attached to
+        students.set(index, newStored);
+
+        for (Group g : oldGroups) {
+            g.addStudent(newStored);
+        }
+        for (Specialization sp : oldSpecs) {
+            sp.addStudent(newStored);
+        }
         saveToDb();
     }
 
@@ -149,14 +172,38 @@ public class StudentService implements CRUDService<Student> {
             throw new IllegalArgumentException("email must not be null or blank");
         }
 
+        // firstly we find the old stored student
+        int index = -1;
+        Student oldStored = null;
+
         for (int i = 0; i < students.size(); i++) {
             if (Objects.equals(students.get(i).getEmail(), email)) {
-                students.remove(i);
-                saveToDb();
-                return;
+                index = i;
+                oldStored = students.get(i);
+                break;
             }
         }
-        throw new IllegalArgumentException("Student with email=" + email + " not found");
+
+        if (index == -1) {
+            throw new IllegalArgumentException("Student with email=" + email + " not found");
+        }
+
+        // then, we collect references (STUDENT - GROUP; STUDENT - SPECIALIZATION)
+        Set<Group> oldGroups = oldStored.getGroups();
+        Set<Specialization> oldSpecs = oldStored.getSpecializations();
+
+
+        // theen, we remove connection with old instances from references
+        for (Group g : oldGroups) {
+            g.removeStudent(oldStored);
+        }
+        for (Specialization sp : oldSpecs) {
+            sp.removeStudent(oldStored);
+        }
+
+        students.remove(index);
+
+        saveToDb();
     }
 
     @Override
