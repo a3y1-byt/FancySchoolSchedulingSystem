@@ -15,10 +15,12 @@ import java.util.stream.Collectors;
 
 public class BuildingService implements CRUDService<Building> {
     private final SaveLoadService saveLoadService;
+    private final ClassRoomService classRoomService;
     private  List<Building> buildings;
 
     public BuildingService(SaveLoadService saveLoadService) {
         this.saveLoadService = saveLoadService;
+        this.classRoomService = new ClassRoomService(saveLoadService);
         this.buildings = null;
     }
 
@@ -83,11 +85,16 @@ public class BuildingService implements CRUDService<Building> {
 
         List<Building> updatedBuildings = buildings.stream()
                 .filter((b) -> {
-                    if(b.getName().equals(name)) {
-                        b.getClassRooms().forEach(b::removeClassRoom);
-                        return false;
-                    }
-                    return true;
+                    if(!b.getName().equals(name)) return true;
+
+                    b.getClassRooms().forEach(cr -> {
+                        try {
+                            classRoomService.delete(cr.getName());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    return false;
                 })
                 .collect(Collectors.toList());
 
