@@ -4,79 +4,108 @@ import com.byt.data.user_system.Admin;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
-import com.byt.services.reporting.IssueReportService;
 import com.byt.validation.user_system.AdminValidator;
 import com.google.gson.reflect.TypeToken;
 
+import javax.imageio.IIOException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class AdminService implements CRUDService<Admin> {
 
     private final SaveLoadService service;
-    private final IssueReportService issueReportService; // can be null
     private List<Admin> admins;
 
     private static final Type ADMIN_LIST_TYPE = new TypeToken<List<Admin>>() {}.getType();
 
-    public AdminService(SaveLoadService service) {
-        this(service, null, null);
-    }
-
-    public AdminService(SaveLoadService service, IssueReportService issueReportService) {
-        this(service, null, issueReportService);
-    }
-
-    public AdminService(SaveLoadService service, List<Admin> admins, IssueReportService issueReportService) {
+    public AdminService(SaveLoadService service, List<Admin> admins) {
         this.service = service;
-        this.issueReportService = issueReportService;
-        this.admins = admins != null ? copyList(admins) : new ArrayList<>();
+        this.admins = admins != null ? new ArrayList<>(admins) : new ArrayList<>();
+    }
+
+    public AdminService(SaveLoadService service) {
+        this(service, null);
     }
 
     @Override
     public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb();
-        this.admins = loaded != null ? loaded : new ArrayList<>();
+        this.admins = new ArrayList<>(loaded);
+
+        Map<String, Admin> byEmail = new HashMap<>();
+        for (Admin a : admins) {
+            byEmail.put(a.getEmail(), a);
+        }
+
+        for (Admin a : admins) {
+            String superEmail = a.getSuperAdminEmail();
+            if (superEmail != null) {
+                Admin parent = byEmail.get(superEmail);
+                if (parent != null) {
+                    a.addSuperAdmin(parent);
+                }
+            }
+        }
     }
 
     public Admin create(String firstName, String lastName, String familyName,
                         LocalDate dateOfBirth, String phoneNumber, String email,
-                        LocalDate hireDate, LocalDateTime lastLoginTime,
-                        String superAdminEmail) throws IOException {
+                        LocalDate hireDate, LocalDateTime lastLoginTime, Admin superAdmin) throws IOException {
 
-        AdminValidator.validateAdmin(
-                firstName, lastName, familyName,
+        AdminValidator.validateAdmin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime
-        );
+                hireDate, lastLoginTime);
 
-        if (exists(email)) {
+        if (email != null && exists(email)) {
             throw new IllegalStateException("Admin exists with this email already");
         }
 
-        Admin created = new Admin(
-                firstName, lastName, familyName,
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+            if (!exists(superAdmin)) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
+            }
+        }
+
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
+        Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime,
-                null
+                hireDate, lastLoginTime, null
         );
 
-        admins.add(created);
+        admins.add(admin); // canonical in storage
 
-        if (superAdminEmail != null && !superAdminEmail.isBlank()) {
-            Admin superInternal = findInternal(superAdminEmail)
-                    .orElseThrow(() -> new IllegalArgumentException("SuperAdmin with email=" + superAdminEmail + " not found"));
-            created.addSuperAdmin(superInternal);
+        if (storedSuper != null) {
+            admin.addSuperAdmin(storedSuper);
         }
 
         saveToDb();
-        return Admin.copy(created);
+        return Admin.copy(admin);
+
     }
 
     @Override
@@ -84,29 +113,46 @@ public class AdminService implements CRUDService<Admin> {
         AdminValidator.validateClass(prototype);
 
         String email = prototype.getEmail();
-        if (exists(email)) {
-            throw new IllegalArgumentException("Admin with email=" + email + " already exists");
+        if (email != null && exists(email)) {
+            throw new IllegalArgumentException("Admin with email = " + email + " already exists");
         }
 
-        Admin created = new Admin(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getHireDate(),
-                prototype.getLastLoginTime(),
-                null
-        );
+        Admin superAdmin = prototype.getSuperAdmin();
 
-        admins.add(created);
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+            if (!exists(superAdmin)) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
+            }
+        }
 
-        if (prototype.getSuperAdmin() != null) {
-            String se = prototype.getSuperAdmin().getEmail();
-            Admin superInternal = findInternal(se)
-                    .orElseThrow(() -> new IllegalArgumentException("SuperAdmin with email=" + se + " not found"));
-            created.addSuperAdmin(superInternal);
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
+        Admin toStore = Admin.copy(prototype);
+        admins.add(toStore);
+
+        if (storedSuper != null) {
+            toStore.addSuperAdmin(storedSuper);
         }
 
         saveToDb();
@@ -115,9 +161,15 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public Optional<Admin> get(String email) throws IllegalArgumentException {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
+            throw new IllegalArgumentException("Admin email must not be null or blank");
         }
-        return findInternal(email).map(Admin::copy);
+
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getEmail(), email)) {
+                return Optional.of(Admin.copy(admin));
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -128,168 +180,224 @@ public class AdminService implements CRUDService<Admin> {
     @Override
     public void update(String email, Admin prototype) throws IllegalArgumentException, IOException {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
+            throw new IllegalArgumentException("Admin email must not be null or blank");
         }
+
         AdminValidator.validateClass(prototype);
 
-        String oldEmail = email;
-
-        Admin current = findInternal(email)
-                .orElseThrow(() -> new IllegalArgumentException("Admin with email=" + email + " not found"));
+        int index = -1;
+        for (int i = 0; i < admins.size(); i++) {
+            if (Objects.equals(admins.get(i).getEmail(), email)) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            throw new IllegalArgumentException("Admin with email = " + email + " not found");
+        }
 
         String newEmail = prototype.getEmail();
-        if (newEmail == null || newEmail.isBlank()) {
-            throw new IllegalArgumentException("new email must not be null or blank");
-        }
-        if (!Objects.equals(newEmail, email) && exists(newEmail)) {
-            throw new IllegalArgumentException("Admin with email=" + newEmail + " already exists");
+        if (newEmail != null && !Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("Admin with email = " + newEmail + " already exists");
         }
 
-        current.setFirstName(prototype.getFirstName());
-        current.setLastName(prototype.getLastName());
-        current.setFamilyName(prototype.getFamilyName());
-        current.setDateOfBirth(prototype.getDateOfBirth());
-        current.setPhoneNumber(prototype.getPhoneNumber());
-        current.setEmail(newEmail);
-        current.setHireDate(prototype.getHireDate());
-        current.setLastLoginTime(prototype.getLastLoginTime());
+        Admin superAdmin = prototype.getSuperAdmin();
 
-        Admin desiredSuper = null;
-        if (prototype.getSuperAdmin() != null) {
-            String se = prototype.getSuperAdmin().getEmail();
-            desiredSuper = findInternal(se)
-                    .orElseThrow(() -> new IllegalArgumentException("SuperAdmin with email=" + se + " not found"));
-            if (desiredSuper == current) {
+        if (superAdmin != null) {
+            if (Objects.equals(superAdmin.getEmail(), newEmail)) {
                 throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+            if (!exists(superAdmin.getEmail())) {
+                throw new IllegalArgumentException("Superadmin with email = " + superAdmin.getEmail() + " does not exist");
             }
         }
 
-        Admin oldSuper = current.getSuperAdmin();
-        if (!Objects.equals(oldSuper, desiredSuper)) {
-            if (oldSuper != null) current.removeSuperAdmin(oldSuper);
-            if (desiredSuper != null) current.addSuperAdmin(desiredSuper);
+        Admin oldStored = admins.get(index);
+
+        Admin oldSuper = oldStored.getSuperAdmin();
+        if (prototype.getSuperAdmin() != null) {
+            if (oldSuper != null) {
+                oldSuper.removeSupervisedAdmin(oldStored);
+            }
+        }
+
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, newEmail)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
+        Admin stored = admins.get(index);
+
+        stored.setFirstName(prototype.getFirstName());
+        stored.setLastName(prototype.getLastName());
+        stored.setFamilyName(prototype.getFamilyName());
+        stored.setDateOfBirth(prototype.getDateOfBirth());
+        stored.setPhoneNumber(prototype.getPhoneNumber());
+        stored.setHireDate(prototype.getHireDate());
+        stored.setLastLoginTime(prototype.getLastLoginTime());
+        admins.set(index, stored);
+
+        if (storedSuper != null) {
+            stored.addSuperAdmin(storedSuper);
         }
 
         saveToDb();
-
-        if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
-            issueReportService.updateReporterEmail(oldEmail, newEmail);
-        }
     }
 
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email must not be null or blank");
+            throw new IllegalArgumentException("Admin email must not be null or blank");
         }
 
-        Admin toDelete = findInternal(email)
-                .orElseThrow(() -> new IllegalArgumentException("Admin with email=" + email + " not found"));
-
-        if (hasSubordinates(toDelete)) {
-            throw new IllegalStateException("Admin supervises other admins. Use deleteSuperAdmin(oldEmail, newSuperEmail)");
+        List<Admin> subordinates = getSubordinates(email);
+        if (!subordinates.isEmpty()) {
+            throw new IllegalStateException(
+                    "You are trying to delete SuperAdmin. Use deleteSuperAdmin(email, newSuperadminEmail)"
+            );
         }
 
-        if (toDelete.getSuperAdmin() != null) {
-            toDelete.removeSuperAdmin(toDelete.getSuperAdmin());
+        for (int i = 0; i < admins.size(); i++) {
+            if (Objects.equals(admins.get(i).getEmail(), email)) {
+                Admin toDelete = admins.get(i);
+
+                Admin oldSuper = toDelete.getSuperAdmin();
+                if (oldSuper != null) {
+                    oldSuper.removeSupervisedAdmin(toDelete);
+                }
+                admins.remove(i);
+                saveToDb();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Admin with email = " + email + " not found");
+    }
+
+    public void deleteSuperAdmin(String email, String newSuperadminEmail) throws IllegalArgumentException, IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Admin email must not be null or blank");
         }
 
-        admins.remove(toDelete);
+        Admin adminToDelete = null;
+        for (Admin a : admins) {
+            if (Objects.equals(a.getEmail(), email)) {
+                adminToDelete = a;
+                break;
+            }
+        }
+        if (adminToDelete == null) {
+            throw new IllegalArgumentException("Admin with email = " + email + " not found");
+        }
+
+        boolean hasSubordinates = false;
+        for (Admin a : admins) {
+            if (a.getSuperAdmin() != null && Objects.equals(a.getSuperAdmin().getEmail(), email)) {
+                hasSubordinates = true;
+                break;
+            }
+        }
+
+        if (hasSubordinates) {
+            if (newSuperadminEmail == null || newSuperadminEmail.isBlank()) {
+                throw new IllegalArgumentException("You must provide new SuperAdmin email");
+            }
+            if (!exists(newSuperadminEmail)) {
+                throw new IllegalArgumentException("Admin with email = " + newSuperadminEmail + " not found");
+            }
+            if (Objects.equals(newSuperadminEmail, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            makeSuperAdmin(newSuperadminEmail);
+
+            Admin superAdmin = null;
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), newSuperadminEmail)) {
+                    superAdmin = a;
+                    break;
+                }
+            }
+            if (superAdmin == null) {
+                throw new IllegalArgumentException("Admin with email = " + newSuperadminEmail + " not found");
+            }
+
+            List<Admin> toMove = new ArrayList<>();
+
+            for (Admin a : admins) {
+                if (a.getSuperAdmin() != null && Objects.equals(a.getSuperAdmin().getEmail(), email)) {
+                    toMove.add(a);
+                }
+            }
+
+            for (Admin a : toMove) {
+                a.addSuperAdmin(superAdmin);
+            }
+        }
+
+        Admin parent = adminToDelete.getSuperAdmin();
+        if (parent != null) {
+            parent.removeSupervisedAdmin(adminToDelete);
+        }
+
+        admins.remove(adminToDelete);
         saveToDb();
+    }
+
+    public void makeSuperAdmin(String email) throws IOException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Admin email must not be null or blank");
+        }
+
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getEmail(), email)) {
+                admin.removeSuperAdmin();
+                saveToDb();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Admin with email = " + email + " not found");
     }
 
     @Override
     public boolean exists(String email) throws IOException {
         if (email == null || email.isBlank()) return false;
-        return findInternal(email).isPresent();
-    }
-
-    public void assignSupervisor(String adminEmail, String superAdminEmail) throws IOException {
-        if (adminEmail == null || adminEmail.isBlank()) {
-            throw new IllegalArgumentException("adminEmail must not be blank");
-        }
-        if (superAdminEmail == null || superAdminEmail.isBlank()) {
-            throw new IllegalArgumentException("superAdminEmail must not be blank");
-        }
-
-        Admin admin = findInternal(adminEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Admin with email=" + adminEmail + " not found"));
-        Admin superAdmin = findInternal(superAdminEmail)
-                .orElseThrow(() -> new IllegalArgumentException("SuperAdmin with email=" + superAdminEmail + " not found"));
-
-        admin.addSuperAdmin(superAdmin);
-        saveToDb();
-    }
-
-    public void deleteSuperAdmin(String oldSuperEmail, String newSuperEmail) throws IOException {
-        if (oldSuperEmail == null || oldSuperEmail.isBlank()) {
-            throw new IllegalArgumentException("oldSuperEmail must not be blank");
-        }
-
-        Admin oldSuper = findInternal(oldSuperEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Admin with email=" + oldSuperEmail + " not found"));
-
-        List<Admin> subs = getSubordinates(oldSuper);
-
-        if (!subs.isEmpty()) {
-            if (newSuperEmail == null || newSuperEmail.isBlank()) {
-                throw new IllegalArgumentException("newSuperEmail must not be blank");
-            }
-
-            Admin newSuper = findInternal(newSuperEmail)
-                    .orElseThrow(() -> new IllegalArgumentException("Admin with email=" + newSuperEmail + " not found"));
-
-            if (newSuper == oldSuper) {
-                throw new IllegalArgumentException("Admin cannot supervise himself");
-            }
-
-            for (Admin sub : subs) {
-                sub.addSuperAdmin(newSuper);
-            }
-        }
-
-        if (oldSuper.getSuperAdmin() != null) {
-            oldSuper.removeSuperAdmin(oldSuper.getSuperAdmin());
-        }
-
-        admins.remove(oldSuper);
-        saveToDb();
-    }
-
-    private Optional<Admin> findInternal(String email) {
-        for (Admin a : admins) {
-            if (Objects.equals(a.getEmail(), email)) return Optional.of(a);
-        }
-        return Optional.empty();
-    }
-
-    private boolean hasSubordinates(Admin superAdmin) {
-        for (Admin a : admins) {
-            if (a.getSuperAdmin() != null && a.getSuperAdmin() == superAdmin) {
+        for (Admin admin : admins) {
+            if (Objects.equals(admin.getEmail(), email)) {
                 return true;
             }
         }
         return false;
     }
 
-    private List<Admin> getSubordinates(Admin superAdmin) {
-        List<Admin> res = new ArrayList<>();
-        for (Admin a : admins) {
-            if (a.getSuperAdmin() != null && a.getSuperAdmin() == superAdmin) {
-                res.add(a);
-            }
-        }
-        return res;
+    public boolean exists(Admin admin) throws IOException {
+        return exists(admin.getEmail());
     }
 
-    private List<Admin> copyList(List<Admin> source) {
-        List<Admin> result = new ArrayList<>();
-        if (source == null) return result;
+    private List<Admin> getSubordinates(String superadminEmail) {
+        List<Admin> raw = new ArrayList<>();
+        for (Admin admin : admins) {
+            if (admin.getSuperAdmin() != null
+                    && Objects.equals(admin.getSuperAdmin().getEmail(), superadminEmail)) {
 
-        for (Admin a : source) {
-            result.add(Admin.copy(a));
+                raw.add(admin);
+            }
         }
-        return result;
+        return raw;
     }
 
     private List<Admin> loadFromDb() throws IOException {
@@ -302,7 +410,9 @@ public class AdminService implements CRUDService<Admin> {
         if (loaded instanceof List<?> raw) {
             List<Admin> result = new ArrayList<>();
             for (Object o : raw) {
-                if (o instanceof Admin admin) result.add(admin);
+                if (o instanceof Admin admin) {
+                    result.add(admin);
+                }
             }
             return result;
         }
@@ -312,5 +422,14 @@ public class AdminService implements CRUDService<Admin> {
 
     private void saveToDb() throws IOException {
         service.save(DataSaveKeys.ADMINS, admins);
+    }
+
+    private static List<Admin> copyList(List<Admin> list) {
+        List<Admin> out = new ArrayList<>();
+        if (list == null) return out;
+        for (Admin a : list) {
+            out.add(Admin.copy(a));
+        }
+        return out;
     }
 }

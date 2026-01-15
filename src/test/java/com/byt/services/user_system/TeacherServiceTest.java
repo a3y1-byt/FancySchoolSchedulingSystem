@@ -55,7 +55,6 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
     // update test
     @Test
-    @Disabled
     public void updateTeacherWithValidData() throws IOException {
         TeacherService service = (TeacherService) serviceWithData;
 
@@ -81,7 +80,7 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
 
         service.update(id, prototype);
 
-        Optional<Teacher> afterOpt = service.get(id);
+        Optional<Teacher> afterOpt = service.get("yumiii@gmail.com");
         assertTrue(afterOpt.isPresent());
         Teacher updated = afterOpt.get();
 
@@ -95,10 +94,10 @@ public class TeacherServiceTest extends CRUDServiceTest<Teacher> {
         assertEquals("DogTeacher", updated.getTitle());
         assertEquals("Dean", updated.getPosition());
 
-        assertEquals(id, updated.getEmail());
+        assertEquals("yumiii@gmail.com", updated.getEmail());
     }
 
-                // firstName contains ukrainian letters
+    // firstName contains ukrainian letters
     @Test
     public void createTeacherWithNonLatinFirstName() {
         TeacherService service = (TeacherService) emptyService;

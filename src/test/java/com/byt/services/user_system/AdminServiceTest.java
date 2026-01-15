@@ -1,9 +1,10 @@
 package com.byt.services.user_system;
 
-import com.byt.data.user_system.Admin;
-import com.byt.exception.ValidationException;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
+import com.byt.data.user_system.Admin;
+import com.byt.exception.ValidationException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -25,13 +26,14 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         return "yumi@gmail.com";
     }
 
+
     @Override
     protected Admin getSampleObject() {
         LocalDate dob = LocalDate.of(1997, 1, 1);
         LocalDate hireDate = LocalDate.of(2024, 1, 1);
         LocalDateTime lastLogin = LocalDateTime.of(2025, 1, 1, 12, 0);
 
-        return new Admin(
+        Admin admin = new Admin(
                 "Yumi",
                 "Hnatiuk",
                 "Pies",
@@ -42,7 +44,10 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 lastLogin,
                 null
         );
+        admin.getEmail();
+        return admin;
     }
+
 
     @Override
     protected void alterEntity(Admin entity) {
@@ -51,12 +56,13 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
     // ------------------- TESTS FOR FIELDS FROM USER -------------------
 
+    // update test
     @Test
     public void updateAdminWithValidData() throws IOException {
         AdminService service = (AdminService) serviceWithData;
 
-        String oldEmail = getSampleObjectId();
-        Optional<Admin> beforeOpt = service.get(oldEmail);
+        String id = getSampleObjectId();
+        Optional<Admin> beforeOpt = service.get(id);
         assertTrue(beforeOpt.isPresent());
 
         LocalDate today = LocalDate.now();
@@ -64,23 +70,21 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         LocalDate hireDate = today.minusYears(2);
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
-        String newEmail = "yumiii@gmail.com";
-
         Admin prototype = new Admin(
                 "Yumpa",
                 "Hnatiukk",
                 "Piess",
                 dob,
                 "3809691046",
-                newEmail,
+                "yumiii@gmail.com",
                 hireDate,
                 lastLogin,
                 null
         );
 
-        service.update(oldEmail, prototype);
+        service.update(id, prototype);
 
-        Optional<Admin> afterOpt = service.get(newEmail);
+        Optional<Admin> afterOpt = service.get(id);
         assertTrue(afterOpt.isPresent());
         Admin updated = afterOpt.get();
 
@@ -89,11 +93,13 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals("Piess", updated.getFamilyName());
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals(newEmail, updated.getEmail());
         assertEquals(hireDate, updated.getHireDate());
         assertEquals(lastLogin, updated.getLastLoginTime());
+
+        assertEquals(id, updated.getEmail());
     }
 
+    // firstName contains ukrainian letters
     @Test
     public void createAdminWithNonLatinFirstName() {
         AdminService service = (AdminService) emptyService;
@@ -111,7 +117,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+ua@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -119,6 +125,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // email = null
     @Test
     public void createAdminWithNullEmail() {
         AdminService service = (AdminService) emptyService;
@@ -144,6 +151,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // email wrong format
     @Test
     public void createAdminWithInvalidEmailFormat() {
         AdminService service = (AdminService) emptyService;
@@ -169,6 +177,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // phone contains letters
     @Test
     public void createAdminWithPhoneContainingLetters() {
         AdminService service = (AdminService) emptyService;
@@ -186,7 +195,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "48505ab505",
-                        "yumi+1@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -194,6 +203,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // phone too short
     @Test
     public void createAdminWithTooShortPhone() {
         AdminService service = (AdminService) emptyService;
@@ -211,7 +221,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "4850",
-                        "yumi+2@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -219,6 +229,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // date of birth in future
     @Test
     public void createAdminWithFutureDateOfBirth() {
         AdminService service = (AdminService) emptyService;
@@ -236,7 +247,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+3@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -244,6 +255,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // too young
     @Test
     public void createAdminWithTooYoungDateOfBirth() {
         AdminService service = (AdminService) emptyService;
@@ -261,7 +273,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+4@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -269,69 +281,156 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
-    // ------------------- TESTS FOR ADMIN ASSOCIATION (SELF-REFERENCE) -------------------
+    // ------------------- TESTS FOR ADMIN FIELDS -------------------
 
+    // make Super Admin
     @Test
-    public void assignSupervisorCreatesReverseConnection() throws IOException {
+    public void makeSuperAdmin() throws IOException {
         AdminService service = (AdminService) emptyService;
+
 
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(21);
         LocalDate hireDate = today.minusYears(2);
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
-        service.create("Super", "A", "Boss", dob, "10203040", "super@gmail.com", hireDate, lastLogin, null);
-        service.create("Sub", "A", "Worker", dob, "10203041", "sub@gmail.com", hireDate, lastLogin, null);
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
 
-        service.assignSupervisor("sub@gmail.com", "super@gmail.com");
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumiiii@gmail.com",
+                hireDate,
+                lastLogin,
+                superA
+        );
 
-        Admin subStored = service.get("sub@gmail.com").orElseThrow();
-        assertNotNull(subStored.getSuperAdmin());
-        assertEquals("super@gmail.com", subStored.getSuperAdmin().getEmail());
+        Optional<Admin> before = service.get(subA.getEmail());
+        assertTrue(before.isPresent());
+        assertEquals(superA.getEmail(), before.get().getSuperAdminEmail());
 
-        Admin superStored = service.get("super@gmail.com").orElseThrow();
-        assertTrue(superStored.getSupervisedAdmins().stream().anyMatch(a -> a.getEmail().equals("sub@gmail.com")));
+        service.makeSuperAdmin(subA.getEmail());
+
+        Optional<Admin> after = service.get(subA.getEmail());
+        assertTrue(after.isPresent());
+        assertNull(after.get().getSuperAdmin());
     }
 
+    // delete superadmin via simple delete
     @Test
-    public void deleteSupervisorViaDeleteThrowsWhenHasSubordinates() throws IOException {
+    public void deleteSuperAdminViaDelete() throws IOException {
         AdminService service = (AdminService) emptyService;
+
 
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(21);
         LocalDate hireDate = today.minusYears(2);
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
-        service.create("Super", "A", "Boss", dob, "10203040", "super@gmail.com", hireDate, lastLogin, null);
-        service.create("Sub", "A", "Worker", dob, "10203041", "sub@gmail.com", hireDate, lastLogin, "super@gmail.com");
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumiiiiii@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
 
-        assertThrows(IllegalStateException.class, () -> service.delete("super@gmail.com"));
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                superA
+        );
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.delete(superA.getEmail())
+        );
     }
 
+    //delete superadmin via deleteSuperAdmin
     @Test
-    public void deleteSuperAdminReassignsSubordinates() throws IOException {
+    public void deleteSuperAdmin() throws IOException {
         AdminService service = (AdminService) emptyService;
+
 
         LocalDate today = LocalDate.now();
         LocalDate dob = today.minusYears(21);
         LocalDate hireDate = today.minusYears(2);
         LocalDateTime lastLogin = LocalDateTime.now().minusDays(1);
 
-        service.create("Old", "Boss", "One", dob, "10203040", "oldsuper@gmail.com", hireDate, lastLogin, null);
-        service.create("New", "Boss", "Two", dob, "10203042", "newsuper@gmail.com", hireDate, lastLogin, null);
-        service.create("Sub", "A", "Worker", dob, "10203041", "sub@gmail.com", hireDate, lastLogin, "oldsuper@gmail.com");
+        Admin superA = service.create(
+                "Yumi",
+                "Hnatiuk",
+                "Pies",
+                dob,
+                "10203040",
+                "yumiiiiii@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
 
-        service.deleteSuperAdmin("oldsuper@gmail.com", "newsuper@gmail.com");
+        Admin subA = service.create(
+                "AYumi",
+                "AHnatiuk",
+                "APies",
+                dob,
+                "10203040",
+                "yumiiiiiiii@gmail.com",
+                hireDate,
+                lastLogin,
+                superA
+        );
 
-        assertTrue(service.get("oldsuper@gmail.com").isEmpty());
+        Admin newSuperA = service.create(
+                "AAYumi",
+                "AAHnatiuk",
+                "AAPies",
+                dob,
+                "10203040",
+                "yumi@gmail.com",
+                hireDate,
+                lastLogin,
+                null
+        );
 
-        Admin sub = service.get("sub@gmail.com").orElseThrow();
-        assertNotNull(sub.getSuperAdmin());
-        assertEquals("newsuper@gmail.com", sub.getSuperAdmin().getEmail());
+        service.deleteSuperAdmin(superA.getEmail(), newSuperA.getEmail());
+
+        assertTrue(service.get(superA.getEmail()).isEmpty());
+
+        Optional<Admin> newSuperAfter = service.get(newSuperA.getEmail());
+        assertTrue(newSuperAfter.isPresent());
+        assertNull(newSuperAfter.get().getSuperAdmin());
+
+        Optional<Admin> subAfter = service.get(subA.getEmail());
+        assertTrue(subAfter.isPresent());
+        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperAdminEmail());
     }
 
-    // ------------------- OTHER ADMIN FIELD TESTS -------------------
-
+    // valid data
     @Test
     public void createAdminWithValidData() throws IOException {
         AdminService service = (AdminService) emptyService;
@@ -349,7 +448,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "valid@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -362,6 +461,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals(before + 1, after.size());
     }
 
+    // hire date = null
     @Test
     public void createAdminWithNullHireDate() {
         AdminService service = (AdminService) emptyService;
@@ -378,7 +478,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+hireNull@gmail.com",
+                        "yumi@gmail.com",
                         null,
                         lastLogin,
                         null
@@ -386,6 +486,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // hire date is in future
     @Test
     public void createAdminWithFutureHireDate() {
         AdminService service = (AdminService) emptyService;
@@ -403,7 +504,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+hireFuture@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -411,6 +512,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // person is younger than 18 at hire date
     @Test
     public void createAdminTooYoungAtHireDate() {
         AdminService service = (AdminService) emptyService;
@@ -428,7 +530,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+tooYoungHire@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -436,6 +538,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // hire date is before person's birth
     @Test
     public void createAdminWithHireDateBeforeBirth() {
         AdminService service = (AdminService) emptyService;
@@ -453,7 +556,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+hireBeforeBirth@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -461,6 +564,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // last login date is in future
     @Test
     public void createAdminWithFutureLastLogin() {
         AdminService service = (AdminService) emptyService;
@@ -478,7 +582,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+futureLogin@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -486,6 +590,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // last login time is before hire date
     @Test
     public void createAdminWithLastLoginBeforeHireDate() {
         AdminService service = (AdminService) emptyService;
@@ -503,7 +608,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                         "Pies",
                         dob,
                         "10203040",
-                        "yumi+loginBeforeHire@gmail.com",
+                        "yumi@gmail.com",
                         hireDate,
                         lastLogin,
                         null
@@ -511,12 +616,14 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         );
     }
 
+    // creating prototype with null
     @Test
     public void createWithNullPrototype() {
         AdminService service = (AdminService) emptyService;
         assertThrows(ValidationException.class, () -> service.create((Admin) null));
     }
 
+    // create prototype and test for leackage
     @Test
     public void createWithPrototypeDoesNotLeakReferences() throws IOException {
         AdminService service = (AdminService) emptyService;
@@ -532,7 +639,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "prototype@gmail.com",
+                "yumi@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -541,10 +648,8 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         service.create(prototype);
 
         prototype.setFirstName("CHANGED");
-
         List<Admin> all = service.getAll();
         assertEquals(1, all.size());
-
         Admin stored = all.getFirst();
         assertNotEquals("CHANGED", stored.getFirstName());
         assertEquals("Yumi", stored.getFirstName());
