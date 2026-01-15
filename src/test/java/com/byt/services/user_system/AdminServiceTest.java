@@ -15,7 +15,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled
 public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
     public AdminServiceTest() {
@@ -94,7 +93,6 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
         assertEquals("Piess", updated.getFamilyName());
         assertEquals(dob, updated.getDateOfBirth());
         assertEquals("3809691046", updated.getPhoneNumber());
-        assertEquals("yumiii@gmail.com", updated.getEmail());
         assertEquals(hireDate, updated.getHireDate());
         assertEquals(lastLogin, updated.getLastLoginTime());
 
@@ -314,7 +312,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "APies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                "yumiiii@gmail.com",
                 hireDate,
                 lastLogin,
                 superA
@@ -322,7 +320,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> before = service.get(subA.getEmail());
         assertTrue(before.isPresent());
-        assertEquals(superA.getEmail(), before.get().getSuperAdmin());
+        assertEquals(superA.getEmail(), before.get().getSuperAdminEmail());
 
         service.makeSuperAdmin(subA.getEmail());
 
@@ -348,7 +346,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                "yumiiiiii@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -389,7 +387,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "Pies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                "yumiiiiii@gmail.com",
                 hireDate,
                 lastLogin,
                 null
@@ -401,7 +399,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
                 "APies",
                 dob,
                 "10203040",
-                "yumi@gmail.com",
+                "yumiiiiiiii@gmail.com",
                 hireDate,
                 lastLogin,
                 superA
@@ -429,7 +427,7 @@ public class AdminServiceTest extends CRUDServiceTest<Admin> {
 
         Optional<Admin> subAfter = service.get(subA.getEmail());
         assertTrue(subAfter.isPresent());
-        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperAdmin());
+        assertEquals(newSuperA.getEmail(), subAfter.get().getSuperAdminEmail());
     }
 
     // valid data

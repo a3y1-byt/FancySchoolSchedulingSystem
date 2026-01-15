@@ -18,15 +18,12 @@ public class Admin extends Staff {
 
     private LocalDateTime lastLoginTime;
 
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Admin superAdmin;
+    private String superAdminEmail;
+    private Set<String> supervisedAdminEmails = new HashSet<>();
 
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
-    private Set<Admin> supervisedAdmins = new HashSet<>();
+    private transient Admin superAdmin;
+    private transient Set<Admin> supervisedAdmins = new HashSet<>();
+
 
     public Admin(String firstName, String lastName, String familyName,
                  LocalDate dateOfBirth, String phoneNumber, String email,
@@ -34,7 +31,9 @@ public class Admin extends Staff {
 
         super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email, hireDate);
         this.lastLoginTime = lastLoginTime;
-        this.superAdmin = superAdmin;
+        if (superAdmin != null) {
+            addSuperAdmin(superAdmin);
+        }
     }
 
     public LocalDateTime getLastLoginTime() { return lastLoginTime; }
@@ -43,28 +42,35 @@ public class Admin extends Staff {
 
     public Admin getSuperAdmin() { return superAdmin; }
 
-    public void addSuperAdmin(Admin newSuperAdmin) {
-        AdminValidator.validateClass(newSuperAdmin);
-
-        if (this.superAdmin == newSuperAdmin) return;
-
-        // detach from old
-        if (this.superAdmin != null) {
-            this.superAdmin.supervisedAdmins.remove(this);
-        }
-
-        // attach to new
-        this.superAdmin = newSuperAdmin;
-        newSuperAdmin.supervisedAdmins.add(this);
+    public String getSuperAdminEmail() {
+        return superAdminEmail;
     }
 
-    public void removeSuperAdmin(Admin superAdmin) {
-        AdminValidator.validateClass(superAdmin);
+    public void addSuperAdmin(Admin newSuperAdmin) {
+        if (newSuperAdmin == null) return;
 
-        if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return;
+        if (this.superAdmin != null) {
+            this.superAdmin.supervisedAdmins.remove(this);
+            this.superAdmin.supervisedAdminEmails.remove(this.getEmail());
+        }
+
+        this.superAdmin = newSuperAdmin;
+        this.superAdminEmail = newSuperAdmin.getEmail();
+
+        newSuperAdmin.supervisedAdmins.add(this);
+        newSuperAdmin.supervisedAdminEmails.add(this.getEmail());
+    }
+
+    public void removeSuperAdmin() {
+        if (this.superAdmin == null) return;
+
+        Admin old = this.superAdmin;
+
+        old.supervisedAdmins.remove(this);
+        old.supervisedAdminEmails.remove(this.getEmail());
 
         this.superAdmin = null;
-        superAdmin.supervisedAdmins.remove(this);
+        this.superAdminEmail = null;
     }
 
 
@@ -73,31 +79,35 @@ public class Admin extends Staff {
     }
 
     public void addSupervisedAdmin(Admin admin) {
-        AdminValidator.validateClass(admin);
+        if (admin == null) return;
 
         if (supervisedAdmins.contains(admin)) return;
 
-        // detach admin from old super
         if (admin.superAdmin != null) {
             admin.superAdmin.supervisedAdmins.remove(admin);
+            admin.superAdmin.supervisedAdminEmails.remove(admin.getEmail());
         }
 
         supervisedAdmins.add(admin);
+        supervisedAdminEmails.add(admin.getEmail());
+
         admin.superAdmin = this;
+        admin.superAdminEmail = this.getEmail();
     }
 
     public void removeSupervisedAdmin(Admin admin) {
-        AdminValidator.validateClass(admin);
+        if (admin == null) return;
 
         if (!supervisedAdmins.contains(admin)) return;
 
         supervisedAdmins.remove(admin);
+        supervisedAdminEmails.remove(admin.getEmail());
 
         if (admin.superAdmin == this) {
             admin.superAdmin = null;
+            admin.superAdminEmail = null;
         }
     }
-
 
     public static Admin copy(Admin admin) {
         if (admin == null) return null;
@@ -113,6 +123,9 @@ public class Admin extends Staff {
                 admin.getLastLoginTime(),
                 null
         );
+
+        out.superAdminEmail = admin.superAdminEmail;
+        out.supervisedAdminEmails = new HashSet<>(admin.supervisedAdminEmails);
 
         return out;
     }

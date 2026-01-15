@@ -9,8 +9,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AdminTest {
 
-    private Admin sampleAdmin1 = new Admin("Admin", "Adminski", null, LocalDate.now().minusYears(20), "329432432", "a@a.com", LocalDate.now().minusDays(1), LocalDateTime.now(), null);
-    private Admin sampleAdmin2 = new Admin("Admin", "Adminski", null, LocalDate.now().minusYears(20), "329432432", "a@a.com", LocalDate.now().minusDays(1), LocalDateTime.now(), null);
+    private Admin sampleAdmin1 = new Admin(
+            "Admin", "Adminski", null,
+            LocalDate.now().minusYears(20),
+            "329432432",
+            "a1@a.com",
+            LocalDate.now().minusDays(1),
+            LocalDateTime.now(),
+            null
+    );
+
+    private Admin sampleAdmin2 = new Admin(
+            "Admin", "Adminski", null,
+            LocalDate.now().minusYears(20),
+            "329432432",
+            "a2@a.com",
+            LocalDate.now().minusDays(1),
+            LocalDateTime.now(),
+            null
+    );
 
     @Test
     public void testAddSuperAdminAddsSupervisedAdminOnTheOtherSide() {
@@ -22,9 +39,17 @@ public class AdminTest {
 
     @Test
     public void testRemoveSuperAdminRemovesSupervisedAdminOnTheOtherSide() {
-        Admin sampleSupervisedAdmin = new Admin("Admin", "Adminski", null, LocalDate.now().minusYears(20), "329432432", "a@a.com", LocalDate.now().minusDays(1), LocalDateTime.now(), sampleAdmin1);
+        Admin sampleSupervisedAdmin = new Admin(
+                "Admin", "Adminski", null,
+                LocalDate.now().minusYears(20),
+                "329432432",
+                "a3@a.com",   // <-- must be different
+                LocalDate.now().minusDays(1),
+                LocalDateTime.now(),
+                sampleAdmin1
+        );
 
-        sampleSupervisedAdmin.removeSuperAdmin(sampleAdmin1);
+        sampleSupervisedAdmin.removeSuperAdmin();
 
         assertNull(sampleSupervisedAdmin.getSuperAdmin());
         assertFalse(sampleAdmin1.getSupervisedAdmins().contains(sampleSupervisedAdmin));

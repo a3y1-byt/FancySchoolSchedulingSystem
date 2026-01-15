@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class AdminService implements CRUDService<Admin> {
 
@@ -37,6 +34,21 @@ public class AdminService implements CRUDService<Admin> {
     public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb();
         this.admins = new ArrayList<>(loaded);
+
+        Map<String, Admin> byEmail = new HashMap<>();
+        for (Admin a : admins) {
+            byEmail.put(a.getEmail(), a);
+        }
+
+        for (Admin a : admins) {
+            String superEmail = a.getSuperAdminEmail();
+            if (superEmail != null) {
+                Admin parent = byEmail.get(superEmail);
+                if (parent != null) {
+                    a.addSuperAdmin(parent);
+                }
+            }
+        }
     }
 
     public Admin create(String firstName, String lastName, String familyName,
@@ -200,19 +212,13 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
 
-//        if (newEmail != null && !Objects.equals(newEmail, email)) {
-//            for (Admin a : admins) {
-//                if (Objects.equals(a.getSuperAdmin(), email)) {
-//                    a.setS(newEmail);
-//                }
-//            }
-//        }
-
         Admin oldStored = admins.get(index);
 
         Admin oldSuper = oldStored.getSuperAdmin();
-        if (oldSuper != null) {
-            oldSuper.removeSupervisedAdmin(oldStored);
+        if (prototype.getSuperAdmin() != null) {
+            if (oldSuper != null) {
+                oldSuper.removeSupervisedAdmin(oldStored);
+            }
         }
 
         Admin storedSuper = null;
@@ -235,11 +241,19 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
 
-        Admin newStored = Admin.copy(prototype);
-        admins.set(index, newStored);
+        Admin stored = admins.get(index);
+
+        stored.setFirstName(prototype.getFirstName());
+        stored.setLastName(prototype.getLastName());
+        stored.setFamilyName(prototype.getFamilyName());
+        stored.setDateOfBirth(prototype.getDateOfBirth());
+        stored.setPhoneNumber(prototype.getPhoneNumber());
+        stored.setHireDate(prototype.getHireDate());
+        stored.setLastLoginTime(prototype.getLastLoginTime());
+        admins.set(index, stored);
 
         if (storedSuper != null) {
-            newStored.addSuperAdmin(storedSuper);
+            stored.addSuperAdmin(storedSuper);
         }
 
         saveToDb();
@@ -322,10 +336,16 @@ public class AdminService implements CRUDService<Admin> {
                 throw new IllegalArgumentException("Admin with email = " + newSuperadminEmail + " not found");
             }
 
+            List<Admin> toMove = new ArrayList<>();
+
             for (Admin a : admins) {
                 if (a.getSuperAdmin() != null && Objects.equals(a.getSuperAdmin().getEmail(), email)) {
-                    a.addSuperAdmin(superAdmin);
+                    toMove.add(a);
                 }
+            }
+
+            for (Admin a : toMove) {
+                a.addSuperAdmin(superAdmin);
             }
         }
 
@@ -345,10 +365,7 @@ public class AdminService implements CRUDService<Admin> {
 
         for (Admin admin : admins) {
             if (Objects.equals(admin.getEmail(), email)) {
-                Admin parent = admin.getSuperAdmin();
-                if (parent != null) {
-                    parent.removeSupervisedAdmin(admin);
-                }
+                admin.removeSuperAdmin();
                 saveToDb();
                 return;
             }
@@ -380,7 +397,7 @@ public class AdminService implements CRUDService<Admin> {
                 raw.add(admin);
             }
         }
-        return copyList(raw);
+        return raw;
     }
 
     private List<Admin> loadFromDb() throws IOException {
