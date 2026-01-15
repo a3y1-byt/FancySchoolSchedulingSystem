@@ -153,7 +153,6 @@ public abstract class CRUDServiceTest<TEntity> {
     }
 
     @Test
-    @Disabled // Times changed, folks. Thank reverse connections for that.
     public void testNoReferenceLeakedOnGet() {
         CRUDService<TEntity> service = serviceWithData;
 

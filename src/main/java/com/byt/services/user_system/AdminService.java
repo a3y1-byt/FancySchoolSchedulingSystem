@@ -60,15 +60,40 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
 
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
         Admin admin = new Admin(firstName, lastName, familyName,
                 dateOfBirth, phoneNumber, email,
-                hireDate, lastLoginTime, superAdmin
+                hireDate, lastLoginTime, null
         );
 
-        admins.add(Admin.copy(admin));
-        saveToDb();
+        admins.add(admin); // canonical in storage
 
+        if (storedSuper != null) {
+            admin.addSuperAdmin(storedSuper);
+        }
+
+        saveToDb();
         return Admin.copy(admin);
+
     }
 
     @Override
@@ -91,7 +116,33 @@ public class AdminService implements CRUDService<Admin> {
             }
         }
 
-        admins.add(Admin.copy(prototype));
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, email)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
+        Admin toStore = Admin.copy(prototype);
+        admins.add(toStore);
+
+        if (storedSuper != null) {
+            toStore.addSuperAdmin(storedSuper);
+        }
+
         saveToDb();
     }
 
@@ -157,7 +208,40 @@ public class AdminService implements CRUDService<Admin> {
 //            }
 //        }
 
-        admins.set(index, Admin.copy(prototype));
+        Admin oldStored = admins.get(index);
+
+        Admin oldSuper = oldStored.getSuperAdmin();
+        if (oldSuper != null) {
+            oldSuper.removeSupervisedAdmin(oldStored);
+        }
+
+        Admin storedSuper = null;
+        if (superAdmin != null) {
+            String superEmail = superAdmin.getEmail();
+
+            if (Objects.equals(superEmail, newEmail)) {
+                throw new IllegalArgumentException("Admin cannot supervise himself");
+            }
+
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), superEmail)) {
+                    storedSuper = a;
+                    break;
+                }
+            }
+
+            if (storedSuper == null) {
+                throw new IllegalArgumentException("Superadmin with email = " + superEmail + " does not exist");
+            }
+        }
+
+        Admin newStored = Admin.copy(prototype);
+        admins.set(index, newStored);
+
+        if (storedSuper != null) {
+            newStored.addSuperAdmin(storedSuper);
+        }
+
         saveToDb();
     }
 
@@ -176,6 +260,12 @@ public class AdminService implements CRUDService<Admin> {
 
         for (int i = 0; i < admins.size(); i++) {
             if (Objects.equals(admins.get(i).getEmail(), email)) {
+                Admin toDelete = admins.get(i);
+
+                Admin oldSuper = toDelete.getSuperAdmin();
+                if (oldSuper != null) {
+                    oldSuper.removeSupervisedAdmin(toDelete);
+                }
                 admins.remove(i);
                 saveToDb();
                 return;
@@ -202,7 +292,7 @@ public class AdminService implements CRUDService<Admin> {
 
         boolean hasSubordinates = false;
         for (Admin a : admins) {
-            if (Objects.equals(a.getSuperAdmin(), email)) {
+            if (a.getSuperAdmin() != null && Objects.equals(a.getSuperAdmin().getEmail(), email)) {
                 hasSubordinates = true;
                 break;
             }
@@ -221,13 +311,27 @@ public class AdminService implements CRUDService<Admin> {
 
             makeSuperAdmin(newSuperadminEmail);
 
-            Admin superAdmin = get(newSuperadminEmail).orElseThrow();
+            Admin superAdmin = null;
+            for (Admin a : admins) {
+                if (Objects.equals(a.getEmail(), newSuperadminEmail)) {
+                    superAdmin = a;
+                    break;
+                }
+            }
+            if (superAdmin == null) {
+                throw new IllegalArgumentException("Admin with email = " + newSuperadminEmail + " not found");
+            }
 
             for (Admin a : admins) {
-                if (Objects.equals(a.getSuperAdmin(), superAdmin)) {
+                if (a.getSuperAdmin() != null && Objects.equals(a.getSuperAdmin().getEmail(), email)) {
                     a.addSuperAdmin(superAdmin);
                 }
             }
+        }
+
+        Admin parent = adminToDelete.getSuperAdmin();
+        if (parent != null) {
+            parent.removeSupervisedAdmin(adminToDelete);
         }
 
         admins.remove(adminToDelete);
@@ -241,9 +345,10 @@ public class AdminService implements CRUDService<Admin> {
 
         for (Admin admin : admins) {
             if (Objects.equals(admin.getEmail(), email)) {
-                Admin superAdmin = get(email).orElseThrow();
-
-                admin.addSuperAdmin(superAdmin);
+                Admin parent = admin.getSuperAdmin();
+                if (parent != null) {
+                    parent.removeSupervisedAdmin(admin);
+                }
                 saveToDb();
                 return;
             }
@@ -269,7 +374,9 @@ public class AdminService implements CRUDService<Admin> {
     private List<Admin> getSubordinates(String superadminEmail) {
         List<Admin> raw = new ArrayList<>();
         for (Admin admin : admins) {
-            if (Objects.equals(admin.getSuperAdmin(), superadminEmail)) {
+            if (admin.getSuperAdmin() != null
+                    && Objects.equals(admin.getSuperAdmin().getEmail(), superadminEmail)) {
+
                 raw.add(admin);
             }
         }

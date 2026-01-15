@@ -97,15 +97,20 @@ public class Lesson {
     }
 
     public void addTeacher(Teacher teacher) {
-        if(this.teacher == null) return;
+        if (teacher == null) {
+            throw new IllegalArgumentException("Teacher cannot be null");
+        }
+
+        if (this.teacher == teacher) return;
+
         TeacherValidator.validateTeacher(teacher);
-        if(this.teacher != null){
+        if (this.teacher != null) {
             Teacher oldTeacher = this.teacher;
             this.teacher = null;
             oldTeacher.removeLesson(this);
         }
         this.teacher = teacher;
-         teacher.addLesson(this);
+        teacher.addLesson(this);
     }
     public void removeTeacher(Teacher teacher) {
         if(this.teacher == null || !this.teacher.equals(teacher)) return;

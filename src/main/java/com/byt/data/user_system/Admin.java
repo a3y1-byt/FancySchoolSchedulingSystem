@@ -43,23 +43,30 @@ public class Admin extends Staff {
 
     public Admin getSuperAdmin() { return superAdmin; }
 
-    public void addSuperAdmin(Admin superAdmin) {
-        AdminValidator.validateClass(superAdmin);
+    public void addSuperAdmin(Admin newSuperAdmin) {
+        AdminValidator.validateClass(newSuperAdmin);
+
+        if (this.superAdmin == newSuperAdmin) return;
+
+        // detach from old
         if (this.superAdmin != null) {
-            Admin oldsuperAdmin = this.superAdmin;
-            this.superAdmin = superAdmin;
-            oldsuperAdmin.removeSuperAdmin(this);
+            this.superAdmin.supervisedAdmins.remove(this);
         }
-        this.superAdmin = superAdmin;
-        superAdmin.addSupervisedAdmin(this);
+
+        // attach to new
+        this.superAdmin = newSuperAdmin;
+        newSuperAdmin.supervisedAdmins.add(this);
     }
 
     public void removeSuperAdmin(Admin superAdmin) {
-        if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return ;
-        Admin  oldsuperAdmin = this.superAdmin;
+        AdminValidator.validateClass(superAdmin);
+
+        if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return;
+
         this.superAdmin = null;
-        oldsuperAdmin.removeSuperAdmin(this);
+        superAdmin.supervisedAdmins.remove(this);
     }
+
 
     public Set<Admin> getSupervisedAdmins() {
         return new HashSet<>(supervisedAdmins);
@@ -68,28 +75,34 @@ public class Admin extends Staff {
     public void addSupervisedAdmin(Admin admin) {
         AdminValidator.validateClass(admin);
 
-        if (supervisedAdmins.contains(admin))
-            return;
+        if (supervisedAdmins.contains(admin)) return;
+
+        // detach admin from old super
+        if (admin.superAdmin != null) {
+            admin.superAdmin.supervisedAdmins.remove(admin);
+        }
 
         supervisedAdmins.add(admin);
-        admin.addSuperAdmin(this);
+        admin.superAdmin = this;
     }
 
     public void removeSupervisedAdmin(Admin admin) {
         AdminValidator.validateClass(admin);
 
-        if (!supervisedAdmins.contains(admin))
-            return;
+        if (!supervisedAdmins.contains(admin)) return;
 
         supervisedAdmins.remove(admin);
-        admin.removeSuperAdmin(this);
+
+        if (admin.superAdmin == this) {
+            admin.superAdmin = null;
+        }
     }
 
 
     public static Admin copy(Admin admin) {
         if (admin == null) return null;
 
-        return new Admin(
+        Admin out = new Admin(
                 admin.getFirstName(),
                 admin.getLastName(),
                 admin.getFamilyName(),
@@ -98,7 +111,9 @@ public class Admin extends Staff {
                 admin.getEmail(),
                 admin.getHireDate(),
                 admin.getLastLoginTime(),
-                admin.getSuperAdmin()
+                null
         );
+
+        return out;
     }
 }
