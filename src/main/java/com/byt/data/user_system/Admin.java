@@ -23,11 +23,11 @@ public class Admin extends Staff {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private Admin superAdmin;
+    private transient Admin superAdmin;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private Set<Admin> supervisedAdmins = new HashSet<>();
+    private transient Set<Admin> supervisedAdmins = new HashSet<>();
 
     public Admin(
             String firstName,

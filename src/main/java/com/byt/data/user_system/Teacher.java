@@ -76,6 +76,7 @@ public class Teacher extends Staff {
                 teacher.getPosition()
         );
 
+        t.lessons = new HashSet<>(teacher.lessons);
         return t;
     }
 }

@@ -65,8 +65,8 @@ public class FancySchedulingApplication {
         reportService.initialize();
 
         StudentService studentService = new StudentService(database, null, reportService);
-        TeacherService teacherService = new TeacherService(database, null, reportService);
-        FreeListenerService freeListenerService = new FreeListenerService(database, null, reportService);
+        TeacherService teacherService = new TeacherService(database, null);
+        FreeListenerService freeListenerService = new FreeListenerService(database, null);
         AdminService adminService = new AdminService(database, null, reportService);
         GroupService groupService = new GroupService(database);
 
