@@ -82,11 +82,12 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
         List<ClassRoom> updatedClassRooms = classRooms.stream()
                 .filter(r -> {
-                    if(r.getName().equals(name)){
-                        r.removeBuilding(r.getBuilding());
-                        return false;
-                    }
-                    return true;
+                    if(!r.getName().equals(name)) return true;
+                    r.removeBuilding(r.getBuilding());
+                    r.getLessons().forEach(lesson -> {
+                        lesson.removeClassRoom(r);
+                    });
+                    return false;
                 })
                 .collect(Collectors.toList());
 
@@ -131,6 +132,5 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
 
         this.classRooms = new ArrayList<>(loadedClassRooms);
     }
-
 
 }
