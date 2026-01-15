@@ -27,6 +27,9 @@ public class AdminService implements CRUDService<Admin> {
 
     public AdminService(SaveLoadService service) {
         this(service, null, null);
+    public AdminService(SaveLoadService service, List<Admin> admins) {
+        this.service = service;
+        this.admins = admins != null ? new ArrayList<>(admins) : new ArrayList<>();
     }
 
     public AdminService(SaveLoadService service, IssueReportService issueReportService) {
@@ -43,6 +46,7 @@ public class AdminService implements CRUDService<Admin> {
     public void initialize() throws IOException {
         List<Admin> loaded = loadFromDb();
         this.admins = loaded != null ? loaded : new ArrayList<>();
+        this.admins = new ArrayList<>(loaded);
     }
 
     public Admin create(String firstName, String lastName, String familyName,

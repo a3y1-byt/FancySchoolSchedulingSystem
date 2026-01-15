@@ -1,4 +1,6 @@
 package com.byt.services.user_system;
+
+import com.byt.data.scheduling.Group;
 import com.byt.validation.user_system.FreeListenerValidator;
 
 import com.byt.persistence.SaveLoadService;
@@ -6,6 +8,7 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
 import com.byt.data.user_system.FreeListener;
 import com.byt.enums.user_system.StudyLanguage;
+import com.byt.validation.user_system.TeacherValidator;
 import com.google.gson.reflect.TypeToken;
 import com.byt.services.reporting.IssueReportService;
 
@@ -28,6 +31,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         this.service = service;
         this.freeListeners = freeListeners != null ? new ArrayList<>(freeListeners.stream().map(FreeListener::copy).toList()) : new ArrayList<>();
         this.issueReportService = issueReportService;
+        this.freeListeners = freeListeners != null ? new ArrayList<>(freeListeners) : new ArrayList<>();
+
     }
 
     public FreeListenerService(SaveLoadService service) {
@@ -37,7 +42,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
     @Override
     public void initialize() throws IOException {
         List<FreeListener> loaded = loadFromDb(); // raw objects from our 'DB'
-        this.freeListeners = new ArrayList<>(loaded.stream().map(FreeListener::copy).toList()); // safe deep copies
+        this.freeListeners = new ArrayList<>(loaded);
     }
 
     // _________________________________________________________
@@ -62,7 +67,7 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             throw new IllegalStateException("freeListener exists with this email already");
         }
 
-        freeListeners.add(FreeListener.copy(freeListener));
+        freeListeners.add(freeListener);
         saveToDb();
         return FreeListener.copy(freeListener);
     }
@@ -106,23 +111,27 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("email must not be null or blank");
         }
-
         FreeListenerValidator.validateClass(prototype);
 
         String oldEmail = email;
 
+        // firstly we find the old stored student
         int index = -1;
+        FreeListener oldStored = null;
+
         for (int i = 0; i < freeListeners.size(); i++) {
             if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
                 index = i;
+                oldStored = freeListeners.get(i);
                 break;
             }
         }
 
         if (index == -1) {
-            throw new IllegalArgumentException("FreeListener with email=" + email + " not found");
+            throw new IllegalArgumentException("freeListeners with email=" + email + " not found");
         }
 
+        // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
         if (newEmail == null || newEmail.isBlank()) {
             throw new IllegalArgumentException("new email must not be null or blank");
@@ -137,8 +146,30 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             freeListeners.add(FreeListener.copy(prototype));
         } else {
             freeListeners.set(index, FreeListener.copy(prototype));
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("freeListeners with email=" + newEmail + " already exists");
+            }
         }
 
+        // then, we collect references (FREELISTENERS - GROUP)
+        Set<Group> oldGroups = oldStored.getGroups();
+
+
+        // theen, we remove connection with old instances from references
+        for (Group l : oldGroups) {
+            l.removeFreeListener(oldStored);
+        }
+
+        // finally, we are creating a new student instance (just a copy)
+        FreeListener newStored = FreeListener.copy(prototype);
+
+        // AND ----- attaching new instance to the same reference the old one was attached to
+        freeListeners.set(index, newStored);
+
+        for (Group l : oldGroups) {
+            l.addFreeListener(newStored);
+        }
         saveToDb();
 
         if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
@@ -153,14 +184,34 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             throw new IllegalArgumentException("email must not be null or blank");
         }
 
+        // firstly we find the old stored student
+        int index = -1;
+        FreeListener oldStored = null;
+
         for (int i = 0; i < freeListeners.size(); i++) {
             if (Objects.equals(freeListeners.get(i).getEmail(), email)) {
-                freeListeners.remove(i);
-                saveToDb();
-                return;
+                index = i;
+                oldStored = freeListeners.get(i);
+                break;
             }
         }
-        throw new IllegalArgumentException("FreeListener with email=" + email + " not found");
+
+        if (index == -1) {
+            throw new IllegalArgumentException("freeListeners with email=" + email + " not found");
+        }
+
+        // then, we collect references (FREELISTENERS - GROUP)
+        Set<Group> oldGroups = oldStored.getGroups();
+
+
+        // theen, we remove connection with old instances from references
+        for (Group l : oldGroups) {
+            l.removeFreeListener(oldStored);
+        }
+
+        freeListeners.remove(index);
+
+        saveToDb();
     }
 
     @Override
