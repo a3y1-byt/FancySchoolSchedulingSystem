@@ -1,33 +1,90 @@
 package com.byt.data.user_system;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.byt.validation.scheduling.Validator;
+import com.byt.validation.user_system.AdminValidator;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@Getter(AccessLevel.NONE)
+@Setter(AccessLevel.NONE)
 public class Admin extends Staff {
 
     private LocalDateTime lastLoginTime;
-    private String superadminId;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    private Admin superAdmin;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    private Set<Admin> supervisedAdmins = new HashSet<>();
 
     public Admin(String firstName, String lastName, String familyName,
                  LocalDate dateOfBirth, String phoneNumber, String email,
-                 LocalDate  hireDate, LocalDateTime lastLoginTime,String superadminId) {
+                 LocalDate hireDate, LocalDateTime lastLoginTime, Admin superAdmin) {
 
-        super(firstName, lastName, familyName,
-                dateOfBirth, phoneNumber, email,
-                hireDate);
-
+        super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email, hireDate);
         this.lastLoginTime = lastLoginTime;
-        this.superadminId = superadminId;
+        this.superAdmin = superAdmin;
     }
+
+    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+
+    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
+
+    public Admin getSuperAdmin() { return superAdmin; }
+
+    public void addSuperAdmin(Admin superAdmin) {
+        AdminValidator.validateClass(superAdmin);
+        if (this.superAdmin != null) {
+            Admin oldsuperAdmin = this.superAdmin;
+            this.superAdmin = superAdmin;
+            oldsuperAdmin.removeSuperAdmin(this);
+        }
+        this.superAdmin = superAdmin;
+        superAdmin.addSupervisedAdmin(this);
+    }
+
+    public void removeSuperAdmin(Admin superAdmin) {
+        if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return ;
+        Admin  oldsuperAdmin = this.superAdmin;
+        this.superAdmin = null;
+        oldsuperAdmin.removeSuperAdmin(this);
+    }
+
+    public Set<Admin> getSupervisedAdmins() {
+        return new HashSet<>(supervisedAdmins);
+    }
+
+    public void addSupervisedAdmin(Admin admin) {
+        AdminValidator.validateClass(admin);
+
+        if (supervisedAdmins.contains(admin))
+            return;
+
+        supervisedAdmins.add(admin);
+        admin.addSuperAdmin(this);
+    }
+
+    public void removeSupervisedAdmin(Admin admin) {
+        AdminValidator.validateClass(admin);
+
+        if (!supervisedAdmins.contains(admin))
+            return;
+
+        supervisedAdmins.remove(admin);
+        admin.removeSuperAdmin(this);
+    }
+
 
     public static Admin copy(Admin admin) {
         if (admin == null) return null;
@@ -41,8 +98,7 @@ public class Admin extends Staff {
                 admin.getEmail(),
                 admin.getHireDate(),
                 admin.getLastLoginTime(),
-                admin.getSuperadminId()
+                admin.getSuperAdmin()
         );
     }
-
 }

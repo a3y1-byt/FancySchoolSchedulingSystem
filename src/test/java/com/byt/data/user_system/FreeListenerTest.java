@@ -42,7 +42,7 @@ public class FreeListenerTest {
             dob,
             "10203040",
             SAMPLE_EMAIL,
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             "Some notes"
     );
 

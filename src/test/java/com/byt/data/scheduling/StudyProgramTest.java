@@ -91,5 +91,25 @@ class TestSpecialization extends Specialization {
     public void removeStudyProgram(StudyProgram studyProgram) {
         throw new Success();
     }
+
+    @Override
+    public void addStudent(Student student) {
+        throw new Success();
+    }
+
+    @Override
+    public void removeStudent(Student student) {
+        throw new Success();
+    }
+
+    @Override
+    public void addSubject(Subject subject) {
+        throw new Success();
+    }
+
+    @Override
+    public void removeSubject(Subject subject) {
+        throw new Success();
+    }
 }
 

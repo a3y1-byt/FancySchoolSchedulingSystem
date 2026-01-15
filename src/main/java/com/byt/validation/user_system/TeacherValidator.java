@@ -8,7 +8,16 @@ import java.time.LocalDate;
 
 public class TeacherValidator {
 
-    public TeacherValidator() {}
+    private TeacherValidator() {}
+
+    public static void validateEmailKey(String email) {
+        if (email == null || email.isBlank()) {
+            throw new ValidationException(
+                    ExceptionCode.NOT_NULL_VIOLATION,
+                    "Teacher email must not be null or blank"
+            );
+        }
+    }
 
     public static void validateTeacher(Teacher teacher) {
         if (teacher == null) {
@@ -31,7 +40,6 @@ public class TeacherValidator {
         );
     }
 
-    // VALIDATION METHODS
     public static void validateTeacher(
             String firstName,
             String lastName,
@@ -43,7 +51,6 @@ public class TeacherValidator {
             String title,
             String position
     ) {
-        // general USER class validation
         UserValidator.validateUserFields(
                 firstName,
                 lastName,
@@ -53,7 +60,6 @@ public class TeacherValidator {
                 email
         );
 
-        //  only Teacher validation
         if (hireDate == null) {
             throw new ValidationException(
                     ExceptionCode.NOT_NULL_VIOLATION,
@@ -62,15 +68,14 @@ public class TeacherValidator {
         }
 
         LocalDate today = LocalDate.now();
-        LocalDate earliest_hire_date = LocalDate.of(2000, 1, 1);
-        int min_age_at_hire = 18;
+        int minAgeAtHire = 18;
 
         if (dateOfBirth != null) {
-            LocalDate minHireDateByDob = dateOfBirth.plusYears(min_age_at_hire);
+            LocalDate minHireDateByDob = dateOfBirth.plusYears(minAgeAtHire);
             if (hireDate.isBefore(minHireDateByDob)) {
                 throw new ValidationException(
                         ExceptionCode.VALUE_OUT_OF_RANGE,
-                        "Person must be at least " + min_age_at_hire + " years old at hire date"
+                        "Person must be at least " + minAgeAtHire + " years old at hire date"
                 );
             }
         }
@@ -105,24 +110,6 @@ public class TeacherValidator {
     }
 
     public static void validateClass(Teacher prototype) {
-        if (prototype == null) {
-            throw new ValidationException(
-                    ExceptionCode.NOT_NULL_VIOLATION,
-                    "Teacher prototype must not be null"
-            );
-        }
-
-        validateTeacher(
-                prototype.getFirstName(),
-                prototype.getLastName(),
-                prototype.getFamilyName(),
-                prototype.getDateOfBirth(),
-                prototype.getPhoneNumber(),
-                prototype.getEmail(),
-                prototype.getHireDate(),
-                prototype.getTitle(),
-                prototype.getPosition()
-        );
+        validateTeacher(prototype);
     }
-
 }

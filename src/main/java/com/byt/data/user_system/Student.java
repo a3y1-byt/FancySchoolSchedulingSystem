@@ -23,7 +23,7 @@ public class Student extends Attendee {
 
     public Student(String firstName, String lastName, String familyName,
                    LocalDate dateOfBirth, String phoneNumber, String email,
-                   List<StudyLanguage> languagesOfStudies,
+                   Set<StudyLanguage> languagesOfStudies,
                    StudyStatus studiesStatus) {
 
         super(firstName, lastName, familyName,
@@ -36,9 +36,9 @@ public class Student extends Attendee {
     public static Student copy(Student s) {
         if (s == null) return null;
 
-        List<StudyLanguage> langsCopy = (s.getLanguagesOfStudies() != null)
-                ? new ArrayList<>(s.getLanguagesOfStudies())
-                : new ArrayList<>();
+        Set<StudyLanguage> langsCopy = (s.getLanguagesOfStudies() != null)
+                ? new HashSet<>(s.getLanguagesOfStudies())
+                : new HashSet<>();
 
         return new Student(
                 s.getFirstName(),

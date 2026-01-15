@@ -75,7 +75,7 @@ public class FancySchedulingApplication {
                 LocalDate.now().minusYears(20),
                 "4808857322",
                 "jake.doe@ilovebyt.pl",
-                List.of(StudyLanguage.ENGLISH),
+                Set.of(StudyLanguage.ENGLISH),
                 StudyStatus.ACTIVE);
 
         // ...or with builders!

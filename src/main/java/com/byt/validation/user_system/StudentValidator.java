@@ -7,7 +7,7 @@ import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 public class StudentValidator {
 
@@ -33,7 +33,6 @@ public class StudentValidator {
         );
     }
 
-    // VALIDATION METHODS
     public static void validateStudent(
             String firstName,
             String lastName,
@@ -41,10 +40,9 @@ public class StudentValidator {
             LocalDate dateOfBirth,
             String phoneNumber,
             String email,
-            List<StudyLanguage> languagesOfStudies,
+            Set<StudyLanguage> languagesOfStudies,
             StudyStatus studiesStatus
     ) {
-        // general USER class validation
         UserValidator.validateUserFields(
                 firstName,
                 lastName,
@@ -54,7 +52,6 @@ public class StudentValidator {
                 email
         );
 
-        //  only Student validation
         if (languagesOfStudies == null || languagesOfStudies.isEmpty()) {
             throw new ValidationException(
                     ExceptionCode.NOT_NULL_VIOLATION,
@@ -62,24 +59,12 @@ public class StudentValidator {
             );
         }
 
-        // null and duplicate check
-        for (int i = 0; i < languagesOfStudies.size(); i++) {
-            StudyLanguage sl = languagesOfStudies.get(i);
-
+        for (StudyLanguage sl : languagesOfStudies) {
             if (sl == null) {
                 throw new ValidationException(
                         ExceptionCode.NOT_NULL_VIOLATION,
                         "Study language must not be null"
                 );
-            }
-
-            for (int j = i + 1; j < languagesOfStudies.size(); j++) {
-                if (sl == languagesOfStudies.get(j)) { // enum -> можна порівнювати через ==
-                    throw new ValidationException(
-                            ExceptionCode.INVALID_FORMAT,
-                            "Study languages must be unique"
-                    );
-                }
             }
         }
 
@@ -110,5 +95,4 @@ public class StudentValidator {
                 prototype.getStudiesStatus()
         );
     }
-
 }

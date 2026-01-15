@@ -48,7 +48,7 @@ public class GroupTest {
             dob,
             "10203040",
             "yumi@gmail.com",
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             StudyStatus.ACTIVE
     );
 
@@ -59,7 +59,7 @@ public class GroupTest {
             dob,
             "30201040",
             "yumi2@gmail.com",
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             StudyStatus.ACTIVE
     );
 
@@ -70,7 +70,7 @@ public class GroupTest {
             dob,
             "10203040",
             "yumi3@gmail.com",
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             "Some notes"
     );
 
@@ -81,7 +81,7 @@ public class GroupTest {
             dob,
             "30201040",
             "yumi4@gmail.com",
-            List.of(StudyLanguage.ENGLISH),
+            Set.of(StudyLanguage.ENGLISH),
             "Some notes"
     );
 
