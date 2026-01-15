@@ -1,17 +1,20 @@
 package com.byt.data.user_system;
 
-import com.byt.validation.scheduling.Validator;
 import com.byt.validation.user_system.AdminValidator;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"superAdmin", "supervisedAdmins"})
 @Getter(AccessLevel.NONE)
 @Setter(AccessLevel.NONE)
 public class Admin extends Staff {
@@ -20,76 +23,92 @@ public class Admin extends Staff {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
     private Admin superAdmin;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    @EqualsAndHashCode.Exclude
     private Set<Admin> supervisedAdmins = new HashSet<>();
 
-    public Admin(String firstName, String lastName, String familyName,
-                 LocalDate dateOfBirth, String phoneNumber, String email,
-                 LocalDate hireDate, LocalDateTime lastLoginTime, Admin superAdmin) {
-
+    public Admin(
+            String firstName,
+            String lastName,
+            String familyName,
+            LocalDate dateOfBirth,
+            String phoneNumber,
+            String email,
+            LocalDate hireDate,
+            LocalDateTime lastLoginTime,
+            Admin superAdmin
+    ) {
         super(firstName, lastName, familyName, dateOfBirth, phoneNumber, email, hireDate);
         this.lastLoginTime = lastLoginTime;
         this.superAdmin = superAdmin;
     }
 
-    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+    public LocalDateTime getLastLoginTime() {return lastLoginTime;}
 
-    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
+    public void setLastLoginTime(LocalDateTime lastLoginTime) {this.lastLoginTime = lastLoginTime;}
 
-    public Admin getSuperAdmin() { return superAdmin; }
+    public Admin getSuperAdmin() {return superAdmin;}
 
-    public void addSuperAdmin(Admin superAdmin) {
-        AdminValidator.validateClass(superAdmin);
-        if (this.superAdmin != null) {
-            Admin oldsuperAdmin = this.superAdmin;
-            this.superAdmin = superAdmin;
-            oldsuperAdmin.removeSuperAdmin(this);
+    public Set<Admin> getSupervisedAdmins() {return new HashSet<>(supervisedAdmins);}
+
+
+    public void addSuperAdmin(Admin newSuperAdmin) {
+        AdminValidator.validateClass(newSuperAdmin);
+
+        if (newSuperAdmin == this) {
+            throw new IllegalArgumentException("Admin cannot supervise himself");
         }
-        this.superAdmin = superAdmin;
-        superAdmin.addSupervisedAdmin(this);
+
+        if (Objects.equals(this.superAdmin, newSuperAdmin)) {
+            return;
+        }
+
+        if (this.superAdmin != null) {
+            Admin old = this.superAdmin;
+            this.superAdmin = null;
+            old.supervisedAdmins.remove(this);
+        }
+
+        this.superAdmin = newSuperAdmin;
+        newSuperAdmin.supervisedAdmins.add(this);
     }
 
-    public void removeSuperAdmin(Admin superAdmin) {
-        if (this.superAdmin == null || !this.superAdmin.equals(superAdmin)) return ;
-        Admin  oldsuperAdmin = this.superAdmin;
+    public void removeSuperAdmin(Admin expectedSuperAdmin) {
+        if (this.superAdmin == null) {
+            return;
+        }
+
+        if (!Objects.equals(this.superAdmin, expectedSuperAdmin)) {
+            return;
+        }
+
+        Admin old = this.superAdmin;
         this.superAdmin = null;
-        oldsuperAdmin.removeSuperAdmin(this);
-    }
-
-    public Set<Admin> getSupervisedAdmins() {
-        return new HashSet<>(supervisedAdmins);
+        old.supervisedAdmins.remove(this);
     }
 
     public void addSupervisedAdmin(Admin admin) {
         AdminValidator.validateClass(admin);
 
-        if (supervisedAdmins.contains(admin))
-            return;
+        if (admin == this) {
+            throw new IllegalArgumentException("Admin cannot supervise himself");
+        }
 
-        supervisedAdmins.add(admin);
         admin.addSuperAdmin(this);
     }
 
     public void removeSupervisedAdmin(Admin admin) {
         AdminValidator.validateClass(admin);
 
-        if (!supervisedAdmins.contains(admin))
-            return;
-
-        supervisedAdmins.remove(admin);
         admin.removeSuperAdmin(this);
     }
-
 
     public static Admin copy(Admin admin) {
         if (admin == null) return null;
 
-        return new Admin(
+        Admin c = new Admin(
                 admin.getFirstName(),
                 admin.getLastName(),
                 admin.getFamilyName(),
@@ -100,5 +119,9 @@ public class Admin extends Staff {
                 admin.getLastLoginTime(),
                 admin.getSuperAdmin()
         );
+
+        c.supervisedAdmins = new HashSet<>(admin.supervisedAdmins);
+
+        return c;
     }
 }

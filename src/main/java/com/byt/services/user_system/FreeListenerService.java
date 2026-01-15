@@ -10,6 +10,7 @@ import com.byt.data.user_system.FreeListener;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.validation.user_system.TeacherValidator;
 import com.google.gson.reflect.TypeToken;
+import com.byt.services.reporting.IssueReportService;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -20,19 +21,22 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
     // comments explaining how everything works are in FreeListener Service
     private final SaveLoadService service;
+    private final IssueReportService issueReportService;
     private List<FreeListener> freeListeners;
 
     private static final Type FREELISTENER_LIST_TYPE = new TypeToken<List<FreeListener>>() {
     }.getType();
 
-    public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners) {
+    public FreeListenerService(SaveLoadService service, List<FreeListener> freeListeners, IssueReportService issueReportService) {
         this.service = service;
+        this.freeListeners = freeListeners != null ? new ArrayList<>(freeListeners.stream().map(FreeListener::copy).toList()) : new ArrayList<>();
+        this.issueReportService = issueReportService;
         this.freeListeners = freeListeners != null ? new ArrayList<>(freeListeners) : new ArrayList<>();
 
     }
 
     public FreeListenerService(SaveLoadService service) {
-        this(service, null);
+        this(service, null, null);
     }
 
     @Override
@@ -109,6 +113,8 @@ public class FreeListenerService implements CRUDService<FreeListener> {
         }
         FreeListenerValidator.validateClass(prototype);
 
+        String oldEmail = email;
+
         // firstly we find the old stored student
         int index = -1;
         FreeListener oldStored = null;
@@ -127,6 +133,19 @@ public class FreeListenerService implements CRUDService<FreeListener> {
 
         // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("new email must not be null or blank");
+        }
+
+        if (!Objects.equals(newEmail, email)) {
+            if (exists(newEmail)) {
+                throw new IllegalArgumentException("FreeListener with email=" + newEmail + " already exists");
+            }
+
+            freeListeners.remove(index);
+            freeListeners.add(FreeListener.copy(prototype));
+        } else {
+            freeListeners.set(index, FreeListener.copy(prototype));
         if (!Objects.equals(newEmail, email)) {
             if (newEmail != null && exists(newEmail)) {
                 throw new IllegalArgumentException("freeListeners with email=" + newEmail + " already exists");
@@ -152,7 +171,12 @@ public class FreeListenerService implements CRUDService<FreeListener> {
             l.addFreeListener(newStored);
         }
         saveToDb();
+
+        if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
+            issueReportService.updateReporterEmail(oldEmail, newEmail);
+        }
     }
+
 
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {

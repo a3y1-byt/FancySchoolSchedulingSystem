@@ -3,8 +3,13 @@ package com.byt.services.reporting;
 import com.byt.data.reporting.IssueReport;
 import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDServiceTest;
+import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
 
@@ -19,7 +24,6 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
                 "Sample title",
                 "Sample description",
                 LocalDateTime.of(2025, 1, 2, 10, 0)
-//                null
         );
     }
 
@@ -37,4 +41,106 @@ public class IssueReportServiceCRUDTest extends CRUDServiceTest<IssueReport> {
         // do not change email or title because they are part of the key
         entity.setDescription(entity.getDescription() + " edited");
     }
+
+    @Test
+    public void createDuplicateIssueReportThrows() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        IssueReport r1 = getSampleObject();
+
+        service.create(r1);
+
+        IssueReport r2 = new IssueReport(
+                r1.getEmail(),
+                r1.getTitle(),
+                "Another description",
+                LocalDateTime.now()
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(r2));
+    }
+
+    @Test
+    public void getAllByEmailReturnsOnlyMatchingReports() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        service.create(new IssueReport(
+                "sample@mail.com",
+                "Title A",
+                "Desc A",
+                LocalDateTime.now()
+        ));
+
+        service.create(new IssueReport(
+                "sample@mail.com",
+                "Title B",
+                "Desc B",
+                LocalDateTime.now()
+        ));
+
+        service.create(new IssueReport(
+                "other@mail.com",
+                "Title A",
+                "Desc C",
+                LocalDateTime.now()
+        ));
+
+        List<IssueReport> bySample = service.getAllByEmail("sample@mail.com");
+        assertEquals(2, bySample.size());
+        assertTrue(bySample.stream().allMatch(r -> "sample@mail.com".equalsIgnoreCase(r.getEmail())));
+
+        List<IssueReport> byOther = service.getAllByEmail("other@mail.com");
+        assertEquals(1, byOther.size());
+        assertEquals("other@mail.com", byOther.getFirst().getEmail());
+    }
+
+    @Test
+    public void updateReporterEmailMovesReportsToNewEmail() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        IssueReport report = new IssueReport(
+                "old@mail.com",
+                "Same title",
+                "Desc",
+                LocalDateTime.now()
+        );
+
+        service.create(report);
+
+        String oldId = IssueReportService.compositeId("old@mail.com", "Same title");
+        assertTrue(service.exists(oldId));
+
+        service.updateReporterEmail("old@mail.com", "new@mail.com");
+
+        List<IssueReport> oldList = service.getAllByEmail("old@mail.com");
+        assertEquals(0, oldList.size());
+
+        List<IssueReport> newList = service.getAllByEmail("new@mail.com");
+        assertEquals(1, newList.size());
+
+        String newId = IssueReportService.compositeId("new@mail.com", "Same title");
+        assertFalse(service.exists(oldId));
+        assertTrue(service.exists(newId));
+    }
+
+    @Test
+    public void deleteRemovesAssociationAndReverseNavigation() throws IOException {
+        IssueReportService service = (IssueReportService) emptyService;
+
+        service.create(new IssueReport(
+                "del@mail.com",
+                "To delete",
+                "Desc",
+                LocalDateTime.now()
+        ));
+
+        assertEquals(1, service.getAllByEmail("del@mail.com").size());
+
+        String id = IssueReportService.compositeId("del@mail.com", "To delete");
+        service.delete(id);
+
+        assertEquals(0, service.getAllByEmail("del@mail.com").size());
+        assertFalse(service.exists(id));
+    }
+
 }

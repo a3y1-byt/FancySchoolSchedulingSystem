@@ -7,6 +7,7 @@ import com.byt.persistence.util.DataSaveKeys;
 import com.byt.services.CRUDService;
 import com.byt.validation.user_system.TeacherValidator;
 import com.google.gson.reflect.TypeToken;
+import com.byt.services.reporting.IssueReportService;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -17,17 +18,20 @@ public class TeacherService implements CRUDService<Teacher> {
 
     private final SaveLoadService service;
     private List<Teacher> teachers;
+    private final IssueReportService issueReportService;
 
     private static final Type TEACHER_LIST_TYPE = new TypeToken<List<Teacher>>() {
     }.getType();
 
-    public TeacherService(SaveLoadService service, List<Teacher> teachers) {
+    public TeacherService(SaveLoadService service, List<Teacher> teachers,  IssueReportService issueReportService) {
         this.service = service;
+        this.teachers = teachers != null ? copyList(teachers) : new ArrayList<>();
+        this.issueReportService = issueReportService;
         this.teachers = new ArrayList<>();
     }
 
     public TeacherService(SaveLoadService service) {
-        this(service, null);
+        this(service, null, null);
     }
 
     @Override
@@ -98,6 +102,8 @@ public class TeacherService implements CRUDService<Teacher> {
         TeacherValidator.validateEmailKey(email);
         TeacherValidator.validateClass(prototype);
 
+        String oldEmail = email;
+
         // firstly we find the old stored student
         int index = -1;
         Teacher oldStored = null;
@@ -116,6 +122,12 @@ public class TeacherService implements CRUDService<Teacher> {
 
         // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("new email must not be null or blank");
+        }
+
+        if (!Objects.equals(newEmail, email) && exists(newEmail)) {
+            throw new IllegalArgumentException("Teacher with email = " + newEmail + " already exists");
         if (!Objects.equals(newEmail, email)) {
             if (newEmail != null && exists(newEmail)) {
                 throw new IllegalArgumentException("Teacher with email=" + newEmail + " already exists");
@@ -141,7 +153,12 @@ public class TeacherService implements CRUDService<Teacher> {
             l.addTeacher(newStored);
         }
         saveToDb();
+
+        if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
+            issueReportService.updateReporterEmail(oldEmail, newEmail);
+        }
     }
+
 
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {

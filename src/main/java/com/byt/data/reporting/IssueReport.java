@@ -32,4 +32,14 @@ public class IssueReport {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public static IssueReport copy(IssueReport r) {
+        if (r == null) return null;
+        return new IssueReport(
+                r.getEmail(),
+                r.getTitle(),
+                r.getDescription(),
+                r.getCreatedAt()
+        );
+    }
 }

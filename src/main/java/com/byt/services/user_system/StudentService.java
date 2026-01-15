@@ -7,6 +7,7 @@ import com.byt.exception.ExceptionCode;
 import com.byt.exception.ValidationException;
 import com.byt.validation.scheduling.Validator;
 import com.byt.validation.user_system.StudentValidator;
+import com.byt.services.reporting.IssueReportService;
 
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
@@ -24,20 +25,22 @@ import java.util.*;
 public class StudentService implements CRUDService<Student> {
     // comments explaining how everything works are in Student Service
     private final SaveLoadService service;
+    private final IssueReportService issueReportService;
     private List<Student> students;
 
     private static final Type STUDENT_LIST_TYPE = new TypeToken<List<Student>>() {
     }.getType();
 
-    public StudentService(SaveLoadService service, List<Student> students) {
+    public StudentService(SaveLoadService service, List<Student> students, IssueReportService issueReportService) {
         this.service = service;
         this.students = students != null
                 ? new ArrayList<>(students)
                 : new ArrayList<>();
+        this.issueReportService = issueReportService;
     }
 
     public StudentService(SaveLoadService service) {
-        this(service, null);
+        this(service, null, null);
     }
 
     @Override
@@ -115,6 +118,8 @@ public class StudentService implements CRUDService<Student> {
 
         StudentValidator.validateClass(prototype);
 
+        String oldEmail = email;
+
         // firstly we find the old stored student
         int index = -1;
         Student oldStored = null;
@@ -133,10 +138,19 @@ public class StudentService implements CRUDService<Student> {
 
         // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("new email must not be null or blank");
+        }
+
         if (!Objects.equals(newEmail, email)) {
-            if (newEmail != null && exists(newEmail)) {
+            if (exists(newEmail)) {
                 throw new IllegalArgumentException("Student with email=" + newEmail + " already exists");
             }
+
+            students.remove(index);
+            students.add(Student.copy(prototype));
+        } else {
+            students.set(index, Student.copy(prototype));
         }
 
         // then, we collect references (STUDENT - GROUP; STUDENT - SPECIALIZATION)
@@ -165,7 +179,12 @@ public class StudentService implements CRUDService<Student> {
             sp.addStudent(newStored);
         }
         saveToDb();
+
+        if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
+            issueReportService.updateReporterEmail(oldEmail, newEmail);
+        }
     }
+
 
     @Override
     public void delete(String email) throws IllegalArgumentException, IOException {
