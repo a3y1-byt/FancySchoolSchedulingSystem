@@ -110,7 +110,7 @@ public class Specialization {
 
     public void removeSubject(Subject subject) {
         Validator.validateSubject(subject);
-
+        System.out.println("Removing subject: " + subject.getName());
         if (!subjects.contains(subject))
             return;
 

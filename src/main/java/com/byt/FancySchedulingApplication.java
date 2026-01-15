@@ -11,7 +11,7 @@ import com.byt.data.user_system.Student;
 import com.byt.data.user_system.Teacher;
 import com.byt.enums.user_system.StudyLanguage;
 import com.byt.enums.user_system.StudyStatus;
-import com.byt.services.scheduling.GroupService;
+import com.byt.services.scheduling.*;
 import com.byt.services.user_system.AdminService;
 import com.byt.services.user_system.FreeListenerService;
 import com.byt.services.user_system.StudentService;
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ public class FancySchedulingApplication {
         try {
             // Obviously, that's an impromptu database, not a real SQL-based solution or whatever
             SaveLoadService database = generatePersistenceService();
-            demonstrateServices(database);
+            demonstrateApp(database);
         } catch (IOException e) {
             throw new RuntimeException("Oops, the services were so cool that they fell. It's still 3/3, right?");
         }
@@ -60,6 +61,142 @@ public class FancySchedulingApplication {
         return database;
     }
 
+    private static void demonstrateApp(SaveLoadService database) throws IOException {
+        // User
+        AdminService adminService = new AdminService(database);
+        TeacherService teacherService = new TeacherService(database);
+        StudentService studentService = new StudentService(database);
+        FreeListenerService freeListenerService = new FreeListenerService(database);
+
+        adminService.initialize();
+        teacherService.initialize();
+        studentService.initialize();
+        freeListenerService.initialize();
+
+        // Scheduling
+        GroupService groupService = new GroupService(database);
+        LessonService lessonService = new LessonService(database);
+        ClassRoomService classRoomService = new ClassRoomService(database);
+        BuildingService buildingService = new BuildingService(database);
+        SubjectService subjectService = new SubjectService(database);
+        SemesterService semesterService = new SemesterService(database);
+        StudyProgramService studyProgramService = new StudyProgramService(database);
+
+        groupService.initialize();
+        lessonService.initialize();
+        classRoomService.initialize();
+        buildingService.initialize();
+        subjectService.initialize();
+        semesterService.initialize();
+        studyProgramService.initialize();
+
+        // Service stuff
+        IssueReportService issueReportService = new IssueReportService(database);
+
+        issueReportService.initialize();
+
+        // -- GO! --
+        System.out.println("DEMO STARTS HERE!");
+
+        Student studentProto = new Student(
+                "Alex", "Alexov", null,
+                LocalDate.now().minusYears(20),
+                "3706421244", "alex.alexov@alexia.com",
+                new HashSet<>() {{ add(StudyLanguage.ENGLISH); }},
+                StudyStatus.ACTIVE
+        );
+
+        studentService.create(studentProto);
+
+        System.out.println("========================");
+        System.out.println("== REFLEX ASSOCIATION ==");
+
+        Admin superAdminProto = new Admin(
+                "Admin", "Adminski", null,
+                LocalDate.now().minusYears(22),
+                "4898542321", "superadmin@WeLoveBYT.com",
+                LocalDate.now().minusMonths(1),
+                LocalDateTime.now(),
+                null
+        );
+
+        Admin normalAdminProto = new Admin(
+                "Admin", "Normalny", null,
+                LocalDate.now().minusYears(20),
+                "712344244", "turboflex.admin@WeLoveBYT.com",
+                LocalDate.now().minusDays(10),
+                LocalDateTime.now().minusHours(1),
+                superAdminProto
+        );
+
+        adminService.create(superAdminProto);
+        adminService.create(normalAdminProto);
+
+        System.out.println("Two admins were initialized:");
+        System.out.println("Super Admin: " + adminService.get(superAdminProto.getEmail()).get().getEmail());
+        System.out.println("Normal Admin: " + adminService.get(normalAdminProto.getEmail()).get().getEmail());
+        System.out.println();
+        System.out.println("Current supervisor of normal admin: " + adminService.get(normalAdminProto.getEmail()).get().getEmail());
+        System.out.println("Removing supervised admin from the superadmin...");
+
+        Admin supervisingAdmin = adminService.get(superAdminProto.getEmail()).get();
+        supervisingAdmin.removeSupervisedAdmin(adminService.get(normalAdminProto.getEmail()).get());
+        adminService.update(supervisingAdmin.getEmail(), supervisingAdmin);
+
+        System.out.println("Current supervisor of normal admin: " + adminService.get(normalAdminProto.getEmail()).get().getEmail());
+
+        System.out.println("========================");
+
+        Building buildingProto = Building.builder()
+                .name("BYlTing")
+                .description("It's a pun with 'building' and 'BYT', got it? I'm SO funny")
+                .address("ul. BYT, b. 34/3")
+                .build();
+
+        ClassRoom classRoomProto = ClassRoom.builder()
+                .name("Abdulla Mohamed's Personal Throne Hall")
+                .building(buildingProto)
+                .floor(1)
+                .capacity(35)
+                .build();
+
+        buildingProto.addClassRoom(classRoomProto);
+
+        buildingService.create(buildingProto);
+        classRoomService.create(classRoomProto);
+
+        System.out.printf("A building '%s' was initialized with classroom '%s'\n",
+                buildingService.get(buildingProto.getName()).get().getName(),
+                classRoomService.get(classRoomProto.getName()).get().getName()
+        );
+
+        Lesson lessonProto = Lesson.builder()
+                .name("BYT Lecture with non-mandatory attendance that EVERYBODY visits")
+                .language(StudyLanguage.ENGLISH)
+                .build();
+
+        Group groupProto = Group.builder()
+                .name("BYT-2025")
+                .language(StudyLanguage.ENGLISH)
+                .maxCapacity(35)
+                .yearOfStudy(2025)
+                .notes(new ArrayList<String>() {{ add("The best subject ever OMG"); }})
+                .lessons(new HashSet<Lesson>())
+                .freeListeners(new HashSet<FreeListener>())
+                .build();
+
+        System.out.println("=======================");
+        System.out.println("===== COMPOSITION =====");
+
+        System.out.println("Do you remember the building we just created?");
+        System.out.println("I wonder what will happen with the classroom inside it if we'll delete the building");
+        System.out.println("Current TOTAL amount of classrooms: " + classRoomService.getAll().size());
+        System.out.println("Deleting the '" + buildingProto.getName() + "' building...");
+        buildingService.delete(buildingProto.getName());
+        System.out.println("Current TOTAL amount of classrooms: " + classRoomService.getAll().size());
+    }
+
+    @Deprecated
     private static void demonstrateServices(SaveLoadService database) throws IOException {
         IssueReportService reportService = new IssueReportService(database);
         reportService.initialize();
