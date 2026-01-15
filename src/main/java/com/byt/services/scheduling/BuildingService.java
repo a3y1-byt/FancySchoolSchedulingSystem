@@ -82,7 +82,13 @@ public class BuildingService implements CRUDService<Building> {
         int originalSize = buildings.size();
 
         List<Building> updatedBuildings = buildings.stream()
-                .filter(b -> !b.getName().equals(name))
+                .filter((b) -> {
+                    if(b.getName().equals(name)) {
+                        b.getClassRooms().forEach(b::removeClassRoom);
+                        return false;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
 
         if (updatedBuildings.size() < originalSize) {
@@ -126,7 +132,5 @@ public class BuildingService implements CRUDService<Building> {
 
             this.buildings = new ArrayList<>(loadedBuildings);
     }
-
-
 
 }

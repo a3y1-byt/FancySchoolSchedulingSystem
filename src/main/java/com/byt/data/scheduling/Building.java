@@ -43,6 +43,7 @@ public class Building {
                 .name(building.getName())
                 .address(building.getAddress())
                 .description(building.getDescription())
+                .classRooms(new HashSet<>(building.getClassRooms()))
                 .build();
     }
 }

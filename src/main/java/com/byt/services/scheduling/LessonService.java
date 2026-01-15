@@ -83,7 +83,17 @@ public class LessonService implements CRUDService<Lesson> {
         int originalSize = lessons.size();
 
         List<Lesson> updatedLessons = lessons.stream()
-                .filter(l -> !l.getName().equals(name))
+                .filter(l -> {
+                    if(l.getName().equals(name)){
+                        l.removeSubject(l.getSubject());
+                        l.removeGroup(l.getGroup());
+                        l.removeTeacher(l.getTeacher());
+                        l.getClassRooms().forEach(l::removeClassRoom);
+                        l.getSemesters().forEach(l::removeSemester);
+                        return false;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
 
         if (updatedLessons.size() < originalSize) {

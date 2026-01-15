@@ -76,6 +76,7 @@ public class ClassRoom {
                 .name(original.getName())
                 .floor(original.getFloor())
                 .capacity(original.getCapacity())
+                .building(original.getBuilding())
                 .build();
     }
 }

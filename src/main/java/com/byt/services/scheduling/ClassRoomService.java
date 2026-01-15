@@ -81,7 +81,13 @@ public class ClassRoomService implements CRUDService<ClassRoom> {
         int originalSize = classRooms.size();
 
         List<ClassRoom> updatedClassRooms = classRooms.stream()
-                .filter(r -> !r.getName().equals(name))
+                .filter(r -> {
+                    if(r.getName().equals(name)){
+                        r.removeBuilding(r.getBuilding());
+                        return false;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
 
         if (updatedClassRooms.size() < originalSize) {

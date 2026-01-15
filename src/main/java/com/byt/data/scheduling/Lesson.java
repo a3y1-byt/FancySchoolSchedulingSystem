@@ -89,6 +89,7 @@ public class Lesson {
         this.group = group;
          group.addLesson(this);
     }
+
     public void removeGroup(Group group) {
         if(this.group == null || !this.group.equals(group)) return;
 
@@ -174,6 +175,12 @@ public class Lesson {
                 .endTime(lesson.getEndTime())
                 .language(lesson.getLanguage())
                 .weekPattern(lesson.getWeekPattern())
+                .group(lesson.getGroup())
+                .semesters(new HashSet<>(lesson.getSemesters()))
+                .classRooms(new HashSet<>(lesson.getClassRooms()))
+                .teacher(lesson.getTeacher())
+                .subject(lesson.getSubject())
+                .group(lesson.getGroup())
                 .build();
     }
 }
