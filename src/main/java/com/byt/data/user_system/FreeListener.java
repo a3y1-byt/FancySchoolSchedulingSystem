@@ -49,8 +49,6 @@ public class FreeListener extends Attendee {
                 fl.getNotes()
         );
 
-        copy.groups = (fl.groups != null) ? new HashSet<>(fl.groups) : new HashSet<>();
-
         return copy;
     }
 

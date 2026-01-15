@@ -1,5 +1,6 @@
 package com.byt.services.user_system;
 
+import com.byt.data.scheduling.Lesson;
 import com.byt.data.user_system.Teacher;
 import com.byt.persistence.SaveLoadService;
 import com.byt.persistence.util.DataSaveKeys;
@@ -11,10 +12,7 @@ import com.byt.services.reporting.IssueReportService;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class TeacherService implements CRUDService<Teacher> {
 
@@ -22,12 +20,14 @@ public class TeacherService implements CRUDService<Teacher> {
     private List<Teacher> teachers;
     private final IssueReportService issueReportService;
 
-    private static final Type TEACHER_LIST_TYPE = new TypeToken<List<Teacher>>() {}.getType();
+    private static final Type TEACHER_LIST_TYPE = new TypeToken<List<Teacher>>() {
+    }.getType();
 
     public TeacherService(SaveLoadService service, List<Teacher> teachers,  IssueReportService issueReportService) {
         this.service = service;
         this.teachers = teachers != null ? copyList(teachers) : new ArrayList<>();
         this.issueReportService = issueReportService;
+        this.teachers = new ArrayList<>();
     }
 
     public TeacherService(SaveLoadService service) {
@@ -37,7 +37,7 @@ public class TeacherService implements CRUDService<Teacher> {
     @Override
     public void initialize() throws IOException {
         List<Teacher> loaded = loadFromDb();
-        this.teachers = copyList(loaded);
+        this.teachers = new ArrayList<>(loaded);
     }
 
     public Teacher create(String firstName, String lastName, String familyName,
@@ -61,7 +61,7 @@ public class TeacherService implements CRUDService<Teacher> {
                 hireDate, title, position
         );
 
-        teachers.add(Teacher.copy(teacher));
+        teachers.add(teacher);
         saveToDb();
 
         return Teacher.copy(teacher);
@@ -104,18 +104,23 @@ public class TeacherService implements CRUDService<Teacher> {
 
         String oldEmail = email;
 
+        // firstly we find the old stored student
         int index = -1;
+        Teacher oldStored = null;
+
         for (int i = 0; i < teachers.size(); i++) {
             if (Objects.equals(teachers.get(i).getEmail(), email)) {
                 index = i;
+                oldStored = teachers.get(i);
                 break;
             }
         }
 
         if (index == -1) {
-            throw new IllegalArgumentException("Teacher with email = " + email + " not found");
+            throw new IllegalArgumentException("Teacher with email=" + email + " not found");
         }
 
+        // then, we validate email change, in order to avoid possible duplicates
         String newEmail = prototype.getEmail();
         if (newEmail == null || newEmail.isBlank()) {
             throw new IllegalArgumentException("new email must not be null or blank");
@@ -123,9 +128,30 @@ public class TeacherService implements CRUDService<Teacher> {
 
         if (!Objects.equals(newEmail, email) && exists(newEmail)) {
             throw new IllegalArgumentException("Teacher with email = " + newEmail + " already exists");
+        if (!Objects.equals(newEmail, email)) {
+            if (newEmail != null && exists(newEmail)) {
+                throw new IllegalArgumentException("Teacher with email=" + newEmail + " already exists");
+            }
         }
 
-        teachers.set(index, Teacher.copy(prototype));
+        // then, we collect references (TEACHER - LESSON)
+        Set<Lesson> oldLessons = oldStored.getLessons();
+
+
+        // theen, we remove connection with old instances from references
+        for (Lesson l : oldLessons) {
+            l.removeTeacher(oldStored);
+        }
+
+        // finally, we are creating a new student instance (just a copy)
+        Teacher newStored = Teacher.copy(prototype);
+
+        // AND ----- attaching new instance to the same reference the old one was attached to
+        teachers.set(index, newStored);
+
+        for (Lesson l : oldLessons) {
+            l.addTeacher(newStored);
+        }
         saveToDb();
 
         if (issueReportService != null && !Objects.equals(oldEmail, newEmail)) {
@@ -138,15 +164,35 @@ public class TeacherService implements CRUDService<Teacher> {
     public void delete(String email) throws IllegalArgumentException, IOException {
         TeacherValidator.validateEmailKey(email);
 
+        // firstly we find the old stored student
+        int index = -1;
+        Teacher oldStored = null;
+
         for (int i = 0; i < teachers.size(); i++) {
             if (Objects.equals(teachers.get(i).getEmail(), email)) {
-                teachers.remove(i);
-                saveToDb();
-                return;
+                index = i;
+                oldStored = teachers.get(i);
+                break;
             }
         }
 
-        throw new IllegalArgumentException("Teacher with email = " + email + " not found");
+        if (index == -1) {
+            throw new IllegalArgumentException("Teacher with email=" + email + " not found");
+        }
+
+        // then, we collect references (STUDENT - LESSON)
+        Set<Lesson> oldLessons = oldStored.getLessons();
+
+
+        // theen, we remove connection with old instances from references
+        for (Lesson l : oldLessons) {
+            l.removeTeacher(oldStored);
+        }
+
+
+        teachers.remove(index);
+
+        saveToDb();
     }
 
     @Override
